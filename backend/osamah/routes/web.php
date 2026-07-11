@@ -40,6 +40,9 @@ Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {
 Route::get('/my-orders', [CustomerOrderController::class, 'index'])
     ->middleware('auth')
     ->name('orders.index');
+Route::delete('/my-orders/{order}', [CustomerOrderController::class, 'destroy'])
+    ->middleware('auth')
+    ->name('orders.destroy');
 
 Route::middleware('auth')->prefix('account')->name('account.')->group(function () {
     Route::get('/settings', [AccountController::class, 'edit'])->name('settings');

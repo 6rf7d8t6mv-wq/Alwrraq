@@ -5,15 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>إعدادات الحساب</title>
     <style>
-        body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
-        .header { background: #0f172a; color: #ffffff; padding: 18px 24px; }
-        .header-inner { max-width: 900px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
-        .brand { font-size: 22px; font-weight: 800; }
-        .home-button { color: #0f172a; background: #ffffff; text-decoration: none; font-weight: 800; padding: 10px 14px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.35); }
+        * { box-sizing: border-box; }
+        :root { --sidebar-width: clamp(118px, 18vw, 220px); --page-gap: clamp(10px, 3vw, 28px); }
+        body { margin: 0; padding: 0 calc(var(--sidebar-width) + var(--page-gap)) 0 var(--page-gap); font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
+        .header { width: var(--sidebar-width); min-height: 100vh; max-height: 100vh; overflow-y: auto; background: #0f172a; color: #ffffff; padding: clamp(14px, 2vw, 22px) clamp(8px, 1.5vw, 16px); position: fixed; top: 0; right: 0; z-index: 20; box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15); }
+        .header-inner { height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 16px; }
+        .brand { font-size: clamp(19px, 4vw, 22px); font-weight: 800; }
+        .home-button { color: #0f172a; background: #ffffff; text-decoration: none; font-weight: 800; padding: 10px 12px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, 0.35); text-align: center; line-height: 1.6; }
         .home-button:hover { background: #e2e8f0; }
-        main { max-width: 900px; margin: 28px auto; padding: 0 20px; }
-        .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
-        h1 { margin: 0 0 8px; font-size: 28px; }
+        main { width: min(900px, 100%); margin: clamp(16px, 4vw, 28px) auto; padding: 0 clamp(12px, 4vw, 20px); }
+        .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: clamp(16px, 4vw, 24px); box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
+        h1 { margin: 0 0 8px; font-size: clamp(24px, 6vw, 28px); }
         p { margin: 0 0 22px; color: #64748b; line-height: 1.7; }
         .notice, .errors { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; }
         .notice { background: #ecfdf5; color: #047857; }
@@ -30,7 +32,7 @@
         .empty { color: #94a3b8; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
         label { display: block; color: #334155; font-weight: 800; font-size: 13px; margin-bottom: 6px; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 15px; }
+        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 16px; }
         input[readonly] { background: #e2e8f0; color: #475569; }
         .full { grid-column: 1 / -1; }
         button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 9px; background: #0f172a; color: #ffffff; font-weight: 800; cursor: pointer; }
@@ -39,8 +41,11 @@
         .edit-panel { display: none; margin-top: 16px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; }
         .edit-panel.active { display: block; }
         @media (max-width: 720px) {
+            :root { --sidebar-width: 112px; --page-gap: 8px; }
+            .header { padding: 14px 7px; }
             .form-grid, .details-grid { grid-template-columns: 1fr; }
-            .header-inner, .section-header { align-items: flex-start; flex-direction: column; }
+            .section-header { align-items: flex-start; flex-direction: column; }
+            .home-button, button { width: 100%; text-align: center; }
         }
     </style>
 </head>

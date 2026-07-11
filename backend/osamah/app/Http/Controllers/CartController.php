@@ -24,7 +24,11 @@ class CartController extends Controller
         $this->authorizeOrder($order);
 
         $order->load('files');
-        $this->ensureOrderCanBePaid($order);
+        if ($message = $this->orderPaymentBlockMessage($order)) {
+            return back()->withErrors([
+                'order' => $message,
+            ]);
+        }
 
         $data = $request->validate([
             'payment_method' => ['required', Rule::in(['apple_pay', 'card'])],
@@ -50,18 +54,38 @@ class CartController extends Controller
         abort_unless($order->user_id === Auth::id(), 403);
     }
 
-    private function ensureOrderCanBePaid(Order $order): void
+    private function orderPaymentBlockMessage(Order $order): ?string
     {
-        abort_if($order->payment_status === 'paid', 422, 'تم دفع هذا الطلب مسبقًا.');
-        abort_if($order->files->isEmpty(), 422, 'لا يمكن إتمام طلب بدون ملفات.');
-        abort_if($order->grand_total <= 0, 422, 'لا يمكن إتمام طلب بدون إجمالي.');
+        if ($order->payment_status === 'paid') {
+            return 'تم دفع هذا الطلب مسبقًا.';
+        }
+
+        if ($order->files->isEmpty()) {
+            return 'لا يمكن إتمام طلب بدون ملفات.';
+        }
+
+        if ($order->grand_total <= 0) {
+            return 'لا يمكن إتمام طلب بدون إجمالي.';
+        }
 
         if ($order->service_type === 'notes') {
-            abort_if(
-                $order->files->contains(fn ($file) => blank($file->binding_type)),
-                422,
-                'اختر نوع التغليف لكل ملف قبل الدفع.'
-            );
+            if ($order->files->contains(fn ($file) => blank($file->binding_type))) {
+                return 'اختر نوع التغليف لكل ملف قبل الدفع.';
+            }
         }
+
+        if (in_array($order->service_type, ['thesis', 'phd'], true)) {
+            if ($order->files->contains(fn ($file) => blank($file->university_name))) {
+                return 'اختر الجامعة أو المعهد لكل ملف قبل الدفع.';
+            }
+        }
+
+        if ($order->service_type === 'thesis') {
+            if ($order->files->contains(fn ($file) => $file->file_type === 'pdf' && blank($file->thesis_project_type))) {
+                return 'اختر نوع مشروع الرسالة لكل ملف PDF قبل الدفع.';
+            }
+        }
+
+        return null;
     }
 }

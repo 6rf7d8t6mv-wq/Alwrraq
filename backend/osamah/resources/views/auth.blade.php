@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>الدخول - Mr-Student</title>
     <style>
+        * { box-sizing: border-box; }
         body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
-        .page { min-height: 100vh; display: grid; place-items: center; padding: 24px; box-sizing: border-box; }
-        .auth-card { width: min(430px, 100%); background: #ffffff; border: 1px solid #e5e7eb; border-radius: 14px; padding: 26px; box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10); }
+        .page { min-height: 100vh; display: grid; place-items: center; padding: clamp(14px, 4vw, 24px); }
+        .auth-card { width: min(430px, 100%); background: #ffffff; border: 1px solid #e5e7eb; border-radius: clamp(12px, 3vw, 14px); padding: clamp(18px, 4vw, 26px); box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10); }
         .brand { margin-bottom: 22px; text-align: center; }
-        h1 { margin: 0; font-size: 28px; }
-        h2 { margin: 0 0 6px; font-size: 22px; }
+        h1 { margin: 0; font-size: clamp(24px, 7vw, 28px); }
+        h2 { margin: 0 0 6px; font-size: clamp(20px, 5vw, 22px); }
         p { margin: 0; color: #64748b; line-height: 1.7; }
         label { display: block; margin: 14px 0 6px; font-weight: 700; font-size: 13px; color: #334155; }
-        input { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 15px; }
+        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 16px; }
         button { width: 100%; margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 9px; background: #0f172a; color: #ffffff; font-weight: 800; cursor: pointer; }
         .secondary-action { margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; }
         .switch-button { width: auto; margin-top: 10px; padding: 9px 13px; background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; }

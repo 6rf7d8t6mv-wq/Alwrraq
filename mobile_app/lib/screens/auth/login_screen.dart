@@ -37,6 +37,16 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = false);
 
     if (error == null) {
+      final role = ApiClient.user?['role']?.toString();
+      if (role == 'admin') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حساب المدير يستخدم من لوحة المتصفح حاليًا.'),
+          ),
+        );
+        return;
+      }
+
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const GradesScreen()),
       );

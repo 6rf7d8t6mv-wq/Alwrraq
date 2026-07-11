@@ -122,12 +122,22 @@ class FileUploadController extends Controller
                 'size' => $fileSize,
                 'pages' => $pageCount,
                 'copies' => 1,
+                'thesis_project_type' => null,
+                'university_name' => null,
                 'binding_type' => null,
                 'print_price' => 0,
                 'binding_price' => 0,
                 'total_price' => 0,
             ]);
 
+            $prices = $this->calculatePrices(
+                $service,
+                $pageCount,
+                $orderFile->copies,
+                $orderFile->binding_type
+            );
+
+            $orderFile->fill($prices)->save();
             $this->refreshOrderTotals($order);
 
             if ($path) {
@@ -139,7 +149,13 @@ class FileUploadController extends Controller
                     'filename' => $filename,
                     'path' => $path,
                     'size' => $fileSize,
-                    'pages' => $pageCount
+                    'pages' => $pageCount,
+                    'copies' => $orderFile->copies,
+                    'binding_type' => $orderFile->binding_type,
+                    'university_name' => $orderFile->university_name,
+                    'print_price' => $orderFile->print_price,
+                    'binding_price' => $orderFile->binding_price,
+                    'total_price' => $orderFile->total_price,
                 ]);
             } else {
                 return response()->json([
@@ -164,6 +180,8 @@ class FileUploadController extends Controller
         $data = $request->validate([
             'binding_type' => ['nullable', 'in:tape,wire,normal,none'],
             'copies' => ['nullable', 'integer', 'min:1', 'max:999'],
+            'thesis_project_type' => ['nullable', 'in:thesis,supplementary,graduation'],
+            'university_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         if (array_key_exists('binding_type', $data)) {
@@ -172,6 +190,14 @@ class FileUploadController extends Controller
 
         if (array_key_exists('copies', $data)) {
             $file->copies = $data['copies'];
+        }
+
+        if (array_key_exists('thesis_project_type', $data)) {
+            $file->thesis_project_type = $data['thesis_project_type'];
+        }
+
+        if (array_key_exists('university_name', $data)) {
+            $file->university_name = $data['university_name'];
         }
 
         $prices = $this->calculatePrices(
@@ -189,6 +215,8 @@ class FileUploadController extends Controller
             'print_price' => $file->print_price,
             'binding_price' => $file->binding_price,
             'total_price' => $file->total_price,
+            'thesis_project_type' => $file->thesis_project_type,
+            'university_name' => $file->university_name,
             'order_totals' => $this->orderTotalsPayload($file->order->fresh()),
         ]);
     }

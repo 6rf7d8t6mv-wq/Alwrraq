@@ -16,7 +16,7 @@
         <div class="stat"><span>العملاء</span><strong>{{ $stats['customers'] }}</strong></div>
         <div class="stat"><span>المدراء</span><strong>{{ $stats['admins'] }}</strong></div>
         <div class="stat"><span>إجمالي الطباعة</span><strong>{{ $stats['print_total'] }} ريال</strong></div>
-        <div class="stat"><span>إجمالي التغليف</span><strong>{{ $stats['binding_total'] }} ريال</strong></div>
+        <div class="stat"><span>إجمالي التجليد/التغليف</span><strong>{{ $stats['binding_total'] }} ريال</strong></div>
         <div class="stat"><span>الإجمالي الكلي</span><strong>{{ $stats['grand_total'] }} ريال</strong></div>
     </div>
 

@@ -113,36 +113,40 @@ class _GradesScreenState extends State<GradesScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: _background,
-        body: SafeArea(
-          child: Column(
-            children: [
-              _Header(onNavigate: _openPage),
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: Center(
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(maxWidth: 1040),
-                      child: _selectedService == null
-                          ? _ServicesPanel(onSelect: _selectService)
-                          : _UploadPanel(
-                              service: _selectedService!,
-                              onBack: () =>
-                                  setState(() => _selectedService = null),
-                              onUpload: _pickAndUpload,
-                              wordFiles: _files[_selectedService!]!['word']!,
-                              pdfFiles: _files[_selectedService!]!['pdf']!,
-                              orderId: _orderIds[_selectedService!],
-                              onBindingChanged: _updateBinding,
-                              onCopiesChanged: _updateCopies,
-                              onDelete: _deleteFile,
-                            ),
+        body: Column(
+          children: [
+            _Header(onNavigate: _openPage),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
+                child: Column(
+                  children: [
+                    Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 1000),
+                        child: _selectedService == null
+                            ? _ServicesPanel(onSelect: _selectService)
+                            : _UploadPanel(
+                                service: _selectedService!,
+                                onBack: () =>
+                                    setState(() => _selectedService = null),
+                                onUpload: _pickAndUpload,
+                                wordFiles: _files[_selectedService!]!['word']!,
+                                pdfFiles: _files[_selectedService!]!['pdf']!,
+                                orderId: _orderIds[_selectedService!],
+                                onBindingChanged: _updateBinding,
+                                onCopiesChanged: _updateCopies,
+                                onDelete: _deleteFile,
+                              ),
+                      ),
                     ),
-                  ),
+                    const SizedBox(height: 28),
+                    const _PageFooter(),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -233,6 +237,7 @@ class _UploadedFile {
   int pages;
   int copies = 1;
   String? bindingType;
+  String? thesisProjectType;
   int printPrice;
   int bindingPrice;
   int totalPrice;
@@ -303,32 +308,35 @@ class _Header extends StatelessWidget {
 
   final void Function(Widget page) onNavigate;
 
+  String get _currentUserName {
+    final name = ApiClient.user?['name']?.toString().trim();
+    return name == null || name.isEmpty ? 'المستخدم' : name;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final topPadding = MediaQuery.paddingOf(context).top;
+
     return Container(
       color: _GradesScreenState._dark,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
+      padding: EdgeInsets.fromLTRB(24, topPadding + 20, 24, 20),
       child: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1040),
-          child: Wrap(
-            spacing: 12,
-            runSpacing: 12,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            alignment: WrapAlignment.spaceBetween,
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const SizedBox(
-                width: 230,
+              const Expanded(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       'Mr-Student',
                       style: TextStyle(
                         color: Colors.white,
                         fontFamily: 'Arial',
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     SizedBox(height: 4),
@@ -343,32 +351,43 @@ class _Header extends StatelessWidget {
                   ],
                 ),
               ),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                crossAxisAlignment: WrapCrossAlignment.center,
-                children: [
-                  const _HeaderPill(text: 'أسامة محمد'),
-                  _HeaderButton(
-                    text: 'طلباتي',
-                    onPressed: () => onNavigate(const MyOrdersScreen()),
+              const SizedBox(width: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  reverse: true,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _HeaderPill(text: _currentUserName),
+                      const SizedBox(width: 12),
+                      _HeaderButton(
+                        text: '🧾 طلباتي',
+                        onPressed: () => onNavigate(const MyOrdersScreen()),
+                      ),
+                      const SizedBox(width: 12),
+                      _HeaderButton(
+                        text: '⚙️ إعداداتي',
+                        onPressed: () =>
+                            onNavigate(const AccountSettingsScreen()),
+                      ),
+                      const SizedBox(width: 12),
+                      _HeaderButton(
+                        text: 'خروج',
+                        onPressed: () {
+                          ApiClient.logout();
+                          Navigator.of(context).pushAndRemoveUntil(
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                            (route) => false,
+                          );
+                        },
+                        outlined: true,
+                      ),
+                    ],
                   ),
-                  _HeaderButton(
-                    text: 'إعداداتي',
-                    onPressed: () => onNavigate(const AccountSettingsScreen()),
-                  ),
-                  _HeaderButton(
-                    text: 'خروج',
-                    onPressed: () {
-                      ApiClient.logout();
-                      Navigator.of(context).pushAndRemoveUntil(
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        (route) => false,
-                      );
-                    },
-                    outlined: true,
-                  ),
-                ],
+                ),
               ),
             ],
           ),
@@ -389,32 +408,97 @@ class _ServicesPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
-            'اختر الخدمة المطلوبة',
-            style: TextStyle(
-              color: _GradesScreenState._text,
-              fontFamily: 'Arial',
-              fontSize: 24,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 18),
+          const _BladeSectionTitle('اختر الخدمة المطلوبة'),
+          const SizedBox(height: 22),
           _ServiceButton(
-            text: 'طباعة وتغليف المذكرات',
-            icon: Icons.description_outlined,
+            text: '📝 طباعة وتغليف المذكرات',
             onPressed: () => onSelect('notes'),
           ),
+          const SizedBox(height: 20),
           _ServiceButton(
-            text: 'طبعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج',
-            icon: Icons.menu_book_outlined,
+            text: '📚 طبعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج',
             onPressed: () => onSelect('thesis'),
           ),
+          const SizedBox(height: 20),
           _ServiceButton(
-            text: 'طباعة وتجليد رسالة دكتوراه',
-            icon: Icons.school_outlined,
+            text: '🎓 طباعة وتجليد رسالة دكتوراه',
             onPressed: () => onSelect('phd'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BladeSectionTitle extends StatelessWidget {
+  const _BladeSectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.only(bottom: 12),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0), width: 2)),
+      ),
+      child: Text(
+        text,
+        textAlign: TextAlign.start,
+        style: const TextStyle(
+          color: Color(0xFF1F2937),
+          fontFamily: 'Arial',
+          fontSize: 24,
+          fontWeight: FontWeight.w900,
+          height: 1.25,
+        ),
+      ),
+    );
+  }
+}
+
+class _PageFooter extends StatelessWidget {
+  const _PageFooter();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: _GradesScreenState._dark,
+      padding: EdgeInsets.fromLTRB(
+        24,
+        22,
+        24,
+        MediaQuery.paddingOf(context).bottom + 22,
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: const Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'منصة متخصصة في خدمات الطباعة والتجليد للمذكرات والأبحاث والرسائل العلمية.',
+                style: TextStyle(
+                  color: Color(0xFFCBD5E1),
+                  fontFamily: 'Arial',
+                  fontSize: 14,
+                  height: 1.6,
+                ),
+              ),
+              SizedBox(height: 8),
+              Text(
+                '© 2026 خدمات الطباعة والتجليد. جميع الحقوق محفوظة.',
+                style: TextStyle(
+                  color: Color(0xFFCBD5E1),
+                  fontFamily: 'Arial',
+                  fontSize: 14,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -705,11 +789,13 @@ class _FilesSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final showThesisProject = service == 'thesis' && fileType == 'pdf';
     final headers = [
       'اسم الملف',
       'الصفحات',
       'الحجم',
       showBinding ? 'نوع التغليف' : 'النسخ',
+      if (showThesisProject) 'مشروع الرسالة',
       'سعر الطباعة',
       'سعر التغليف',
       'الإجمالي',
@@ -766,73 +852,73 @@ class _FilesSection extends StatelessWidget {
                     final displayPrintPrice = _allocatedPrintPrice(file);
                     final displayTotalPrice =
                         displayPrintPrice + file.bindingPrice;
-                    return DataRow(
-                      cells: [
-                        DataCell(Text(file.filename)),
-                        DataCell(Text('${file.pages} صفحة')),
-                        DataCell(Text(_formatSize(file.size))),
-                        DataCell(
-                          showBinding
-                              ? _BindingSelect(
-                                  value: file.bindingType,
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      onBindingChanged(file, value);
-                                    }
-                                  },
-                                )
-                              : _CopiesSelect(
-                                  value: file.copies,
-                                  onChanged: (value) {
-                                    if (value != null) {
-                                      onCopiesChanged(file, value);
-                                    }
-                                  },
-                                ),
+                    final cells = [
+                      DataCell(Text(file.filename)),
+                      DataCell(Text('${file.pages} صفحة')),
+                      DataCell(Text(_formatSize(file.size))),
+                      DataCell(
+                        showBinding
+                            ? _BindingSelect(
+                                value: file.bindingType,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    onBindingChanged(file, value);
+                                  }
+                                },
+                              )
+                            : _CopiesSelect(
+                                value: file.copies,
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    onCopiesChanged(file, value);
+                                  }
+                                },
+                              ),
+                      ),
+                      if (showThesisProject)
+                        DataCell(_ThesisProjectSelect(file: file)),
+                      DataCell(Text('$displayPrintPrice ريال')),
+                      DataCell(
+                        Text(
+                          waitingForBinding ? '-' : '${file.bindingPrice} ريال',
                         ),
-                        DataCell(Text('$displayPrintPrice ريال')),
-                        DataCell(
-                          Text(
-                            waitingForBinding
-                                ? '-'
-                                : '${file.bindingPrice} ريال',
+                      ),
+                      DataCell(
+                        Text(
+                          waitingForBinding
+                              ? 'اختر التغليف'
+                              : '$displayTotalPrice ريال',
+                          style: TextStyle(
+                            color: waitingForBinding
+                                ? const Color(0xFFB91C1C)
+                                : _GradesScreenState._text,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        DataCell(
-                          Text(
-                            waitingForBinding
-                                ? 'اختر التغليف'
-                                : '$displayTotalPrice ريال',
-                            style: TextStyle(
-                              color: waitingForBinding
-                                  ? const Color(0xFFB91C1C)
-                                  : _GradesScreenState._text,
-                              fontWeight: FontWeight.w800,
-                            ),
+                      ),
+                      const DataCell(
+                        Text(
+                          'مرفوع',
+                          style: TextStyle(
+                            color: _GradesScreenState._success,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
-                        const DataCell(
-                          Text(
-                            'مرفوع',
-                            style: TextStyle(
-                              color: _GradesScreenState._success,
-                              fontWeight: FontWeight.w800,
-                            ),
+                      ),
+                      DataCell(
+                        TextButton.icon(
+                          onPressed: () => onDelete(
+                            service: service,
+                            fileType: fileType,
+                            file: file,
                           ),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('حذف'),
                         ),
-                        DataCell(
-                          TextButton.icon(
-                            onPressed: () => onDelete(
-                              service: service,
-                              fileType: fileType,
-                              file: file,
-                            ),
-                            icon: const Icon(Icons.delete_outline, size: 18),
-                            label: const Text('حذف'),
-                          ),
-                        ),
-                      ],
-                    );
+                      ),
+                    ];
+
+                    return DataRow(cells: cells);
                   }).toList(),
                 ),
               ),
@@ -913,6 +999,37 @@ class _CopiesSelect extends StatelessWidget {
   }
 }
 
+class _ThesisProjectSelect extends StatefulWidget {
+  const _ThesisProjectSelect({required this.file});
+
+  final _UploadedFile file;
+
+  @override
+  State<_ThesisProjectSelect> createState() => _ThesisProjectSelectState();
+}
+
+class _ThesisProjectSelectState extends State<_ThesisProjectSelect> {
+  static const _options = [
+    DropdownMenuItem(value: 'thesis', child: Text('رسالة ماجستير')),
+    DropdownMenuItem(value: 'supplementary', child: Text('بحث تكميلي')),
+    DropdownMenuItem(value: 'graduation', child: Text('بحث تخرج')),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return DropdownButton<String>(
+      value: widget.file.thesisProjectType,
+      hint: const Text('اختر المشروع'),
+      underline: const SizedBox.shrink(),
+      borderRadius: BorderRadius.circular(10),
+      items: _options,
+      onChanged: (value) {
+        setState(() => widget.file.thesisProjectType = value);
+      },
+    );
+  }
+}
+
 class _Panel extends StatelessWidget {
   const _Panel({required this.child});
 
@@ -921,16 +1038,16 @@ class _Panel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: _GradesScreenState._border),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: const [
           BoxShadow(
             color: Color(0x140F172A),
-            blurRadius: 45,
-            offset: Offset(0, 18),
+            blurRadius: 60,
+            offset: Offset(0, 24),
           ),
         ],
       ),
@@ -940,31 +1057,50 @@ class _Panel extends StatelessWidget {
 }
 
 class _ServiceButton extends StatelessWidget {
-  const _ServiceButton({
-    required this.text,
-    required this.icon,
-    required this.onPressed,
-  });
+  const _ServiceButton({required this.text, required this.onPressed});
 
   final String text;
-  final IconData icon;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: FilledButton.icon(
-        onPressed: onPressed,
-        icon: Icon(icon),
-        label: Text(text),
-        style: FilledButton.styleFrom(
-          backgroundColor: _GradesScreenState._dark,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.all(16),
-          textStyle: const TextStyle(
-            fontFamily: 'Arial',
-            fontWeight: FontWeight.w800,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x260F172A),
+            blurRadius: 12,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 74),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+            alignment: Alignment.center,
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontFamily: 'Arial',
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                height: 1.35,
+              ),
+            ),
           ),
         ),
       ),

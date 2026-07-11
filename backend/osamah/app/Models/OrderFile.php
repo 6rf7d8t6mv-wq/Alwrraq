@@ -16,6 +16,8 @@ class OrderFile extends Model
         'size',
         'pages',
         'copies',
+        'thesis_project_type',
+        'university_name',
         'binding_type',
         'print_price',
         'binding_price',
