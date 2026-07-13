@@ -37,14 +37,16 @@
         .done { background: #e0f2fe; color: #075985; }
         .open { background: #f1f5f9; color: #334155; }
         .cancelled { background: #fee2e2; color: #991b1b; }
-        .actions { display: flex; flex-wrap: wrap; gap: 8px; }
-        .action { display: inline-flex; color: #ffffff; background: #0f172a; text-decoration: none; font-weight: 900; padding: 9px 12px; border-radius: 8px; border: 0; cursor: pointer; font-family: inherit; font-size: 13px; }
+        .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 128px)); justify-content: start; gap: 8px; align-items: stretch; }
+        .action { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 40px; color: #ffffff; background: #0f172a; text-decoration: none; font-weight: 900; padding: 9px 12px; border-radius: 8px; border: 0; cursor: pointer; font-family: inherit; font-size: 13px; text-align: center; line-height: 1.4; }
         .notice-action { position: relative; }
         .order-notice-dot { position: absolute; top: -4px; left: -4px; width: 8px; height: 8px; border-radius: 999px; background: #dc2626; box-shadow: 0 0 0 2px #ffffff; }
         .action.secondary { background: #047857; }
         .action.ghost { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; }
         .action.danger { background: #b91c1c; }
-        .inline-form { display: inline-flex; margin: 0; }
+        .action.invoice-button { background: #0f4c81; color: #ffffff; border: 1px solid #2563eb; }
+        .action.invoice-button:hover { background: #1d6fa5; }
+        .inline-form { display: flex; margin: 0; width: 100%; }
         .empty { text-align: center; color: #94a3b8; padding: 38px 16px; font-weight: 800; }
         .notice { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; background: #ecfdf5; color: #047857; font-weight: 900; }
         .errors { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; background: #fef2f2; color: #b91c1c; font-weight: 900; }
@@ -74,11 +76,42 @@
         .total-card { background: #0f172a; color: #ffffff; border-radius: 10px; padding: 16px; }
         .total-card span { display: block; color: #cbd5e1; font-size: 13px; margin-bottom: 8px; }
         .total-card strong { font-size: 24px; }
-        .modal-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
+        .modal-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb; }
         .delivered-files-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
         .delivered-file-item { display: flex; flex-direction: column; align-items: stretch; gap: 10px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #ffffff; }
         .delivered-file-name { color: #0f172a; font-weight: 900; line-height: 1.6; word-break: break-word; }
         .delivered-file-buttons { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .invoice-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
+        .invoice-toolbar .action { padding: 12px 18px; min-width: 142px; justify-content: center; border-radius: 10px; font-size: 15px; }
+        .invoice-document { color: #111827; background: #ffffff; border: 1px solid #dbe3ef; border-radius: 14px; padding: clamp(14px, 3vw, 24px); box-shadow: 0 18px 50px rgba(15, 23, 42, 0.08); }
+        .invoice-head { display: flex; justify-content: space-between; gap: 16px; align-items: stretch; padding: 18px; border-radius: 12px; background: #0f172a; color: #ffffff; margin-bottom: 18px; }
+        .invoice-brand { display: flex; align-items: center; gap: 12px; }
+        .invoice-logo { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: #ffffff; color: #0f172a; font-size: 24px; font-weight: 900; }
+        .invoice-head h2 { margin: 0; font-size: 28px; color: #ffffff; }
+        .invoice-head p { margin: 4px 0 0; color: #cbd5e1; }
+        .invoice-number { min-width: 140px; text-align: center; padding: 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; background: rgba(255,255,255,0.08); }
+        .invoice-number span, .invoice-grid span, .invoice-totals span { display: block; color: #64748b; font-size: 12px; font-weight: 900; margin-bottom: 5px; }
+        .invoice-number span { color: #cbd5e1; }
+        .invoice-number strong { display: block; font-size: 26px; color: #ffffff; }
+        .invoice-number small { display: inline-flex; margin-top: 7px; padding: 4px 9px; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 12px; font-weight: 900; }
+        .invoice-section-title { margin: 16px 0 10px; color: #0f172a; font-size: 15px; font-weight: 900; }
+        .invoice-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+        .invoice-grid div, .invoice-totals div { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px; }
+        .invoice-grid strong { line-height: 1.6; }
+        .invoice-grid .full { grid-column: 1 / -1; }
+        .invoice-table-wrap { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 10px; }
+        .invoice-table-wrap table { min-width: 760px; border-radius: 0; }
+        .invoice-table-wrap th { background: #eef2f7; color: #0f172a; }
+        .invoice-table-wrap td:last-child { font-weight: 900; color: #0f172a; background: #f8fafc; }
+        .invoice-summary { display: grid; grid-template-columns: minmax(220px, 0.8fr) minmax(0, 1.2fr); gap: 12px; align-items: stretch; margin-top: 16px; }
+        .invoice-summary-note { display: flex; flex-direction: column; justify-content: center; gap: 7px; padding: 14px; border: 1px solid #dbe3ef; border-radius: 12px; background: #f8fafc; }
+        .invoice-summary-note strong { color: #0f172a; }
+        .invoice-summary-note span { color: #64748b; font-size: 13px; line-height: 1.6; }
+        .invoice-totals { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+        .invoice-totals .grand { background: #0f172a; color: #ffffff; }
+        .invoice-totals .grand span { color: #cbd5e1; }
+        .invoice-totals .grand strong { font-size: 22px; }
+        .invoice-note { margin-top: 16px; color: #64748b; font-size: 12px; text-align: center; }
         @media (max-width: 820px) {
             :root { --sidebar-width: 132px; --page-gap: 10px; }
             .header { padding: 14px 8px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.14); }
@@ -86,7 +119,18 @@
             table { display: block; overflow-x: auto; white-space: nowrap; }
             .detail-grid, .totals-grid { grid-template-columns: 1fr; }
             .home-button, .settings-button, .logout-button, .action, .inline-form { width: 100%; justify-content: center; text-align: center; }
-            .modal-actions { justify-content: stretch; }
+            .actions, .modal-actions { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); }
+            .actions { justify-content: stretch; }
+            .invoice-head, .invoice-grid, .invoice-totals, .invoice-summary { grid-template-columns: 1fr; }
+            .invoice-head { flex-direction: column; }
+            .invoice-table-wrap { border: 0; overflow: visible; }
+            .invoice-table-wrap table { min-width: 0; display: block; }
+            .invoice-table-wrap thead { display: none; }
+            .invoice-table-wrap tbody { display: grid; gap: 10px; }
+            .invoice-table-wrap tr { display: grid; gap: 9px; padding: 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #ffffff; }
+            .invoice-table-wrap td { display: grid; grid-template-columns: minmax(100px, 38%) minmax(0, 1fr); align-items: start; gap: 8px; padding: 0; border-bottom: 0; white-space: normal; word-break: break-word; }
+            .invoice-table-wrap td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; }
+            .invoice-table-wrap td:last-child { padding: 9px; border-radius: 8px; }
         }
     </style>
 </head>
@@ -226,9 +270,12 @@
                                                 @endif
                                             </button>
                                         @endif
+                                        @if ($isPaid)
+                                            <button class="action invoice-button" type="button" onclick="openOrderModal('invoiceModal{{ $order->id }}')">الفاتورة</button>
+                                        @endif
                                         @if (! $isPaid && $order->files_count > 0)
                                             <a class="action secondary" href="{{ route('cart.show', $order) }}">إكمال الدفع</a>
-                                        @else
+                                        @elseif (! $isPaid)
                                             <a class="action" href="{{ route('cart.show', $order) }}">السلة</a>
                                         @endif
                                         @if (! $isPaid)
@@ -422,6 +469,9 @@
                                     @if ($order->payment_status !== 'paid' && $order->files_count > 0)
                                         <a class="action secondary" href="{{ route('cart.show', $order) }}">إكمال الدفع</a>
                                     @endif
+                                    @if ($order->payment_status === 'paid')
+                                        <button class="action invoice-button" type="button" onclick="closeOrderModal(null, 'orderModal{{ $order->id }}'); openOrderModal('invoiceModal{{ $order->id }}')">الفاتورة</button>
+                                    @endif
                                     @if ($order->payment_status !== 'paid')
                                         <form class="inline-form" method="post" action="{{ route('orders.destroy', $order) }}" onsubmit="return confirm('هل تريد حذف هذا الطلب وجميع ملفاته؟')">
                                             @csrf
@@ -433,6 +483,20 @@
                             </div>
                         </div>
                     </div>
+
+                    @if ($order->payment_status === 'paid')
+                        <div class="modal-backdrop" id="invoiceModal{{ $order->id }}" tabindex="-1" onclick="closeOrderModal(event, 'invoiceModal{{ $order->id }}')">
+                            <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
+                                <div class="modal-head">
+                                    <div class="modal-title">فاتورة الطلب #{{ $order->id }}</div>
+                                    <button class="modal-close" type="button" onclick="closeOrderModal(null, 'invoiceModal{{ $order->id }}')">إغلاق</button>
+                                </div>
+                                <div class="modal-body">
+                                    @include('shared.invoice', ['order' => $order, 'invoiceId' => 'customerInvoice' . $order->id])
+                                </div>
+                            </div>
+                        </div>
+                    @endif
 
                     @if (in_array($order->service_type, $noPrintServices, true))
                         <div class="modal-backdrop" id="deliveredFilesModal{{ $order->id }}" tabindex="-1" onclick="closeOrderModal(event, 'deliveredFilesModal{{ $order->id }}')">
@@ -508,6 +572,47 @@
             if (event && event.target.id !== id) return;
             document.getElementById(id)?.classList.remove('active');
             document.body.style.overflow = '';
+        }
+
+        function printInvoice(invoiceId) {
+            const invoice = document.getElementById(invoiceId);
+            if (!invoice) return;
+
+            const printWindow = window.open('', '_blank');
+            if (!printWindow) return;
+
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html lang="ar" dir="rtl">
+                <head>
+                    <meta charset="utf-8">
+                    <title>فاتورة</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 24px; color: #111827; direction: rtl; }
+                        table { width: 100%; border-collapse: collapse; }
+                        th, td { border: 1px solid #e5e7eb; padding: 9px; text-align: right; font-size: 12px; }
+                        th { background: #f8fafc; }
+                        .invoice-document { border: 0; padding: 0; }
+                        .invoice-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 3px solid #0f172a; margin-bottom: 16px; padding-bottom: 14px; }
+                        .invoice-brand { display: flex; align-items: center; gap: 10px; }
+                        .invoice-logo { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: #0f172a; color: #fff; font-size: 22px; font-weight: 900; }
+                        .invoice-head h2 { margin: 0; font-size: 28px; }
+                        .invoice-number { text-align: left; }
+                        .invoice-grid, .invoice-totals, .invoice-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }
+                        .invoice-grid div, .invoice-totals div, .invoice-summary-note { border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px; }
+                        .invoice-grid span, .invoice-totals span, .invoice-number span { display: block; color: #64748b; font-size: 11px; font-weight: 700; margin-bottom: 4px; }
+                        .invoice-totals .grand { background: #0f172a; color: #fff; }
+                        .invoice-section-title { margin: 14px 0 8px; font-weight: 900; }
+                        .invoice-note { text-align: center; color: #64748b; margin-top: 18px; }
+                        .invoice-toolbar { display: none; }
+                    </style>
+                </head>
+                <body>${invoice.outerHTML}</body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
         }
 
         document.addEventListener('keydown', (event) => {

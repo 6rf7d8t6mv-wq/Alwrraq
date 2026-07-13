@@ -59,6 +59,8 @@
         .full { grid-column: 1 / -1; }
         .submit-card { width: 100%; margin-top: 16px; padding: 13px 16px; border: 0; border-radius: 9px; background: #0f172a; color: #ffffff; font-weight: 900; cursor: pointer; }
         .paid { background: #ecfdf5; color: #047857; padding: 14px; border-radius: 10px; font-weight: 900; }
+        .close-to-orders { display: inline-flex; align-items: center; justify-content: center; margin-top: 14px; min-width: 150px; padding: 11px 16px; border-radius: 9px; background: #0f172a; color: #ffffff; text-decoration: none; font-weight: 900; }
+        .close-to-orders:hover { background: #1e293b; }
         .missing-info { margin-top: 16px; padding: 14px 16px; background: #fffbeb; color: #92400e; border: 1px solid #fde68a; border-radius: 10px; font-weight: 900; line-height: 1.8; }
         .missing-info ul { margin: 8px 0 0; padding: 0 18px 0 0; }
         @media (max-width: 820px) {
@@ -68,7 +70,7 @@
             .meta, .totals, .form-grid { grid-template-columns: 1fr; }
             .meta-card.full { grid-column: auto; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
-            .home-button, .settings-button, .logout-button, .submit-card, .apple-pay { width: 100%; text-align: center; }
+            .home-button, .settings-button, .logout-button, .submit-card, .apple-pay, .close-to-orders { width: 100%; text-align: center; }
         }
     </style>
 </head>
@@ -258,6 +260,7 @@
             <h2>الدفع</h2>
             @if ($order->payment_status === 'paid')
                 <div class="paid">تم الدفع بنجاح. رقم العملية: {{ $order->payment_reference }}</div>
+                <a class="close-to-orders" href="{{ route('orders.index') }}" target="_top">إغلاق</a>
             @elseif ($missingRequirements->isNotEmpty())
                 <div class="missing-info">أكمل المعلومات المطلوبة من صفحة الخدمة قبل الدفع. الطلب محفوظ وسيظهر في صفحة طلباتي.</div>
             @else

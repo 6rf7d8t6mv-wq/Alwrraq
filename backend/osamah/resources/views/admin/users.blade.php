@@ -24,51 +24,53 @@
             @endif
         </form>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>المستخدم</th>
-                    <th>رقم الجوال</th>
-                    <th>الطلبات</th>
-                    <th>الصلاحية</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($users as $user)
+        <div class="management-table-wrap">
+            <table class="management-table">
+                <thead>
                     <tr>
-                        <td>
-                            <div class="identity">
-                                <strong>{{ $user->name }}</strong>
-                                <span class="id-badge">{{ auth()->user()->is($user) ? 'حسابك الحالي' : 'مستخدم ' . $loop->iteration }}</span>
-                            </div>
-                        </td>
-                        <td>{{ $user->phone }}</td>
-                        <td>{{ $user->orders_count }}</td>
-                        <td><span class="badge">مستخدم إداري</span></td>
-                        <td>
-                            <div class="actions">
-                                @if (!auth()->user()->is($user) && auth()->user()->hasAdminPermission('users_update'))
-                                    <button class="ghost" type="button" onclick="openAdminModal('تعديل بيانات المستخدم', 'edit-admin-{{ $user->id }}')">تعديل البيانات</button>
-                                    <button class="ghost" type="button" onclick="openAdminModal('صلاحيات المستخدم', 'permissions-admin-{{ $user->id }}')">الصلاحيات</button>
-                                @elseif (auth()->user()->is($user))
-                                    <span class="muted">تعديل حسابك من الإعدادات</span>
-                                @endif
-                                @if (auth()->user()->hasAdminPermission('users_delete') && !auth()->user()->is($user))
-                                    <form method="post" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('حذف هذا المستخدم؟')">
-                                        @csrf
-                                        @method('delete')
-                                        <button class="danger small-button" type="submit">حذف</button>
-                                    </form>
-                                @endif
-                            </div>
-                        </td>
+                        <th>المستخدم</th>
+                        <th>رقم الجوال</th>
+                        <th>الطلبات</th>
+                        <th>الصلاحية</th>
+                        <th>الإجراءات</th>
                     </tr>
-                @empty
-                    <tr><td colspan="5" class="empty">لا يوجد مستخدمين.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($users as $user)
+                        <tr>
+                            <td data-label="المستخدم">
+                                <div class="identity">
+                                    <strong>{{ $user->name }}</strong>
+                                    <span class="id-badge">{{ auth()->user()->is($user) ? 'حسابك الحالي' : 'مستخدم ' . $loop->iteration }}</span>
+                                </div>
+                            </td>
+                            <td data-label="رقم الجوال">{{ $user->phone }}</td>
+                            <td data-label="الطلبات">{{ $user->orders_count }}</td>
+                            <td data-label="الصلاحية"><span class="badge">مستخدم إداري</span></td>
+                            <td data-label="الإجراءات">
+                                <div class="actions">
+                                    @if (!auth()->user()->is($user) && auth()->user()->hasAdminPermission('users_update'))
+                                        <button class="ghost" type="button" onclick="openAdminModal('تعديل بيانات المستخدم', 'edit-admin-{{ $user->id }}')">تعديل البيانات</button>
+                                        <button class="ghost" type="button" onclick="openAdminModal('صلاحيات المستخدم', 'permissions-admin-{{ $user->id }}')">الصلاحيات</button>
+                                    @elseif (auth()->user()->is($user))
+                                        <span class="muted">تعديل حسابك من الإعدادات</span>
+                                    @endif
+                                    @if (auth()->user()->hasAdminPermission('users_delete') && !auth()->user()->is($user))
+                                        <form method="post" action="{{ route('admin.users.destroy', $user) }}" onsubmit="return confirm('حذف هذا المستخدم؟')">
+                                            @csrf
+                                            @method('delete')
+                                            <button class="danger small-button" type="submit">حذف</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="empty">لا يوجد مستخدمين.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <template id="create-admin-template">

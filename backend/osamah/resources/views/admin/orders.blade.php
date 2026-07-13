@@ -108,14 +108,21 @@
                                     طباعة {{ $order->print_total }} | {{ $bindingLabel }} {{ $order->binding_total }} | الكل {{ $order->grand_total }} ريال
                                 @endif
                             </div>
-                            @if (auth()->user()->hasAdminPermission('orders_delete'))
+                            @if ($order->payment_status === 'paid' || auth()->user()->hasAdminPermission('orders_delete'))
                                 <div>
-                                    <span class="label">إجراء</span>
-                                    <form method="post" action="{{ route('admin.orders.destroy', $order) }}" onsubmit="return confirm('حذف هذا الطلب وجميع ملفاته؟')">
-                                        @csrf
-                                        @method('delete')
-                                        <button class="danger small-button" type="submit">حذف الطلب</button>
-                                    </form>
+                                    <span class="label">الإجراءات</span>
+                                    <div class="compact-actions">
+                                        @if ($order->payment_status === 'paid')
+                                            <button class="invoice-admin-button" type="button" onclick="openAdminModal('فاتورة الطلب #{{ $order->id }}', 'invoice-admin-{{ $order->id }}')">الفاتورة</button>
+                                        @endif
+                                        @if (auth()->user()->hasAdminPermission('orders_delete'))
+                                            <form method="post" action="{{ route('admin.orders.destroy', $order) }}" onsubmit="return confirm('حذف هذا الطلب وجميع ملفاته؟')">
+                                                @csrf
+                                                @method('delete')
+                                                <button class="danger small-button" type="submit">حذف الطلب</button>
+                                            </form>
+                                        @endif
+                                    </div>
                                 </div>
                             @endif
                         </div>
@@ -222,4 +229,12 @@
     @empty
         <div class="panel empty">لا توجد طلبات حتى الآن.</div>
     @endforelse
+
+    @foreach ($orders as $order)
+        @if ($order->payment_status === 'paid')
+            <template id="invoice-admin-{{ $order->id }}">
+                @include('shared.invoice', ['order' => $order, 'invoiceId' => 'adminInvoice' . $order->id])
+            </template>
+        @endif
+    @endforeach
 @endsection

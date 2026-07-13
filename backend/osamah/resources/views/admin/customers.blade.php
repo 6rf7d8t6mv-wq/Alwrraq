@@ -24,48 +24,50 @@
             @endif
         </form>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>العميل</th>
-                    <th>رقم الجوال</th>
-                    <th>الطلبات</th>
-                    <th>الصلاحية</th>
-                    <th>الإجراءات</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($customers as $customer)
+        <div class="management-table-wrap">
+            <table class="management-table">
+                <thead>
                     <tr>
-                        <td>
-                            <div class="identity">
-                                <strong>{{ $customer->name }}</strong>
-                                <span class="id-badge">عميل {{ $loop->iteration }}</span>
-                            </div>
-                        </td>
-                        <td>{{ $customer->phone }}</td>
-                        <td>{{ $customer->orders_count }}</td>
-                        <td><span class="badge">عميل</span></td>
-                        <td>
-                            <div class="actions">
-                                @if (auth()->user()->hasAdminPermission('customers_update'))
-                                    <button class="ghost" type="button" onclick="openAdminModal('تعديل عميل', 'edit-customer-{{ $customer->id }}')">تعديل</button>
-                                @endif
-                                @if (auth()->user()->hasAdminPermission('customers_delete'))
-                                    <form method="post" action="{{ route('admin.users.destroy', $customer) }}" onsubmit="return confirm('حذف هذا العميل؟ سيتم حذف طلباته وملفاته من قاعدة البيانات.')">
-                                        @csrf
-                                        @method('delete')
-                                        <button class="danger small-button" type="submit">حذف</button>
-                                    </form>
-                                @endif
-                            </div>
-                        </td>
+                        <th>العميل</th>
+                        <th>رقم الجوال</th>
+                        <th>الطلبات</th>
+                        <th>الصلاحية</th>
+                        <th>الإجراءات</th>
                     </tr>
-                @empty
-                    <tr><td colspan="5" class="empty">لا يوجد عملاء.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    @forelse ($customers as $customer)
+                        <tr>
+                            <td data-label="العميل">
+                                <div class="identity">
+                                    <strong>{{ $customer->name }}</strong>
+                                    <span class="id-badge">عميل {{ $loop->iteration }}</span>
+                                </div>
+                            </td>
+                            <td data-label="رقم الجوال">{{ $customer->phone }}</td>
+                            <td data-label="الطلبات">{{ $customer->orders_count }}</td>
+                            <td data-label="الصلاحية"><span class="badge">عميل</span></td>
+                            <td data-label="الإجراءات">
+                                <div class="actions">
+                                    @if (auth()->user()->hasAdminPermission('customers_update'))
+                                        <button class="ghost" type="button" onclick="openAdminModal('تعديل عميل', 'edit-customer-{{ $customer->id }}')">تعديل</button>
+                                    @endif
+                                    @if (auth()->user()->hasAdminPermission('customers_delete'))
+                                        <form method="post" action="{{ route('admin.users.destroy', $customer) }}" onsubmit="return confirm('حذف هذا العميل؟ سيتم حذف طلباته وملفاته من قاعدة البيانات.')">
+                                            @csrf
+                                            @method('delete')
+                                            <button class="danger small-button" type="submit">حذف</button>
+                                        </form>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr><td colspan="5" class="empty">لا يوجد عملاء.</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
     </div>
 
     <template id="create-customer-template">
