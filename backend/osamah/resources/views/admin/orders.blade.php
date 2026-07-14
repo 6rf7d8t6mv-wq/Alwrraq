@@ -36,6 +36,7 @@
         $noPrintServices = ['formatting', 'research'];
         $serviceNames = [
             'notes' => 'مذكرات',
+            'books' => 'كتب',
             'thesis' => 'ماجستير',
             'phd' => 'دكتوراه',
             'formatting' => 'تنسيق الرسائل الجامعية',
@@ -75,17 +76,38 @@
             <template id="{{ $customerKey }}">
                 @foreach ($customerOrders as $order)
                     @php
-                        $bindingLabel = $order->service_type === 'notes'
-                            ? 'التغليف'
-                            : ($order->service_type === 'formatting' ? 'التنسيق' : ($order->service_type === 'research' ? 'إنشاء البحث' : 'التجليد'));
-                        $bindingPriceLabel = $order->service_type === 'notes'
-                            ? 'سعر التغليف'
-                            : ($order->service_type === 'formatting' ? 'سعر التنسيق' : ($order->service_type === 'research' ? 'سعر إنشاء البحث' : 'سعر التجليد'));
-                        $bindingNames = [
-                            'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
-                            'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
-                            'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
-                            'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
+                        $bindingLabel = match ($order->service_type) {
+                            'books' => 'التجليد',
+                            'notes' => 'التغليف',
+                            'formatting' => 'التنسيق',
+                            'research' => 'إنشاء البحث',
+                            default => 'التجليد',
+                        };
+                        $bindingPriceLabel = match ($order->service_type) {
+                            'books' => 'سعر التجليد',
+                            'notes' => 'سعر التغليف',
+                            'formatting' => 'سعر التنسيق',
+                            'research' => 'سعر إنشاء البحث',
+                            default => 'سعر التجليد',
+                        };
+                        $bindingNames = $order->service_type === 'books'
+                            ? [
+                                'tape' => 'تجليد كعب جلد طبيعي',
+                                'wire' => 'تجليد كعب جلد طبيعي',
+                                'normal' => 'تجليد كعب جلد طبيعي',
+                                'none' => 'تجليد كعب جلد طبيعي',
+                            ]
+                            : [
+                                'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
+                                'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
+                                'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
+                                'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
+                            ];
+                        $deliveryMethodNames = [
+                            'branch_pickup' => 'استلام من الفرع',
+                            'islamic_university_delivery' => 'توصيل داخل الجامعة الإسلامية',
+                            'madinah_delivery' => 'توصيل داخل المدينة المنورة',
+                            'redbox_delivery' => 'خارج المدينة المنورة عبر RedBox',
                         ];
                         $coverColorNames = [
                             'black' => 'أسود',
@@ -120,11 +142,24 @@
                             <div><span class="label">الخدمة</span>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</div>
                             <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
                             <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
+                            @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                <div><span class="label">التوصيل</span>
+                                    {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
+                                    @if ($order->delivery_method === 'islamic_university_delivery')
+                                        <br><span class="muted">وحدة {{ $order->delivery_unit }} / دور {{ $order->delivery_floor }} / غرفة {{ $order->delivery_room }}</span>
+                                    @elseif (in_array($order->delivery_method, ['madinah_delivery', 'redbox_delivery'], true))
+                                        <br><span class="muted">{{ $order->delivery_city }} / حي {{ $order->delivery_district }} / شارع {{ $order->delivery_street }}</span>
+                                        @if ($order->delivery_map_url)
+                                            <br><a class="muted" href="{{ $order->delivery_map_url }}" target="_blank" rel="noopener">رابط الموقع</a>
+                                        @endif
+                                    @endif
+                                </div>
+                            @endif
                             <div><span class="label">الإجمالي</span>
                                 @if (in_array($order->service_type, $noPrintServices, true))
                                     {{ $bindingLabel }} {{ $order->binding_total }} | الكل {{ $order->grand_total }} ريال
                                 @else
-                                    طباعة {{ $order->print_total }} | {{ $bindingLabel }} {{ $order->binding_total }} | الكل {{ $order->grand_total }} ريال
+                                    طباعة {{ $order->print_total }} | {{ $bindingLabel }} {{ $order->binding_total }} | توصيل {{ $order->delivery_fee }} | الكل {{ $order->grand_total }} ريال
                                 @endif
                                 @if ($order->discount_amount > 0)
                                     <br><span class="muted">خصم {{ $order->discount_code }}: {{ $order->discount_amount }} ريال</span>
@@ -168,7 +203,7 @@
                                     <button class="save" type="submit">تطبيق الخصم</button>
                                 </form>
                                 @if ($order->discount_amount > 0)
-                                    <p class="muted" style="margin: 10px 0 0;">الإجمالي قبل الخصم: {{ $order->baseTotal() }} ريال، بعد الخصم: {{ $order->grand_total }} ريال.</p>
+                                    <p class="muted" style="margin: 10px 0 0;">الإجمالي قبل الخصم: {{ $order->baseTotal() }} ريال، رسوم التوصيل: {{ $order->delivery_fee }} ريال، بعد الخصم والتوصيل: {{ $order->grand_total }} ريال.</p>
                                 @endif
                             </div>
                         @endif
@@ -189,6 +224,15 @@
                                         <th>الصفحات</th>
                                         @if ($order->service_type !== 'research')
                                             <th>النسخ</th>
+                                        @endif
+                                        @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                            <th>نوع الطباعة</th>
+                                        @endif
+                                        @if (in_array($order->service_type, ['notes', 'books'], true))
+                                            <th>حجم الصفحة</th>
+                                        @endif
+                                        @if (in_array($order->service_type, ['notes', 'books'], true))
+                                            <th>لون الورق</th>
                                         @endif
                                         @if (! in_array($order->service_type, $noPrintServices, true))
                                             <th>{{ $bindingLabel }}</th>
@@ -217,7 +261,16 @@
                                             @endif
                                             <td>{{ $file->pages }}</td>
                                             @if ($order->service_type !== 'research')
-                                                <td>{{ $file->copies }}</td>
+                                                <td>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : $file->copies }}</td>
+                                            @endif
+                                            @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                                <td>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
+                                            @endif
+                                            @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                <td>{{ ['A4' => 'A4', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</td>
+                                            @endif
+                                            @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                <td>{{ ['white' => 'أبيض', 'yellow' => 'أصفر'][$file->paper_color] ?? 'أبيض' }}</td>
                                             @endif
                                             @if (! in_array($order->service_type, $noPrintServices, true))
                                                 <td>{{ $bindingNames[$file->binding_type] ?? '-' }}</td>

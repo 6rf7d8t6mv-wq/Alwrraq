@@ -22,6 +22,15 @@ class Order extends Model
         'discount_amount',
         'discount_applied_by',
         'discount_applied_at',
+        'delivery_method',
+        'delivery_fee',
+        'delivery_unit',
+        'delivery_floor',
+        'delivery_room',
+        'delivery_city',
+        'delivery_district',
+        'delivery_street',
+        'delivery_map_url',
         'grand_total',
         'customer_notes',
         'admin_notes',
@@ -71,5 +80,10 @@ class Order extends Model
     public function baseTotal(): int
     {
         return (int) $this->print_total + (int) $this->binding_total;
+    }
+
+    public function subtotalAfterDiscount(): int
+    {
+        return max(0, $this->baseTotal() - (int) $this->discount_amount);
     }
 }

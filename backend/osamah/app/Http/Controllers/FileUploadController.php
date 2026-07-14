@@ -24,10 +24,17 @@ class FileUploadController extends Controller
             $type = $request->input('type', 'unknown');
             $service = $request->input('service', 'notes');
 
-            if (!in_array($service, ['notes', 'thesis', 'phd', 'formatting', 'research'], true)) {
+            if (!in_array($service, ['notes', 'books', 'thesis', 'phd', 'formatting', 'research'], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'نوع الخدمة غير معروف'
+                ], 400);
+            }
+
+            if (in_array($service, ['notes', 'books'], true) && $type !== 'pdf') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذه الخدمة تقبل ملفات PDF فقط'
                 ], 400);
             }
 
@@ -117,7 +124,7 @@ class FileUploadController extends Controller
                 'admin_notification_seen_at' => null,
             ])->save();
 
-            $orderFile = OrderFile::query()->create([
+            $filePayload = [
                 'order_id' => $order->id,
                 'file_type' => $type,
                 'original_name' => $file->getClientOriginalName(),
@@ -126,22 +133,33 @@ class FileUploadController extends Controller
                 'size' => $fileSize,
                 'pages' => $pageCount,
                 'copies' => 1,
+                'print_sides' => 'two_sides',
+                'paper_color' => 'white',
                 'thesis_project_type' => null,
                 'university_name' => null,
                 'cover_color' => null,
                 'writing_color' => null,
-                'binding_type' => null,
+                'binding_type' => $service === 'books' ? 'normal' : null,
                 'print_price' => 0,
                 'binding_price' => 0,
                 'total_price' => 0,
-            ]);
+            ];
+
+            if (in_array($service, ['notes', 'books'], true)) {
+                $filePayload['page_size'] = 'A4';
+            }
+
+            $orderFile = OrderFile::query()->create($filePayload);
 
             $prices = $this->calculatePrices(
                 $service,
                 $pageCount,
                 $orderFile->copies,
                 $orderFile->binding_type,
-                $orderFile->writing_color
+                $orderFile->writing_color,
+                $orderFile->file_type,
+                $orderFile->paper_color,
+                $orderFile->page_size
             );
 
             $orderFile->fill($prices)->save();
@@ -158,6 +176,9 @@ class FileUploadController extends Controller
                     'size' => $fileSize,
                     'pages' => $pageCount,
                     'copies' => $orderFile->copies,
+                    'print_sides' => $orderFile->print_sides,
+                    'page_size' => $orderFile->page_size,
+                    'paper_color' => $orderFile->paper_color,
                     'binding_type' => $orderFile->binding_type,
                     'university_name' => $orderFile->university_name,
                     'cover_color' => $orderFile->cover_color,
@@ -189,6 +210,9 @@ class FileUploadController extends Controller
         $data = $request->validate([
             'binding_type' => ['nullable', 'in:tape,wire,normal,none'],
             'copies' => ['nullable', 'integer', 'min:1', 'max:999'],
+            'print_sides' => ['nullable', 'in:one_side,two_sides'],
+            'page_size' => ['nullable', 'in:A4,A5,B5'],
+            'paper_color' => ['nullable', 'in:white,yellow'],
             'thesis_project_type' => ['nullable', 'in:thesis,supplementary,graduation'],
             'university_name' => ['nullable', 'string', 'max:255'],
             'cover_color' => ['nullable', 'in:black,light_blue,navy,dark_green,light_green,burgundy,beige,white'],
@@ -201,6 +225,18 @@ class FileUploadController extends Controller
 
         if (array_key_exists('copies', $data)) {
             $file->copies = $data['copies'];
+        }
+
+        if (array_key_exists('print_sides', $data)) {
+            $file->print_sides = $data['print_sides'] ?: 'two_sides';
+        }
+
+        if (array_key_exists('page_size', $data) && in_array($file->order->service_type, ['notes', 'books'], true)) {
+            $file->page_size = $data['page_size'] ?: 'A4';
+        }
+
+        if (array_key_exists('paper_color', $data) && in_array($file->order->service_type, ['notes', 'books'], true)) {
+            $file->paper_color = $data['paper_color'] ?: 'white';
         }
 
         if (array_key_exists('thesis_project_type', $data)) {
@@ -235,7 +271,10 @@ class FileUploadController extends Controller
             $file->pages,
             $file->copies,
             $file->binding_type,
-            $file->writing_color
+            $file->writing_color,
+            $file->file_type,
+            $file->paper_color,
+            $file->page_size
         );
 
         $file->fill($prices)->save();
@@ -248,6 +287,9 @@ class FileUploadController extends Controller
             'total_price' => $file->total_price,
             'thesis_project_type' => $file->thesis_project_type,
             'university_name' => $file->university_name,
+            'print_sides' => $file->print_sides,
+            'page_size' => $file->page_size,
+            'paper_color' => $file->paper_color,
             'cover_color' => $file->cover_color,
             'writing_color' => $file->writing_color,
             'order_totals' => $this->orderTotalsPayload($file->order->fresh()),
@@ -289,6 +331,7 @@ class FileUploadController extends Controller
             'size' => 0,
             'pages' => $pages,
             'copies' => 1,
+            'print_sides' => 'two_sides',
             'thesis_project_type' => null,
             'university_name' => null,
             'research_title' => $researchTitle,
@@ -394,8 +437,16 @@ class FileUploadController extends Controller
         }
     }
 
-    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null): array
+    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null): array
     {
+        if (in_array($service, ['thesis', 'phd'], true) && $fileType === 'word') {
+            return [
+                'print_price' => 0,
+                'binding_price' => 0,
+                'total_price' => 0,
+            ];
+        }
+
         if (in_array($service, ['formatting', 'research'], true)) {
             $servicePrice = $pages * 10;
 
@@ -406,8 +457,23 @@ class FileUploadController extends Controller
             ];
         }
 
-        if ($service === 'notes') {
-            $printPrice = $this->printPrice($pages, 1);
+        if (in_array($service, ['notes', 'books'], true)) {
+            if ($service === 'books') {
+                $printPrice = $paperColor === 'yellow'
+                    ? (int) ceil($pages / 10)
+                    : (int) ceil($pages / 15);
+                $bindingPrice = $pageSize === 'A4' ? 55 : 45;
+
+                return [
+                    'print_price' => $printPrice,
+                    'binding_price' => $bindingPrice,
+                    'total_price' => $printPrice + $bindingPrice,
+                ];
+            }
+
+            $printPrice = $paperColor === 'yellow'
+                ? (int) ceil($pages / 6)
+                : $this->printPrice($pages, 1);
             $bindingPrice = 0;
 
             if ($binding === 'normal') {
@@ -462,21 +528,44 @@ class FileUploadController extends Controller
         $order->load('files');
         $printTotal = 0;
         if (!in_array($order->service_type, ['formatting', 'research'], true)) {
-            $printUnits = $order->files->sum(
-                fn (OrderFile $file) => $file->pages * max(1, (int) $file->copies)
-            );
-            $printTotal = $this->printPrice((int) $printUnits, 1);
+            if (in_array($order->service_type, ['notes', 'books'], true)) {
+                $printTotal = (int) $order->files->sum('print_price');
+            } else {
+                $filesForPrint = $order->files->where('file_type', 'pdf');
+                $printUnits = $filesForPrint->sum(
+                    fn (OrderFile $file) => $file->pages * max(1, (int) $file->copies)
+                );
+                $printTotal = $this->printPrice((int) $printUnits, 1);
+            }
         }
-        $bindingTotal = (int) $order->files->sum('binding_price');
+        $filesForBinding = in_array($order->service_type, ['thesis', 'phd'], true)
+            ? $order->files->where('file_type', 'pdf')
+            : $order->files;
+        $bindingTotal = (int) $filesForBinding->sum('binding_price');
         $baseTotal = $printTotal + $bindingTotal;
         $discountAmount = min((int) $order->discount_amount, $baseTotal);
+        $subtotal = max(0, $baseTotal - $discountAmount);
+        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true)
+            ? $this->deliveryFee($order->delivery_method, $subtotal)
+            : 0;
 
         $order->update([
             'print_total' => $printTotal,
             'binding_total' => $bindingTotal,
             'discount_amount' => $discountAmount,
-            'grand_total' => max(0, $baseTotal - $discountAmount),
+            'delivery_fee' => $deliveryFee,
+            'grand_total' => $subtotal + $deliveryFee,
         ]);
+    }
+
+    private function deliveryFee(?string $method, int $subtotal): int
+    {
+        return match ($method) {
+            'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,
+            'madinah_delivery' => 20,
+            'redbox_delivery' => 30,
+            default => 0,
+        };
     }
 
     private function orderTotalsPayload(Order $order): array
@@ -484,6 +573,7 @@ class FileUploadController extends Controller
         return [
             'print_total' => $order->print_total,
             'binding_total' => $order->binding_total,
+            'delivery_fee' => $order->delivery_fee,
             'grand_total' => $order->grand_total,
         ];
     }

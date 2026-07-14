@@ -6,6 +6,7 @@
     @php
         $serviceNames = [
             'notes' => 'مذكرات',
+            'books' => 'كتب',
             'thesis' => 'ماجستير',
             'phd' => 'دكتوراه',
             'formatting' => 'تنسيق الرسائل الجامعية',

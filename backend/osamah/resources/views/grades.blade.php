@@ -70,7 +70,58 @@
             .files-list-item.has-thesis-project { min-width: 1320px; grid-template-columns: 2fr 0.7fr 0.7fr 0.65fr 1.15fr 1.45fr 0.85fr 0.85fr 0.85fr 0.7fr 0.45fr; }
             .files-list-header.has-formatting-price,
             .files-list-item.has-formatting-price { min-width: 820px; grid-template-columns: 2fr 0.8fr 0.8fr 1fr 1fr 0.7fr 0.45fr; }
-            .files-list-item:last-child { border-bottom: none; }
+            .files-list { border: 0; background: transparent; overflow: visible; }
+            .files-list-header { display: none; }
+            .files-list-item,
+            .files-list-item.has-price,
+            .files-list-item.has-copies-price,
+            .files-list-item.has-academic-university,
+            .files-list-item.has-formatting-price,
+            .files-list-item.has-thesis-project {
+                width: 100%;
+                min-width: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                padding: 14px;
+                margin-bottom: 12px;
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                background: #ffffff;
+                box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+            }
+            .files-list-item > div {
+                width: 100%;
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-between;
+                gap: 12px;
+                padding: 8px 0;
+                border-bottom: 1px solid #f1f5f9;
+                line-height: 1.6;
+            }
+            .files-list-item > div:last-child { border-bottom: 0; }
+            .files-list-item > div::before {
+                content: attr(data-label);
+                flex: 0 0 auto;
+                color: #64748b;
+                font-size: 12px;
+                font-weight: 900;
+                white-space: nowrap;
+            }
+            .files-list-item > div:empty { display: none; }
+            .file-name-cell {
+                display: block !important;
+                padding: 0 0 10px !important;
+                border-bottom: 1px solid #e2e8f0 !important;
+                font-size: 14px;
+                text-align: right;
+            }
+            .file-name-cell::before {
+                display: block;
+                margin-bottom: 6px;
+            }
+            .files-list-item:last-child { margin-bottom: 0; }
             .file-name-cell { color: #111827; font-weight: 800; word-break: normal; overflow-wrap: anywhere; line-height: 1.6; }
             .file-pages { color: #475569; }
             .file-size { color: #6b7280; }
@@ -89,7 +140,10 @@
             .university-result { width: 100%; margin: 0; padding: 8px 10px; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; background: #ffffff; color: #111827; text-align: right; font-size: 12px; font-weight: 800; cursor: pointer; }
             .university-result:hover { background: #f8fafc; }
             .university-result:last-child { border-bottom: 0; }
-            .copies-input { width: 72px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-weight: 700; text-align: center; }
+            .copies-stepper { display: inline-grid; grid-template-columns: 38px 64px 38px; gap: 6px; align-items: center; }
+            .copies-stepper-button { width: 38px; height: 38px; margin: 0; padding: 0; border: 0; border-radius: 8px; background: #0f172a; color: #ffffff; font-size: 20px; font-weight: 900; line-height: 1; cursor: pointer; }
+            .copies-stepper-button:hover { background: #1e293b; }
+            .copies-input { width: 64px; height: 38px; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #111827; font-weight: 800; text-align: center; }
             .file-remove { cursor: pointer; color: #ef4444; font-weight: 600; text-align: center; }
             .file-remove:hover { color: #b91c1c; }
             .empty-message { padding: 20px; text-align: center; color: #9ca3af; font-size: 14px; }
@@ -108,6 +162,7 @@
             .pricing-summary { margin-top: 16px; padding: 14px 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; color: #111827; font-weight: 700; line-height: 1.7; }
             .pricing-summary.empty { color: #6b7280; font-weight: 600; }
             .delivery-notice { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; font-size: 13px; font-weight: 800; line-height: 1.7; }
+            .word-usage-notice { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; font-size: 13px; font-weight: 800; line-height: 1.7; }
             .research-form-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(130px, 0.6fr); gap: 14px; align-items: end; }
             .research-field { display: flex; flex-direction: column; gap: 8px; }
             .research-field label { color: #111827; font-size: 13px; font-weight: 900; }
@@ -119,6 +174,24 @@
             .checkout-button { display: inline-flex; align-items: center; justify-content: center; padding: 12px 18px; background: #047857; color: #ffffff; border-radius: 8px; text-decoration: none; font-weight: 800; border: 0; cursor: pointer; }
             .checkout-button:hover { background: #065f46; }
             .checkout-button.disabled { background: #cbd5e1; color: #64748b; pointer-events: none; }
+            .delivery-box { margin: 14px 0; padding: 14px; border: 1px solid #dbe4ef; border-radius: 12px; background: #f8fafc; text-align: right; }
+            .delivery-title { margin: 0 0 10px; color: #0f172a; font-weight: 900; }
+            .delivery-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 12px; }
+            .delivery-option { display: flex; align-items: flex-start; gap: 8px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; cursor: pointer; color: #1f2937; font-weight: 800; line-height: 1.5; }
+            .delivery-option small { display: block; color: #64748b; font-weight: 700; margin-top: 3px; }
+            .delivery-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 10px 0; }
+            .delivery-fields.address-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .delivery-input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #111827; font-weight: 700; }
+            .delivery-note { margin: 8px 0 10px; padding: 10px 12px; border-radius: 10px; background: #ecfdf5; color: #047857; font-weight: 900; line-height: 1.6; }
+            .delivery-save { padding: 10px 14px; border: 0; border-radius: 8px; background: #0f172a; color: #ffffff; font-weight: 900; cursor: pointer; }
+            .delivery-save:disabled { background: #94a3b8; cursor: not-allowed; }
+            .delivery-status { margin-top: 8px; color: #047857; font-weight: 800; line-height: 1.6; }
+            .delivery-status.error { color: #b91c1c; }
+            @media (max-width: 700px) {
+                .delivery-options,
+                .delivery-fields,
+                .delivery-fields.address-fields { grid-template-columns: 1fr; }
+            }
             .cart-modal-backdrop { position: fixed; inset: 0; display: none; align-items: flex-start; justify-content: center; padding: clamp(10px, 3vw, 24px) clamp(8px, 3vw, 20px); background: rgba(15, 23, 42, 0.62); z-index: 100; overflow-y: auto; }
             .cart-modal-backdrop.active { display: flex; }
             .cart-modal { width: min(1180px, 100%); height: min(760px, calc(100vh - 20px)); margin: auto 0; background: #ffffff; border-radius: 14px; box-shadow: 0 24px 80px rgba(15, 23, 42, 0.32); overflow: hidden; border: 1px solid rgba(226, 232, 240, 0.9); display: flex; flex-direction: column; }
@@ -191,6 +264,7 @@
                 }
                 .binding-select,
                 .copies-input,
+                .copies-stepper,
                 .university-input,
                 .university-custom-input,
                 .university-picker-button {
@@ -250,9 +324,16 @@
 
                 <article class="service-card">
                     <div class="service-icon">📝</div>
-                    <h3 class="service-title">طباعة وتغليف المذكرات</h3>
-                    <p class="service-description">رفع ملفات Word أو PDF، اختيار نوع التغليف، ومراجعة السعر قبل إتمام الطلب.</p>
+                    <h3 class="service-title">طباعة المذكرات وملفات ال بي دي اف</h3>
+                    <p class="service-description">طباعة جميع المذكرات بجميع أحجامها وتغليفها.</p>
                     <button class="service-entry" type="button" onclick="selectService('notes')">الدخول للخدمة</button>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon">📘</div>
+                    <h3 class="service-title">طباعة وتجليد كتب كعب جلد طبيعي</h3>
+                    <p class="service-description">طباعة ملفات PDF والكتب بجميع أحجامها والتغليف وتجليد كعب جلد طبيعي.</p>
+                    <button class="service-entry" type="button" onclick="selectService('books')">الدخول للخدمة</button>
                 </article>
 
                 <article class="service-card">
@@ -290,17 +371,6 @@
                 <h2>تحميل ملفات مذكرات</h2>
                 
                 <div class="upload-section">
-                    <div class="upload-box" id="notesWordBox">
-                        <div class="file-icon">📄</div>
-                        <h3>تحميل ملفات Word</h3>
-                        <input type="file" id="notesWordFile" accept=".doc,.docx" multiple />
-                        <p class="file-info">صيغ مدعومة: .doc, .docx</p>
-                        <p class="file-info">حجم الملف: بدون حد أقصى</p>
-                        <button class="upload-button" id="notesWordUploadBtn" onclick="document.getElementById('notesWordFile').click()">اختر ملفات</button>
-                        <div class="progress-bar" id="notesWordProgress"><div class="progress-bar-fill"></div></div>
-                        <div id="notesWordError" class="error-msg" style="display: none;"></div>
-                    </div>
-
                     <div class="upload-box" id="notesPdfBox">
                         <div class="file-icon">📕</div>
                         <h3>تحميل ملفات PDF</h3>
@@ -310,24 +380,6 @@
                         <button class="upload-button" id="notesPdfUploadBtn" onclick="document.getElementById('notesPdfFile').click()">اختر ملفات</button>
                         <div class="progress-bar" id="notesPdfProgress"><div class="progress-bar-fill"></div></div>
                         <div id="notesPdfError" class="error-msg" style="display: none;"></div>
-                    </div>
-                </div>
-
-                <div style="margin-top: 40px;">
-                    <h3 style="margin-bottom: 16px; color: #111827;">📄 ملفات Word المحملة</h3>
-                    <div class="files-list">
-                        <div class="files-list-header has-price">
-                            <div>اسم الملف</div>
-                            <div>الصفحات</div>
-                            <div>الحجم</div>
-                            <div>نوع التغليف</div>
-                            <div>سعر الطباعة</div>
-                            <div>سعر التجليد</div>
-                            <div>الإجمالي</div>
-                            <div>الحالة</div>
-                            <div></div>
-                        </div>
-                        <div id="notesWordFilesList" class="empty-message">لم يتم تحميل أي ملفات</div>
                     </div>
                 </div>
 
@@ -356,6 +408,48 @@
                 </div>
             </div>
 
+            <!-- Upload Section for Books -->
+            <div id="uploadBooks" class="upload-content">
+                <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
+                <h2>تحميل ملفات الكتب</h2>
+
+                <div class="upload-section">
+                    <div class="upload-box" id="booksPdfBox">
+                        <div class="file-icon">📕</div>
+                        <h3>تحميل ملفات PDF</h3>
+                        <input type="file" id="booksPdfFile" accept=".pdf" multiple />
+                        <p class="file-info">صيغ مدعومة: .pdf</p>
+                        <p class="file-info">حجم الملف: بدون حد أقصى</p>
+                        <button class="upload-button" id="booksPdfUploadBtn" onclick="document.getElementById('booksPdfFile').click()">اختر ملفات</button>
+                        <div class="progress-bar" id="booksPdfProgress"><div class="progress-bar-fill"></div></div>
+                        <div id="booksPdfError" class="error-msg" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; margin-bottom: 40px;">
+                    <h3 style="margin-bottom: 16px; color: #111827;">📕 ملفات PDF المحملة</h3>
+                    <div class="files-list">
+                        <div class="files-list-header has-price">
+                            <div>اسم الملف</div>
+                            <div>الصفحات</div>
+                            <div>الحجم</div>
+                            <div>نوع التغليف</div>
+                            <div>سعر الطباعة</div>
+                            <div>سعر التجليد</div>
+                            <div>الإجمالي</div>
+                            <div>الحالة</div>
+                            <div></div>
+                        </div>
+                        <div id="booksPdfFilesList" class="empty-message">لم يتم تحميل أي ملفات</div>
+                    </div>
+                </div>
+
+                <div class="binding-section">
+                    <h3>إجمالي الكتب</h3>
+                    <div id="booksPricingSummary" class="pricing-summary empty">اختر نوع التغليف لكل ملف لعرض السعر.</div>
+                </div>
+            </div>
+
             <!-- Upload Section for Thesis -->
             <div id="uploadThesis" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
@@ -368,6 +462,7 @@
                         <input type="file" id="thesisWordFile" accept=".doc,.docx" multiple />
                         <p class="file-info">صيغ مدعومة: .doc, .docx</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
+                        <p class="word-usage-notice">ملف Word للعرض أو لاستخدامه في عمل الكعب والكليشة فقط، وليس للطباعه.</p>
                         <button class="upload-button" id="thesisWordUploadBtn" onclick="document.getElementById('thesisWordFile').click()">اختر ملفات</button>
                         <div class="progress-bar" id="thesisWordProgress"><div class="progress-bar-fill"></div></div>
                         <div id="thesisWordError" class="error-msg" style="display: none;"></div>
@@ -378,6 +473,7 @@
                         <h3>تحميل ملفات PDF</h3>
                         <input type="file" id="thesisPdfFile" accept=".pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
+                        <p class="binding-required">ملف PDF إجباري لإتمام الطلب.</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
                         <button class="upload-button" id="thesisPdfUploadBtn" onclick="document.getElementById('thesisPdfFile').click()">اختر ملفات</button>
                         <div class="progress-bar" id="thesisPdfProgress"><div class="progress-bar-fill"></div></div>
@@ -442,6 +538,7 @@
                         <input type="file" id="phdWordFile" accept=".doc,.docx" multiple />
                         <p class="file-info">صيغ مدعومة: .doc, .docx</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
+                        <p class="word-usage-notice">ملف Word للعرض أو لاستخدامه في عمل الكعب والكليشة فقط، وليس للطباعه.</p>
                         <button class="upload-button" id="phdWordUploadBtn" onclick="document.getElementById('phdWordFile').click()">اختر ملفات</button>
                         <div class="progress-bar" id="phdWordProgress"><div class="progress-bar-fill"></div></div>
                         <div id="phdWordError" class="error-msg" style="display: none;"></div>
@@ -452,6 +549,7 @@
                         <h3>تحميل ملفات PDF</h3>
                         <input type="file" id="phdPdfFile" accept=".pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
+                        <p class="binding-required">ملف PDF إجباري لإتمام الطلب.</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
                         <button class="upload-button" id="phdPdfUploadBtn" onclick="document.getElementById('phdPdfFile').click()">اختر ملفات</button>
                         <div class="progress-bar" id="phdPdfProgress"><div class="progress-bar-fill"></div></div>
@@ -577,6 +675,7 @@
             // Store uploaded files for each service
             const uploadedFiles = {
                 notes: { word: [], pdf: [] },
+                books: { word: [], pdf: [] },
                 thesis: { word: [], pdf: [] },
                 phd: { word: [], pdf: [] },
                 formatting: { word: [], pdf: [] },
@@ -584,10 +683,18 @@
             };
             const currentOrders = {
                 notes: null,
+                books: null,
                 thesis: null,
                 phd: null,
                 formatting: null,
                 research: null
+            };
+            const deliveryServices = ['notes', 'books', 'thesis', 'phd'];
+            const deliverySelections = {
+                notes: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
+                books: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
+                thesis: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
+                phd: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' }
             };
             const savedResearchRequest = {
                 title: '',
@@ -737,8 +844,8 @@
             }
 
             const fileConfigs = {
-                notesWord: { inputId: 'notesWordFile', boxId: 'notesWordBox', progressId: 'notesWordProgress', errorId: 'notesWordError', listId: 'notesWordFilesList', service: 'notes', type: 'word' },
                 notesPdf: { inputId: 'notesPdfFile', boxId: 'notesPdfBox', progressId: 'notesPdfProgress', errorId: 'notesPdfError', listId: 'notesPdfFilesList', service: 'notes', type: 'pdf' },
+                booksPdf: { inputId: 'booksPdfFile', boxId: 'booksPdfBox', progressId: 'booksPdfProgress', errorId: 'booksPdfError', listId: 'booksPdfFilesList', service: 'books', type: 'pdf' },
                 thesisWord: { inputId: 'thesisWordFile', boxId: 'thesisWordBox', progressId: 'thesisWordProgress', errorId: 'thesisWordError', listId: 'thesisWordFilesList', service: 'thesis', type: 'word' },
                 thesisPdf: { inputId: 'thesisPdfFile', boxId: 'thesisPdfBox', progressId: 'thesisPdfProgress', errorId: 'thesisPdfError', listId: 'thesisPdfFilesList', service: 'thesis', type: 'pdf' },
                 phdWord: { inputId: 'phdWordFile', boxId: 'phdWordBox', progressId: 'phdWordProgress', errorId: 'phdWordError', listId: 'phdWordFilesList', service: 'phd', type: 'word' },
@@ -761,6 +868,7 @@
             function backToServices() {
                 document.getElementById('servicesScreen').style.display = 'flex';
                 document.getElementById('uploadNotes').classList.remove('active');
+                document.getElementById('uploadBooks').classList.remove('active');
                 document.getElementById('uploadThesis').classList.remove('active');
                 document.getElementById('uploadPhd').classList.remove('active');
                 document.getElementById('uploadFormatting').classList.remove('active');
@@ -836,8 +944,20 @@
                 });
             }
 
-            function calculateNotesFilePrice(pages, binding) {
-                const printPrice = Math.ceil(pages / 15);
+            function calculateNotesFilePrice(pages, binding, paperColor = 'white', service = 'notes', pageSize = 'A4') {
+                if (service === 'books') {
+                    const printPrice = paperColor === 'yellow' ? Math.ceil(pages / 10) : Math.ceil(pages / 15);
+                    const bindingPrice = pageSize === 'A4' ? 55 : 45;
+
+                    return {
+                        printPrice,
+                        bindingPrice,
+                        total: printPrice + bindingPrice,
+                        note: ''
+                    };
+                }
+
+                const printPrice = paperColor === 'yellow' ? Math.ceil(pages / 6) : Math.ceil(pages / 15);
                 let bindingPrice = 0;
                 let note = '';
 
@@ -915,10 +1035,11 @@
             }
 
             function getAllNotesFiles() {
-                return [
-                    ...uploadedFiles.notes.word,
-                    ...uploadedFiles.notes.pdf
-                ];
+                return uploadedFiles.notes.pdf;
+            }
+
+            function getAllBookFiles() {
+                return uploadedFiles.books.pdf;
             }
 
             function getAllServiceFiles(service) {
@@ -926,6 +1047,10 @@
                     ...uploadedFiles[service].word,
                     ...uploadedFiles[service].pdf
                 ];
+            }
+
+            function getAcademicPrintableFiles(service) {
+                return uploadedFiles[service].pdf;
             }
 
             function renderCheckoutSummary(summary, service, message, totals = null, canCheckout = false) {
@@ -946,13 +1071,22 @@
                     formatting: 'سعر التنسيق',
                     research: 'سعر إنشاء البحث'
                 };
-                const bindingLabel = service === 'notes'
-                    ? 'سعر التغليف'
-                    : (noPrintServiceLabels[service] || 'سعر التجليد');
+                const productBindingLabel = service === 'books'
+                    ? 'سعر التجليد'
+                    : (service === 'notes' ? 'سعر التغليف' : (noPrintServiceLabels[service] || 'سعر التجليد'));
 
                 const totalsText = noPrintServiceLabels[service]
                     ? `${noPrintServiceLabels[service]}: ${totals.binding} ريال | الإجمالي: ${totals.total} ريال`
-                    : `سعر الطباعة: ${totals.print} ريال | ${bindingLabel}: ${totals.binding} ريال | الإجمالي: ${totals.total} ريال`;
+                    : `سعر الطباعة: ${totals.print} ريال | ${productBindingLabel}: ${totals.binding} ريال | الإجمالي: ${totals.total} ريال`;
+                const deliveryHtml = deliveryServices.includes(service)
+                    ? renderDeliveryBox(service, totals.total)
+                    : '';
+                const delivery = deliverySelections[service];
+                const deliveryFee = deliveryServices.includes(service) && delivery?.saved ? estimateDeliveryFee(delivery.method, totals.total) : 0;
+                const grandTotalText = deliveryServices.includes(service) && delivery?.saved
+                    ? `<div>رسوم التوصيل: ${deliveryFee} ريال | الإجمالي بعد التوصيل: ${totals.total + deliveryFee} ريال</div>`
+                    : '';
+                const canProceed = !deliveryServices.includes(service) || delivery?.saved;
                 const deliveryNoticeMessages = {
                     formatting: 'سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي فور الانتهاء من التنسيق إن شاء الله.',
                     research: 'سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي خلال ٢٤ ساعة إلى ٤٨ ساعة إن شاء الله.'
@@ -963,48 +1097,213 @@
 
                 summary.innerHTML = `
                     <div>${totalsText}</div>
+                    ${deliveryHtml}
+                    ${grandTotalText}
                     ${deliveryNotice}
                     <div class="checkout-row">
-                        <a class="checkout-button" href="{{ route('orders.index') }}">إتمام الطلب</a>
+                        ${canProceed
+                            ? '<a class="checkout-button" href="/my-orders">إتمام الطلب</a>'
+                            : '<span class="checkout-button disabled">احفظ طريقة الاستلام أو التوصيل</span>'}
                     </div>
                 `;
             }
 
-            function updateNotesPricingSummary() {
-                const summary = document.getElementById('notesPricingSummary');
-                if (!summary) return;
+            function renderDeliveryBox(service, subtotal) {
+                const delivery = deliverySelections[service] || {};
+                const method = delivery.method || '';
+                const campusFee = subtotal >= 35 ? 0 : 5;
+                const status = delivery.saved
+                    ? `تم حفظ طريقة التوصيل. الرسوم: ${delivery.fee} ريال.`
+                    : 'اختر طريقة الاستلام أو التوصيل ثم اضغط حفظ.';
 
-                const files = getAllNotesFiles();
+                return `
+                    <div class="delivery-box">
+                        <div class="delivery-title">الاستلام والتوصيل</div>
+                        <div class="delivery-options">
+                            <label class="delivery-option">
+                                <input type="radio" name="${service}Delivery" value="branch_pickup" ${method === 'branch_pickup' ? 'checked' : ''} onchange="setDeliveryMethod('${service}', this.value)">
+                                <span>استلام من الفرع <small>مجانًا</small></span>
+                            </label>
+                            <label class="delivery-option">
+                                <input type="radio" name="${service}Delivery" value="islamic_university_delivery" ${method === 'islamic_university_delivery' ? 'checked' : ''} onchange="setDeliveryMethod('${service}', this.value)">
+                                <span>توصيل داخل الجامعة الإسلامية <small>${campusFee === 0 ? 'مجانًا للطلبات 35 ريال فأكثر' : '5 ريال'}</small></span>
+                            </label>
+                            <label class="delivery-option">
+                                <input type="radio" name="${service}Delivery" value="madinah_delivery" ${method === 'madinah_delivery' ? 'checked' : ''} onchange="setDeliveryMethod('${service}', this.value)">
+                                <span>توصيل داخل المدينة المنورة <small>20 ريال</small></span>
+                            </label>
+                            <label class="delivery-option">
+                                <input type="radio" name="${service}Delivery" value="redbox_delivery" ${method === 'redbox_delivery' ? 'checked' : ''} onchange="setDeliveryMethod('${service}', this.value)">
+                                <span>خارج المدينة المنورة عبر RedBox <small>30 ريال إلى أقرب نقطة شحن</small></span>
+                            </label>
+                        </div>
+                        <div class="delivery-fields" style="${method === 'islamic_university_delivery' ? '' : 'display:none;'}">
+                            <input class="delivery-input" id="${service}DeliveryUnit" value="${escapeHtml(delivery.unit || '')}" placeholder="رقم الوحدة" oninput="setDeliveryField('${service}', 'unit', this.value)">
+                            <input class="delivery-input" id="${service}DeliveryFloor" value="${escapeHtml(delivery.floor || '')}" placeholder="رقم الدور" oninput="setDeliveryField('${service}', 'floor', this.value)">
+                            <input class="delivery-input" id="${service}DeliveryRoom" value="${escapeHtml(delivery.room || '')}" placeholder="رقم الغرفة" oninput="setDeliveryField('${service}', 'room', this.value)">
+                        </div>
+                        <div class="delivery-note" style="${method === 'islamic_university_delivery' ? '' : 'display:none;'}">تنبيه: إذا طلبك فوق 35 ريال يكون التوصيل داخل الجامعة الإسلامية مجانًا.</div>
+                        <div class="delivery-fields address-fields" style="${['madinah_delivery', 'redbox_delivery'].includes(method) ? '' : 'display:none;'}">
+                            <input class="delivery-input" value="${escapeHtml(delivery.city || '')}" placeholder="اسم المدينة" ${method === 'madinah_delivery' ? 'readonly' : ''} oninput="setDeliveryField('${service}', 'city', this.value)">
+                            <input class="delivery-input" value="${escapeHtml(delivery.district || '')}" placeholder="اسم الحي" oninput="setDeliveryField('${service}', 'district', this.value)">
+                            <input class="delivery-input" value="${escapeHtml(delivery.street || '')}" placeholder="اسم الشارع" oninput="setDeliveryField('${service}', 'street', this.value)">
+                            <input class="delivery-input" value="${escapeHtml(delivery.mapUrl || '')}" placeholder="انسخ رابط موقعك من Google Maps" oninput="setDeliveryField('${service}', 'mapUrl', this.value)">
+                        </div>
+                        <button class="delivery-save" type="button" onclick="saveDelivery('${service}')">حفظ طريقة التوصيل</button>
+                        <div id="${service}DeliveryStatus" class="delivery-status">${status}</div>
+                    </div>
+                `;
+            }
 
-                if (files.length === 0) {
-                    renderCheckoutSummary(summary, 'notes', 'ارفع الملفات لعرض الإجمالي.');
+            function estimateDeliveryFee(method, subtotal) {
+                if (method === 'islamic_university_delivery') {
+                    return subtotal >= 35 ? 0 : 5;
+                }
+                if (method === 'madinah_delivery') {
+                    return 20;
+                }
+                if (method === 'redbox_delivery') {
+                    return 30;
+                }
+
+                return 0;
+            }
+
+            function setDeliveryMethod(service, method) {
+                deliverySelections[service].method = method;
+                if (method === 'madinah_delivery') {
+                    deliverySelections[service].city = 'المدينة المنورة';
+                }
+                deliverySelections[service].saved = false;
+                updatePrintProductPricingSummary(service);
+                if (service === 'thesis' || service === 'phd') {
+                    updateAcademicPricingSummary(service);
+                }
+            }
+
+            function setDeliveryField(service, field, value) {
+                deliverySelections[service][field] = value.trim();
+                deliverySelections[service].saved = false;
+            }
+
+            async function saveDelivery(service) {
+                const orderId = currentOrders[service];
+                const delivery = deliverySelections[service];
+                const status = document.getElementById(`${service}DeliveryStatus`);
+
+                if (!orderId) return;
+                if (!delivery.method) {
+                    if (status) {
+                        status.textContent = 'اختر طريقة الاستلام أو التوصيل أولًا.';
+                        status.classList.add('error');
+                    }
+                    return;
+                }
+                if (delivery.method === 'islamic_university_delivery' && (!delivery.unit || !delivery.floor || !delivery.room)) {
+                    if (status) {
+                        status.textContent = 'اكتب رقم الوحدة ورقم الدور ورقم الغرفة.';
+                        status.classList.add('error');
+                    }
+                    return;
+                }
+                if (delivery.method === 'madinah_delivery' && (!delivery.district || !delivery.street || !delivery.mapUrl)) {
+                    if (status) {
+                        status.textContent = 'اكتب اسم الحي والشارع وأضف رابط موقعك من Google Maps.';
+                        status.classList.add('error');
+                    }
+                    return;
+                }
+                if (delivery.method === 'redbox_delivery' && (!delivery.city || !delivery.district || !delivery.street || !delivery.mapUrl)) {
+                    if (status) {
+                        status.textContent = 'اكتب اسم المدينة والحي والشارع وأضف رابط موقعك من Google Maps.';
+                        status.classList.add('error');
+                    }
                     return;
                 }
 
-                if (files.some(fileData => !fileData.binding)) {
-                    renderCheckoutSummary(summary, 'notes', 'اختر نوع التغليف لكل ملف قبل إتمام الطلب.');
+                try {
+                    const response = await fetch(`/cart/${orderId}/delivery`, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            delivery_method: delivery.method,
+                            delivery_unit: delivery.unit,
+                            delivery_floor: delivery.floor,
+                            delivery_room: delivery.room,
+                            delivery_city: delivery.city,
+                            delivery_district: delivery.district,
+                            delivery_street: delivery.street,
+                            delivery_map_url: delivery.mapUrl
+                        })
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'تعذر حفظ طريقة التوصيل');
+                    }
+
+                    delivery.fee = Number(result.delivery_fee || 0);
+                    delivery.saved = true;
+                    if (service === 'notes' || service === 'books') {
+                        updatePrintProductPricingSummary(service);
+                    } else {
+                        updateAcademicPricingSummary(service);
+                    }
+                } catch (error) {
+                    if (status) {
+                        status.textContent = error.message || 'تعذر حفظ طريقة التوصيل';
+                        status.classList.add('error');
+                    }
+                }
+            }
+
+            function updateNotesPricingSummary() {
+                updatePrintProductPricingSummary('notes');
+            }
+
+            function updateBooksPricingSummary() {
+                updatePrintProductPricingSummary('books');
+            }
+
+            function updatePrintProductPricingSummary(service) {
+                const summary = document.getElementById(`${service}PricingSummary`);
+                if (!summary) return;
+
+                const files = service === 'books' ? getAllBookFiles() : getAllNotesFiles();
+
+                if (files.length === 0) {
+                    renderCheckoutSummary(summary, service, 'ارفع الملفات لعرض الإجمالي.');
+                    return;
+                }
+
+                if (service !== 'books' && files.some(fileData => !fileData.binding)) {
+                    renderCheckoutSummary(summary, service, 'اختر نوع التغليف لكل ملف قبل إتمام الطلب.');
                     return;
                 }
 
                 const totals = files.reduce((sum, fileData) => {
-                    const price = calculateNotesFilePrice(fileData.pages, fileData.binding);
+                    const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize);
                     sum.print += price.printPrice;
                     sum.binding += price.bindingPrice;
                     sum.total += price.total;
                     return sum;
                 }, { print: 0, binding: 0, total: 0 });
 
-                renderCheckoutSummary(summary, 'notes', '', totals, true);
+                renderCheckoutSummary(summary, service, '', totals, true);
             }
 
             function updateAcademicPricingSummary(service) {
                 const summary = document.getElementById(`${service}PricingSummary`);
                 if (!summary) return;
 
-                const files = getAllServiceFiles(service);
+                const files = getAcademicPrintableFiles(service);
 
                 if (files.length === 0) {
-                    renderCheckoutSummary(summary, service, 'ارفع الملفات لعرض الإجمالي.');
+                    renderCheckoutSummary(summary, service, 'ارفع ملف PDF لإتمام الطلب وعرض الإجمالي.');
                     return;
                 }
 
@@ -1220,15 +1519,17 @@
                 const config = fileConfigs[configKey];
                 const listDiv = document.getElementById(config.listId);
                 const files = uploadedFiles[config.service][config.type];
-                const showPrice = config.service === 'notes';
-                const showAcademicPrice = config.service === 'thesis' || config.service === 'phd';
+                const showPrice = config.service === 'notes' || config.service === 'books';
+                const showAcademicPrice = (config.service === 'thesis' || config.service === 'phd') && config.type === 'pdf';
                 const showFormattingPrice = config.service === 'formatting';
                 const showThesisProject = config.service === 'thesis' && config.type === 'pdf';
+                const showPrintSides = (['notes', 'books'].includes(config.service) && config.type === 'pdf') || showAcademicPrice;
+                const showPageSize = ['notes', 'books'].includes(config.service) && config.type === 'pdf';
 
                 if (files.length === 0) {
                     listDiv.innerHTML = '<div class="empty-message">لم يتم تحميل أي ملفات</div>';
                     if (showPrice) {
-                        updateNotesPricingSummary();
+                        updatePrintProductPricingSummary(config.service);
                     } else if (showAcademicPrice) {
                         updateAcademicPricingSummary(config.service);
                     } else if (showFormattingPrice) {
@@ -1239,17 +1540,19 @@
 
                 let html = '';
                 files.forEach((fileData, index) => {
-                    const price = showPrice && fileData.binding ? calculateNotesFilePrice(fileData.pages, fileData.binding) : null;
+                    const price = showPrice && (fileData.binding || config.service === 'books') ? calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, config.service, fileData.pageSize) : null;
                     const bindingHtml = showPrice
                         ? `
-                            <div data-label="التغليف">
-                                <select class="binding-select" required onchange="setNotesFileBinding('${config.type}', ${index}, this.value)">
+                            <div data-label="${config.service === 'books' ? 'التجليد' : 'التغليف'}">
+                                ${config.service === 'books'
+                                    ? '<span class="file-price">تجليد كعب جلد طبيعي</span>'
+                                    : `<select class="binding-select" required onchange="setPrintProductFileBinding('${config.service}', '${config.type}', ${index}, this.value)">
                                     <option value="" ${!fileData.binding ? 'selected' : ''} disabled>اختر التغليف</option>
                                     <option value="tape" ${fileData.binding === 'tape' ? 'selected' : ''}>تغليف دبوس</option>
                                     <option value="wire" ${fileData.binding === 'wire' ? 'selected' : ''}>تغليف سلك</option>
                                     <option value="normal" ${fileData.binding === 'normal' ? 'selected' : ''}>تغليف عادي</option>
                                     <option value="none" ${fileData.binding === 'none' ? 'selected' : ''}>بدون أي تغليف</option>
-                                </select>
+                                </select>`}
                             </div>
                         `
                         : '';
@@ -1257,16 +1560,54 @@
                         ? `<div class="file-price" data-label="سعر الطباعة">${price ? `${price.printPrice} ريال` : '-'}</div>`
                         : '';
                     const notesBindingPriceHtml = showPrice
-                        ? `<div class="file-price" data-label="سعر التغليف">${price ? `${price.bindingPrice} ريال` : '-'}</div>`
+                        ? `<div class="file-price" data-label="${config.service === 'books' ? 'سعر التجليد' : 'سعر التغليف'}">${price ? `${price.bindingPrice} ريال` : '-'}</div>`
                         : '';
                     const notesTotalPriceHtml = showPrice
                         ? `<div class="file-price" data-label="الإجمالي">${price ? `${price.total} ريال` : 'اختر التغليف'}${price?.note ? `<span class="file-price-note">${price.note}</span>` : ''}</div>`
                         : '';
+                    const paperColorHtml = config.service === 'notes' || config.service === 'books'
+                        ? `
+                            <div data-label="لون الورق">
+                                <select class="binding-select" onchange="setPrintProductPaperColor('${config.service}', '${config.type}', ${index}, this.value)">
+                                    <option value="white" ${(fileData.paperColor || 'white') === 'white' ? 'selected' : ''}>أبيض</option>
+                                    <option value="yellow" ${fileData.paperColor === 'yellow' ? 'selected' : ''}>أصفر</option>
+                                </select>
+                            </div>
+                        `
+                        : '';
+                    const printSidesHtml = showPrintSides
+                        ? `
+                            <div data-label="نوع الطباعة">
+                                <select class="binding-select" onchange="setFilePrintSides('${config.service}', '${config.type}', ${index}, this.value)">
+                                    <option value="two_sides" ${(fileData.printSides || 'two_sides') === 'two_sides' ? 'selected' : ''}>وجهين</option>
+                                    <option value="one_side" ${fileData.printSides === 'one_side' ? 'selected' : ''}>وجه واحد</option>
+                                </select>
+                            </div>
+                        `
+                        : '';
+                    const pageSizeHtml = showPageSize
+                        ? `
+                            <div data-label="حجم الصفحة">
+                                <select class="binding-select" onchange="setFilePageSize('${config.service}', '${config.type}', ${index}, this.value)">
+                                    <option value="A4" ${(fileData.pageSize || 'A4') === 'A4' ? 'selected' : ''}>A4</option>
+                                    <option value="A5" ${fileData.pageSize === 'A5' ? 'selected' : ''}>A5</option>
+                                    <option value="B5" ${fileData.pageSize === 'B5' ? 'selected' : ''}>B5</option>
+                                </select>
+                            </div>
+                        `
+                        : '';
                     const hasAcademicColors = showAcademicPrice && fileData.coverColor && fileData.writingColor && canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor);
                     const academicPrice = showAcademicPrice ? calculateAcademicFilePrice(config.service, fileData.pages, fileData.copies, fileData.writingColor) : null;
                     const formattingPrice = showFormattingPrice ? calculateFormattingFilePrice(fileData.pages) : null;
+                    const copiesKey = `${config.service}-${config.type}-${index}`;
                     const copiesHtml = showAcademicPrice
-                        ? `<div data-label="عدد النسخ"><input class="copies-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="${fileData.copies || 1}" oninput="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, true)" /></div>`
+                        ? `<div data-label="عدد النسخ">
+                            <div class="copies-stepper">
+                                <button class="copies-stepper-button" type="button" onclick="changeAcademicFileCopies('${config.service}', '${config.type}', ${index}, -1)">-</button>
+                                <input class="copies-input" data-copies-input="${copiesKey}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${fileData.copies || 1}" oninput="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, true)" />
+                                <button class="copies-stepper-button" type="button" onclick="changeAcademicFileCopies('${config.service}', '${config.type}', ${index}, 1)">+</button>
+                            </div>
+                        </div>`
                         : '';
                     const thesisProjectHtml = showThesisProject
                         ? `
@@ -1328,6 +1669,9 @@
                             <div class="file-name-cell" data-label="اسم الملف">${fileData.filename}</div>
                             <div class="file-pages" data-label="الصفحات">${fileData.pages} صفحة</div>
                             <div class="file-size" data-label="الحجم">${fileData.size}</div>
+                            ${printSidesHtml}
+                            ${pageSizeHtml}
+                            ${paperColorHtml}
                             ${bindingHtml}
                             ${notesPrintPriceHtml}
                             ${notesBindingPriceHtml}
@@ -1351,7 +1695,7 @@
                 listDiv.innerHTML = html;
                 bindEnglishNumberWarnings(listDiv);
                 if (showPrice) {
-                    updateNotesPricingSummary();
+                    updatePrintProductPricingSummary(config.service);
                 } else if (showAcademicPrice) {
                     updateAcademicPricingSummary(config.service);
                 } else if (showFormattingPrice) {
@@ -1381,8 +1725,8 @@
                 uploadedFiles[service][type].splice(index, 1);
                 const configKey = Object.keys(fileConfigs).find(key => fileConfigs[key].service === service && fileConfigs[key].type === type);
                 updateFilesList(configKey);
-                if (service === 'notes') {
-                    updateNotesPricingSummary();
+                if (service === 'notes' || service === 'books') {
+                    updatePrintProductPricingSummary(service);
                 } else if (service === 'thesis' || service === 'phd') {
                     updateAcademicPricingSummary(service);
                 } else if (service === 'formatting') {
@@ -1390,18 +1734,61 @@
                 }
             }
 
-            function setNotesFileBinding(type, index, binding) {
-                const fileData = uploadedFiles.notes[type][index];
+            function setPrintProductFileBinding(service, type, index, binding) {
+                const fileData = uploadedFiles[service][type][index];
                 fileData.binding = binding;
-                const price = calculateNotesFilePrice(fileData.pages, binding);
+                const price = calculateNotesFilePrice(fileData.pages, binding, fileData.paperColor, service, fileData.pageSize);
                 updateStoredFile(fileData, {
                     binding_type: binding,
                     print_price: price.printPrice,
                     binding_price: price.bindingPrice,
                     total_price: price.total
                 });
-                updateFilesList(`notes${type.charAt(0).toUpperCase() + type.slice(1)}`);
-                updateNotesPricingSummary();
+                updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                updatePrintProductPricingSummary(service);
+            }
+
+            function setPrintProductPaperColor(service, type, index, paperColor) {
+                const fileData = uploadedFiles[service][type][index];
+                fileData.paperColor = paperColor || 'white';
+                const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize);
+                updateStoredFile(fileData, {
+                    paper_color: fileData.paperColor,
+                    print_price: price.printPrice,
+                    binding_price: price.bindingPrice,
+                    total_price: price.total
+                });
+                updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                updatePrintProductPricingSummary(service);
+            }
+
+            function setFilePrintSides(service, type, index, printSides) {
+                const fileData = uploadedFiles[service][type][index];
+                fileData.printSides = printSides || 'two_sides';
+                updateStoredFile(fileData, {
+                    print_sides: fileData.printSides
+                });
+            }
+
+            function setFilePageSize(service, type, index, pageSize) {
+                const fileData = uploadedFiles[service][type][index];
+                fileData.pageSize = pageSize || 'A4';
+                const payload = {
+                    page_size: fileData.pageSize
+                };
+
+                if (service === 'books') {
+                    const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize);
+                    payload.print_price = price.printPrice;
+                    payload.binding_price = price.bindingPrice;
+                    payload.total_price = price.total;
+                }
+
+                updateStoredFile(fileData, payload);
+                if (service === 'books') {
+                    updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                    updatePrintProductPricingSummary(service);
+                }
             }
 
             function refreshAcademicFilePriceDisplay(service, type, index) {
@@ -1450,6 +1837,29 @@
                 } else {
                     refreshAcademicFilePriceDisplay(service, type, index);
                 }
+                updateAcademicPricingSummary(service);
+            }
+
+            function changeAcademicFileCopies(service, type, index, delta) {
+                const fileData = uploadedFiles[service][type][index];
+                const currentCopies = Math.max(1, numericValue(fileData.copies) || 1);
+                const nextCopies = Math.min(999, Math.max(1, currentCopies + delta));
+                const key = `${service}-${type}-${index}`;
+                const input = document.querySelector(`[data-copies-input="${key}"]`);
+
+                fileData.copies = nextCopies;
+                if (input) {
+                    input.value = nextCopies;
+                }
+
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                updateStoredFile(fileData, {
+                    copies: fileData.copies,
+                    print_price: price.printPrice,
+                    binding_price: price.bindingPrice,
+                    total_price: price.total
+                });
+                refreshAcademicFilePriceDisplay(service, type, index);
                 updateAcademicPricingSummary(service);
             }
 
@@ -1592,7 +2002,6 @@
             }
 
             function updateNotesFilesPricing() {
-                updateFilesList('notesWord');
                 updateFilesList('notesPdf');
             }
 
@@ -1715,8 +2124,11 @@
                                     filename: response.filename,
                                     pages: response.pages || pageCount,
                                     size: formatFileSize(response.size),
-                                    binding: '',
+                                    binding: response.binding_type || (config.service === 'books' ? 'normal' : ''),
                                     copies: 1,
+                                    printSides: response.print_sides || 'two_sides',
+                                    pageSize: response.page_size || 'A4',
+                                    paperColor: response.paper_color || 'white',
                                     thesisProjectType: '',
                                     universityChoice: '',
                                     universityName: response.university_name || '',
@@ -1725,6 +2137,11 @@
                                     writingColor: response.writing_color || ''
                                 });
                                 updateFilesList(configKey);
+                                if (config.service === 'notes' || config.service === 'books') {
+                                    updatePrintProductPricingSummary(config.service);
+                                } else if (config.service === 'thesis' || config.service === 'phd') {
+                                    updateAcademicPricingSummary(config.service);
+                                }
                             }
                         } else {
                             errorDiv.textContent = response.message || 'تعذر تحميل الملف';

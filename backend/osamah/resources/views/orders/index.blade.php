@@ -191,6 +191,7 @@
                             @php
                                 $serviceNames = [
                                     'notes' => 'مذكرات',
+                                    'books' => 'كتب',
                                     'thesis' => 'ماجستير',
                                     'phd' => 'دكتوراه',
                                     'formatting' => 'تنسيق الرسائل الجامعية',
@@ -232,7 +233,7 @@
                                         ->values()
                                     : collect();
                                 $missingRequirements = collect();
-                                if ($order->service_type === 'notes' && $order->files->contains(fn ($file) => blank($file->binding_type))) {
+                                if (in_array($order->service_type, ['notes', 'books'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                                     $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                                 }
                                 if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
@@ -303,13 +304,15 @@
                     @php
                         $serviceNames = [
                             'notes' => 'مذكرات',
+                            'books' => 'كتب',
                             'thesis' => 'ماجستير',
                             'phd' => 'دكتوراه',
                             'formatting' => 'تنسيق الرسائل الجامعية',
                             'research' => 'إنشاء بحث',
                         ];
                         $serviceFullNames = [
-                            'notes' => 'طباعة وتغليف المذكرات',
+                            'notes' => 'طباعة المذكرات وملفات ال بي دي اف',
+                            'books' => 'طباعة وتجليد كتب كعب جلد طبيعي',
                             'thesis' => 'طباعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج',
                             'phd' => 'طباعة وتجليد رسالة دكتوراه',
                             'formatting' => 'تنسيق الرسائل الجامعية',
@@ -336,18 +339,39 @@
                             'gold' => 'كتابة باللون الذهبي',
                             'black' => 'كتابة باللون الأسود',
                         ];
-                        $bindingNames = [
-                            'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
-                            'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
-                            'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
-                            'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
+                        $bindingNames = $order->service_type === 'books'
+                            ? [
+                                'tape' => 'تجليد كعب جلد طبيعي',
+                                'wire' => 'تجليد كعب جلد طبيعي',
+                                'normal' => 'تجليد كعب جلد طبيعي',
+                                'none' => 'تجليد كعب جلد طبيعي',
+                            ]
+                            : [
+                                'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
+                                'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
+                                'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
+                                'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
+                            ];
+                        $bindingLabel = match ($order->service_type) {
+                            'books' => 'التجليد',
+                            'notes' => 'التغليف',
+                            'formatting' => 'التنسيق',
+                            'research' => 'إنشاء البحث',
+                            default => 'التجليد',
+                        };
+                        $bindingPriceLabel = match ($order->service_type) {
+                            'books' => 'سعر التجليد',
+                            'notes' => 'سعر التغليف',
+                            'formatting' => 'سعر التنسيق',
+                            'research' => 'سعر إنشاء البحث',
+                            default => 'سعر التجليد',
+                        };
+                        $deliveryMethodNames = [
+                            'branch_pickup' => 'استلام من الفرع',
+                            'islamic_university_delivery' => 'توصيل داخل الجامعة الإسلامية',
+                            'madinah_delivery' => 'توصيل داخل المدينة المنورة',
+                            'redbox_delivery' => 'خارج المدينة المنورة عبر RedBox',
                         ];
-                        $bindingLabel = $order->service_type === 'notes'
-                            ? 'التغليف'
-                            : ($order->service_type === 'formatting' ? 'التنسيق' : ($order->service_type === 'research' ? 'إنشاء البحث' : 'التجليد'));
-                        $bindingPriceLabel = $order->service_type === 'notes'
-                            ? 'سعر التغليف'
-                            : ($order->service_type === 'formatting' ? 'سعر التنسيق' : ($order->service_type === 'research' ? 'سعر إنشاء البحث' : 'سعر التجليد'));
                         $statusNames = [
                             'new' => 'بانتظار الدفع',
                             'reviewing' => 'قيد المراجعة',
@@ -365,7 +389,7 @@
                                 ->values()
                             : collect();
                         $missingRequirements = collect();
-                        if ($order->service_type === 'notes' && $order->files->contains(fn ($file) => blank($file->binding_type))) {
+                        if (in_array($order->service_type, ['notes', 'books'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                             $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                         }
                         if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
@@ -392,6 +416,19 @@
                                     <div class="detail-card"><span>حالة الطلب</span><strong>{{ $displayStatus }}</strong></div>
                                     <div class="detail-card"><span>الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
                                     <div class="detail-card"><span>تاريخ إنشاء الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</strong></div>
+                                    @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                        <div class="detail-card full"><span>الاستلام والتوصيل</span><strong>
+                                            {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
+                                            @if ($order->delivery_method === 'islamic_university_delivery')
+                                                - وحدة {{ $order->delivery_unit }} / دور {{ $order->delivery_floor }} / غرفة {{ $order->delivery_room }}
+                                            @elseif (in_array($order->delivery_method, ['madinah_delivery', 'redbox_delivery'], true))
+                                                - {{ $order->delivery_city }} / حي {{ $order->delivery_district }} / شارع {{ $order->delivery_street }}
+                                                @if ($order->delivery_map_url)
+                                                    - <a href="{{ $order->delivery_map_url }}" target="_blank" rel="noopener">رابط الموقع</a>
+                                                @endif
+                                            @endif
+                                        </strong></div>
+                                    @endif
                                 </div>
                                 @if ($missingRequirements->isNotEmpty())
                                     <div class="missing-info">
@@ -426,6 +463,15 @@
                                                     @if ($order->service_type !== 'research')
                                                         <th>النسخ</th>
                                                     @endif
+                                                    @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                                        <th>نوع الطباعة</th>
+                                                    @endif
+                                                    @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                        <th>حجم الصفحة</th>
+                                                    @endif
+                                                    @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                        <th>لون الورق</th>
+                                                    @endif
                                                     @if (! in_array($order->service_type, $noPrintServices, true))
                                                         <th>{{ $bindingLabel }}</th>
                                                     @endif
@@ -458,6 +504,15 @@
                                                         @if ($order->service_type !== 'research')
                                                             <td>{{ $file->copies }}</td>
                                                         @endif
+                                                        @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                                            <td>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
+                                                        @endif
+                                                        @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                            <td>{{ ['A4' => 'A4', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</td>
+                                                        @endif
+                                                        @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                            <td>{{ ['white' => 'أبيض', 'yellow' => 'أصفر'][$file->paper_color] ?? 'أبيض' }}</td>
+                                                        @endif
                                                         @if (! in_array($order->service_type, $noPrintServices, true))
                                                             <td>{{ $bindingNames[$file->binding_type] ?? '-' }}</td>
                                                         @endif
@@ -489,6 +544,9 @@
                                     <div class="total-card"><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
                                     @if ($order->discount_amount > 0)
                                         <div class="total-card"><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
+                                    @endif
+                                    @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                        <div class="total-card"><span>رسوم التوصيل</span><strong>{{ $order->delivery_fee }} ريال</strong></div>
                                     @endif
                                     <div class="total-card"><span>الإجمالي</span><strong>{{ $order->grand_total }} ريال</strong></div>
                                 </div>

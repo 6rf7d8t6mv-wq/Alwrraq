@@ -161,13 +161,21 @@ class AdminController extends Controller
         }
 
         $discountAmount = (int) $data['discount_amount'];
+        $subtotal = max(0, $baseTotal - $discountAmount);
+        $deliveryFee = match ($order->delivery_method) {
+            'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,
+            'madinah_delivery' => 20,
+            'redbox_delivery' => 30,
+            default => 0,
+        };
 
         $order->update([
             'discount_code' => strtoupper($data['discount_code']),
             'discount_amount' => $discountAmount,
             'discount_applied_by' => Auth::id(),
             'discount_applied_at' => now(),
-            'grand_total' => max(0, $baseTotal - $discountAmount),
+            'delivery_fee' => $deliveryFee,
+            'grand_total' => $subtotal + $deliveryFee,
         ]);
 
         return back()->with('status', 'تم تطبيق كود الخصم على الطلب.');

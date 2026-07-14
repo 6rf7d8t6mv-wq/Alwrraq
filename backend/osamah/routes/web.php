@@ -39,6 +39,7 @@ Route::delete('/order-files/{file}', [FileUploadController::class, 'destroyFile'
 
 Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {
     Route::get('/{order}', [CartController::class, 'show'])->name('show');
+    Route::patch('/{order}/delivery', [CartController::class, 'updateDelivery'])->name('delivery.update');
     Route::post('/{order}/pay', [CartController::class, 'pay'])->name('pay');
 });
 
