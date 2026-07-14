@@ -128,6 +128,8 @@ class FileUploadController extends Controller
                 'copies' => 1,
                 'thesis_project_type' => null,
                 'university_name' => null,
+                'cover_color' => null,
+                'writing_color' => null,
                 'binding_type' => null,
                 'print_price' => 0,
                 'binding_price' => 0,
@@ -138,7 +140,8 @@ class FileUploadController extends Controller
                 $service,
                 $pageCount,
                 $orderFile->copies,
-                $orderFile->binding_type
+                $orderFile->binding_type,
+                $orderFile->writing_color
             );
 
             $orderFile->fill($prices)->save();
@@ -157,6 +160,8 @@ class FileUploadController extends Controller
                     'copies' => $orderFile->copies,
                     'binding_type' => $orderFile->binding_type,
                     'university_name' => $orderFile->university_name,
+                    'cover_color' => $orderFile->cover_color,
+                    'writing_color' => $orderFile->writing_color,
                     'print_price' => $orderFile->print_price,
                     'binding_price' => $orderFile->binding_price,
                     'total_price' => $orderFile->total_price,
@@ -186,6 +191,8 @@ class FileUploadController extends Controller
             'copies' => ['nullable', 'integer', 'min:1', 'max:999'],
             'thesis_project_type' => ['nullable', 'in:thesis,supplementary,graduation'],
             'university_name' => ['nullable', 'string', 'max:255'],
+            'cover_color' => ['nullable', 'in:black,light_blue,navy,dark_green,light_green,burgundy,beige,white'],
+            'writing_color' => ['nullable', 'in:gold,black'],
         ]);
 
         if (array_key_exists('binding_type', $data)) {
@@ -204,11 +211,31 @@ class FileUploadController extends Controller
             $file->university_name = $data['university_name'];
         }
 
+        if (array_key_exists('cover_color', $data)) {
+            $file->cover_color = $data['cover_color'];
+        }
+
+        if (array_key_exists('writing_color', $data)) {
+            $file->writing_color = $data['writing_color'];
+        }
+
+        if (
+            in_array($file->order->service_type, ['thesis', 'phd'], true)
+            && $file->writing_color === 'black'
+            && !in_array($file->cover_color, ['beige', 'light_blue', 'light_green', 'white'], true)
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'الكتابة باللون الأسود متاحة فقط مع البيج أو الأزرق الفاتح أو الأخضر الفاتح أو الأبيض.',
+            ], 422);
+        }
+
         $prices = $this->calculatePrices(
             $file->order->service_type,
             $file->pages,
             $file->copies,
-            $file->binding_type
+            $file->binding_type,
+            $file->writing_color
         );
 
         $file->fill($prices)->save();
@@ -221,6 +248,8 @@ class FileUploadController extends Controller
             'total_price' => $file->total_price,
             'thesis_project_type' => $file->thesis_project_type,
             'university_name' => $file->university_name,
+            'cover_color' => $file->cover_color,
+            'writing_color' => $file->writing_color,
             'order_totals' => $this->orderTotalsPayload($file->order->fresh()),
         ]);
     }
@@ -365,7 +394,7 @@ class FileUploadController extends Controller
         }
     }
 
-    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding): array
+    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null): array
     {
         if (in_array($service, ['formatting', 'research'], true)) {
             $servicePrice = $pages * 10;
@@ -404,8 +433,16 @@ class FileUploadController extends Controller
 
         $copyCount = max(1, $copies);
         $printPrice = $this->printPrice($pages, $copyCount);
-        $singleBinding = $service === 'phd' ? 90 : 70;
-        $multiBinding = $service === 'phd' ? 70 : 55;
+        if (!in_array($writingColor, ['gold', 'black'], true)) {
+            return [
+                'print_price' => $printPrice,
+                'binding_price' => 0,
+                'total_price' => $printPrice,
+            ];
+        }
+
+        $singleBinding = $writingColor === 'gold' ? 90 : 60;
+        $multiBinding = $writingColor === 'gold' ? 75 : 45;
         $bindingPrice = $copyCount === 1 ? $singleBinding : $multiBinding * $copyCount;
 
         return [
@@ -431,11 +468,14 @@ class FileUploadController extends Controller
             $printTotal = $this->printPrice((int) $printUnits, 1);
         }
         $bindingTotal = (int) $order->files->sum('binding_price');
+        $baseTotal = $printTotal + $bindingTotal;
+        $discountAmount = min((int) $order->discount_amount, $baseTotal);
 
         $order->update([
             'print_total' => $printTotal,
             'binding_total' => $bindingTotal,
-            'grand_total' => $printTotal + $bindingTotal,
+            'discount_amount' => $discountAmount,
+            'grand_total' => max(0, $baseTotal - $discountAmount),
         ]);
     }
 

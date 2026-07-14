@@ -78,10 +78,17 @@
             .file-price-note { display: block; margin-top: 4px; color: #b91c1c; font-size: 11px; font-weight: 600; line-height: 1.4; }
             .binding-select { width: 100%; min-width: 130px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-weight: 600; }
             .binding-select:invalid { color: #6b7280; }
-            .university-cell { display: flex; flex-direction: column; gap: 8px; }
+            .university-cell { display: flex; flex-direction: column; gap: 8px; min-width: 190px; }
             .university-input { width: 100%; min-width: 170px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-weight: 700; }
             .university-input:placeholder-shown { color: #6b7280; }
             .university-custom-input { width: 100%; min-width: 170px; padding: 8px 10px; border: 1px solid #94a3b8; border-radius: 6px; background: #f8fafc; color: #111827; font-weight: 700; }
+            .university-picker-button { width: 100%; margin: 0; padding: 8px 10px; border: 0; border-radius: 6px; background: #0f172a; color: #ffffff; font-weight: 800; cursor: pointer; }
+            .university-dropdown { display: none; }
+            .university-dropdown.active { display: block; }
+            .university-results { display: block; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; overflow: hidden; max-height: 170px; overflow-y: auto; }
+            .university-result { width: 100%; margin: 0; padding: 8px 10px; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; background: #ffffff; color: #111827; text-align: right; font-size: 12px; font-weight: 800; cursor: pointer; }
+            .university-result:hover { background: #f8fafc; }
+            .university-result:last-child { border-bottom: 0; }
             .copies-input { width: 72px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-weight: 700; text-align: center; }
             .file-remove { cursor: pointer; color: #ef4444; font-weight: 600; text-align: center; }
             .file-remove:hover { color: #b91c1c; }
@@ -185,7 +192,8 @@
                 .binding-select,
                 .copies-input,
                 .university-input,
-                .university-custom-input {
+                .university-custom-input,
+                .university-picker-button {
                     width: min(100%, 220px);
                     min-width: 0;
                 }
@@ -670,6 +678,21 @@
             ];
 
             const knownUniversities = new Set(saudiUniversitiesAndInstitutes);
+            const academicCoverColors = {
+                black: 'أسود',
+                light_blue: 'أزرق فاتح',
+                navy: 'أزرق كحلي',
+                dark_green: 'الأخضر الداكن',
+                light_green: 'الأخضر الفاتح',
+                burgundy: 'العنابي',
+                beige: 'البيج',
+                white: 'الأبيض'
+            };
+            const academicWritingColors = {
+                gold: 'كتابة باللون الذهبي',
+                black: 'كتابة باللون الأسود'
+            };
+            const blackWritingAllowedCovers = ['beige', 'light_blue', 'light_green', 'white'];
 
             function escapeHtml(value) {
                 return String(value ?? '')
@@ -845,11 +868,23 @@
                 return Math.ceil(pages / 15);
             }
 
-            function calculateAcademicFilePrice(service, pages, copies) {
+            function canUseAcademicWritingColor(coverColor, writingColor) {
+                return writingColor !== 'black' || blackWritingAllowedCovers.includes(coverColor);
+            }
+
+            function calculateAcademicFilePrice(service, pages, copies, writingColor = '') {
                 const copyCount = Math.max(1, numericValue(copies) || 1);
                 const printPrice = getPrintPrice(pages) * copyCount;
-                const bindingSinglePrice = service === 'phd' ? 90 : 70;
-                const bindingMultiPrice = service === 'phd' ? 70 : 55;
+                if (!writingColor) {
+                    return {
+                        printPrice,
+                        bindingPrice: 0,
+                        total: printPrice
+                    };
+                }
+
+                const bindingSinglePrice = writingColor === 'gold' ? 90 : 60;
+                const bindingMultiPrice = writingColor === 'gold' ? 75 : 45;
                 const bindingPrice = copyCount === 1 ? bindingSinglePrice : bindingMultiPrice * copyCount;
 
                 return {
@@ -978,13 +1013,18 @@
                     return;
                 }
 
-                if (files.some(fileData => !fileData.universityName)) {
-                    renderCheckoutSummary(summary, service, 'اختر الجامعة أو المعهد لكل ملف قبل إتمام الطلب.');
+                if (files.some(fileData => !fileData.coverColor || !fileData.writingColor)) {
+                    renderCheckoutSummary(summary, service, 'اختر لون الرسالة ولون الكتابة لكل ملف قبل إتمام الطلب.');
+                    return;
+                }
+
+                if (files.some(fileData => !canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor))) {
+                    renderCheckoutSummary(summary, service, 'الكتابة باللون الأسود متاحة فقط مع البيج أو الأزرق الفاتح أو الأخضر الفاتح أو الأبيض.');
                     return;
                 }
 
                 const totals = files.reduce((sum, fileData) => {
-                    const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies);
+                    const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
                     sum.print += price.printPrice;
                     sum.binding += price.bindingPrice;
                     sum.total += price.total;
@@ -1147,31 +1187,31 @@
                 if (service !== 'thesis' && service !== 'phd') return '';
 
                 const universityName = fileData.universityName || '';
-                const usesOther = fileData.universityChoice === OTHER_UNIVERSITY_VALUE || (universityName && !knownUniversities.has(universityName));
-                const searchValue = usesOther ? OTHER_UNIVERSITY_VALUE : universityName;
-                const customValue = usesOther ? universityName : '';
+                const dropdownId = `universityDropdown-${service}-${type}-${index}`;
+                const searchId = `universitySearch-${service}-${type}-${index}`;
+                const resultsId = `universityResults-${service}-${type}-${index}`;
 
                 return `
                     <div data-label="الجامعة/المعهد" class="university-cell">
+                        <button class="university-picker-button" type="button" onclick="toggleAcademicUniversityDropdown('${service}', '${type}', ${index})">اختيار من القائمة</button>
+                        <div id="${dropdownId}" class="university-dropdown">
+                            <input
+                                id="${searchId}"
+                                class="university-input"
+                                value=""
+                                autocomplete="off"
+                                placeholder="ابحث داخل القائمة"
+                                oninput="renderAcademicUniversityResults('${service}', '${type}', ${index}, this.value)"
+                            />
+                            <div id="${resultsId}" class="university-results"></div>
+                        </div>
                         <input
-                            class="university-input"
-                            list="saudiUniversitiesList"
-                            value="${escapeHtml(searchValue)}"
-                            placeholder="ابحث عن جامعتك"
-                            required
+                            class="university-custom-input"
+                            value="${escapeHtml(universityName)}"
+                            placeholder="اختياري: اختر أو اكتب الجامعة/المعهد"
                             oninput="setAcademicFileUniversity('${service}', '${type}', ${index}, this.value, false)"
                             onchange="setAcademicFileUniversity('${service}', '${type}', ${index}, this.value)"
                         />
-                        ${usesOther ? `
-                            <input
-                                class="university-custom-input"
-                                value="${escapeHtml(customValue)}"
-                                placeholder="اكتب اسم الجامعة أو المعهد"
-                                required
-                                oninput="setCustomAcademicUniversity('${service}', '${type}', ${index}, this.value, false)"
-                                onchange="setCustomAcademicUniversity('${service}', '${type}', ${index}, this.value)"
-                            />
-                        ` : ''}
                     </div>
                 `;
             }
@@ -1222,10 +1262,11 @@
                     const notesTotalPriceHtml = showPrice
                         ? `<div class="file-price" data-label="الإجمالي">${price ? `${price.total} ريال` : 'اختر التغليف'}${price?.note ? `<span class="file-price-note">${price.note}</span>` : ''}</div>`
                         : '';
-                    const academicPrice = showAcademicPrice ? calculateAcademicFilePrice(config.service, fileData.pages, fileData.copies) : null;
+                    const hasAcademicColors = showAcademicPrice && fileData.coverColor && fileData.writingColor && canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor);
+                    const academicPrice = showAcademicPrice ? calculateAcademicFilePrice(config.service, fileData.pages, fileData.copies, fileData.writingColor) : null;
                     const formattingPrice = showFormattingPrice ? calculateFormattingFilePrice(fileData.pages) : null;
                     const copiesHtml = showAcademicPrice
-                        ? `<div data-label="عدد النسخ"><input class="copies-input" type="text" inputmode="numeric" value="${fileData.copies || 1}" onchange="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value)" /></div>`
+                        ? `<div data-label="عدد النسخ"><input class="copies-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="${fileData.copies || 1}" oninput="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, true)" /></div>`
                         : '';
                     const thesisProjectHtml = showThesisProject
                         ? `
@@ -1242,14 +1283,38 @@
                     const universityHtml = showAcademicPrice
                         ? academicUniversityHtml(config.service, config.type, index, fileData)
                         : '';
+                    const coverColorHtml = showAcademicPrice
+                        ? `
+                            <div data-label="لون الرسالة">
+                                <select class="binding-select" onchange="setAcademicCoverColor('${config.service}', '${config.type}', ${index}, this.value)">
+                                    <option value="" ${!fileData.coverColor ? 'selected' : ''} disabled>اختر لون الرسالة</option>
+                                    ${Object.entries(academicCoverColors).map(([value, label]) => `<option value="${value}" ${fileData.coverColor === value ? 'selected' : ''}>${label}</option>`).join('')}
+                                </select>
+                            </div>
+                        `
+                        : '';
+                    const writingColorHtml = showAcademicPrice
+                        ? `
+                            <div data-label="لون الكتابة">
+                                <select class="binding-select" onchange="setAcademicWritingColor('${config.service}', '${config.type}', ${index}, this.value)">
+                                    <option value="" ${!fileData.writingColor ? 'selected' : ''} disabled>اختر لون الكتابة</option>
+                                    ${Object.entries(academicWritingColors).map(([value, label]) => {
+                                        const disabled = value === 'black' && fileData.coverColor && !blackWritingAllowedCovers.includes(fileData.coverColor);
+                                        return `<option value="${value}" ${fileData.writingColor === value ? 'selected' : ''} ${disabled ? 'disabled' : ''}>${label}</option>`;
+                                    }).join('')}
+                                </select>
+                                ${fileData.coverColor && fileData.writingColor && !canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor) ? '<span class="file-price-note">الكتابة السوداء لا تناسب هذا اللون</span>' : ''}
+                            </div>
+                        `
+                        : '';
                     const academicPrintPriceHtml = showAcademicPrice
-                        ? `<div class="file-price" data-label="سعر الطباعة">${academicPrice.printPrice} ريال</div>`
+                        ? `<div class="file-price" data-label="سعر الطباعة" data-academic-price="${config.service}-${config.type}-${index}" data-price-kind="print">${academicPrice.printPrice} ريال</div>`
                         : '';
                     const academicBindingPriceHtml = showAcademicPrice
-                        ? `<div class="file-price" data-label="سعر التجليد">${academicPrice.bindingPrice} ريال</div>`
+                        ? `<div class="file-price" data-label="سعر التجليد" data-academic-price="${config.service}-${config.type}-${index}" data-price-kind="binding">${hasAcademicColors ? `${academicPrice.bindingPrice} ريال` : 'اختر الألوان'}</div>`
                         : '';
                     const academicTotalPriceHtml = showAcademicPrice
-                        ? `<div class="file-price" data-label="الإجمالي">${academicPrice.total} ريال</div>`
+                        ? `<div class="file-price" data-label="الإجمالي" data-academic-price="${config.service}-${config.type}-${index}" data-price-kind="total">${hasAcademicColors ? `${academicPrice.total} ريال` : 'اختر الألوان'}</div>`
                         : '';
                     const formattingPriceHtml = showFormattingPrice
                         ? `<div class="file-price" data-label="سعر التنسيق">${formattingPrice.bindingPrice} ريال</div>`
@@ -1270,6 +1335,8 @@
                             ${copiesHtml}
                             ${thesisProjectHtml}
                             ${universityHtml}
+                            ${coverColorHtml}
+                            ${writingColorHtml}
                             ${academicPrintPriceHtml}
                             ${academicBindingPriceHtml}
                             ${academicTotalPriceHtml}
@@ -1337,19 +1404,138 @@
                 updateNotesPricingSummary();
             }
 
-            function setAcademicFileCopies(service, type, index, copies) {
+            function refreshAcademicFilePriceDisplay(service, type, index) {
+                const fileData = uploadedFiles[service][type][index];
+                const key = `${service}-${type}-${index}`;
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                const hasAcademicColors = fileData.coverColor && fileData.writingColor && canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor);
+                const printCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="print"]`);
+                const bindingCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="binding"]`);
+                const totalCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="total"]`);
+
+                if (printCell) {
+                    printCell.textContent = `${price.printPrice} ريال`;
+                }
+
+                if (bindingCell) {
+                    bindingCell.textContent = hasAcademicColors ? `${price.bindingPrice} ريال` : 'اختر الألوان';
+                }
+
+                if (totalCell) {
+                    totalCell.textContent = hasAcademicColors ? `${price.total} ريال` : 'اختر الألوان';
+                }
+            }
+
+            function setAcademicFileCopies(service, type, index, copies, rerender = true) {
                 const fileData = uploadedFiles[service][type][index];
                 const copiesValue = String(copies ?? '').trim();
                 if (!/^[0-9]+$/.test(copiesValue)) {
-                    updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                    if (rerender) {
+                        updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                    }
                     updateAcademicPricingSummary(service);
                     return;
                 }
 
                 fileData.copies = Math.max(1, numericValue(copiesValue) || 1);
-                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
                 updateStoredFile(fileData, {
                     copies: fileData.copies,
+                    print_price: price.printPrice,
+                    binding_price: price.bindingPrice,
+                    total_price: price.total
+                });
+                if (rerender) {
+                    updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                } else {
+                    refreshAcademicFilePriceDisplay(service, type, index);
+                }
+                updateAcademicPricingSummary(service);
+            }
+
+            function academicUniversityIds(service, type, index) {
+                return {
+                    dropdownId: `universityDropdown-${service}-${type}-${index}`,
+                    searchId: `universitySearch-${service}-${type}-${index}`,
+                    resultsId: `universityResults-${service}-${type}-${index}`,
+                };
+            }
+
+            function renderAcademicUniversityResults(service, type, index, search = '') {
+                const { resultsId } = academicUniversityIds(service, type, index);
+                const results = document.getElementById(resultsId);
+                if (!results) return;
+
+                const term = String(search || '').trim();
+                const matches = saudiUniversitiesAndInstitutes
+                    .filter(name => term === '' || name.includes(term))
+                    .slice(0, 80);
+
+                if (matches.length === 0) {
+                    results.innerHTML = `<button class="university-result" type="button" onclick="setAcademicFileUniversity('${service}', '${type}', ${index}, '${escapeHtml(term)}')">استخدام: ${escapeHtml(term)}</button>`;
+                    return;
+                }
+
+                results.innerHTML = matches
+                    .map(name => {
+                        const universityIndex = saudiUniversitiesAndInstitutes.indexOf(name);
+                        return `<button class="university-result" type="button" onclick="chooseAcademicUniversity('${service}', '${type}', ${index}, ${universityIndex})">${escapeHtml(name)}</button>`;
+                    })
+                    .join('');
+            }
+
+            function chooseAcademicUniversity(service, type, index, universityIndex) {
+                setAcademicFileUniversity(service, type, index, saudiUniversitiesAndInstitutes[universityIndex] || '');
+            }
+
+            function toggleAcademicUniversityDropdown(service, type, index) {
+                const { dropdownId, searchId } = academicUniversityIds(service, type, index);
+                const dropdown = document.getElementById(dropdownId);
+                const search = document.getElementById(searchId);
+                if (!dropdown || !search) return;
+
+                const isOpen = dropdown.classList.toggle('active');
+                if (isOpen) {
+                    search.value = '';
+                    renderAcademicUniversityResults(service, type, index);
+                    search.focus();
+                }
+            }
+
+            function setAcademicCoverColor(service, type, index, coverColor) {
+                const fileData = uploadedFiles[service][type][index];
+                fileData.coverColor = coverColor;
+
+                if (fileData.writingColor === 'black' && !canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor)) {
+                    fileData.writingColor = '';
+                }
+
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                updateStoredFile(fileData, {
+                    cover_color: fileData.coverColor || null,
+                    writing_color: fileData.writingColor || null,
+                    print_price: price.printPrice,
+                    binding_price: price.bindingPrice,
+                    total_price: price.total
+                });
+                updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                updateAcademicPricingSummary(service);
+            }
+
+            function setAcademicWritingColor(service, type, index, writingColor) {
+                const fileData = uploadedFiles[service][type][index];
+
+                if (writingColor === 'black' && !canUseAcademicWritingColor(fileData.coverColor, writingColor)) {
+                    updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                    updateAcademicPricingSummary(service);
+                    return;
+                }
+
+                fileData.writingColor = writingColor;
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                updateStoredFile(fileData, {
+                    cover_color: fileData.coverColor || null,
+                    writing_color: fileData.writingColor || null,
                     print_price: price.printPrice,
                     binding_price: price.bindingPrice,
                     total_price: price.total
@@ -1361,20 +1547,19 @@
             function setAcademicFileUniversity(service, type, index, value, rerender = true) {
                 const fileData = uploadedFiles[service][type][index];
                 const selectedValue = String(value || '').trim();
-                const wasOther = fileData.universityChoice === OTHER_UNIVERSITY_VALUE;
 
                 fileData.universityChoice = selectedValue;
-                if (selectedValue === OTHER_UNIVERSITY_VALUE) {
-                    fileData.universityName = fileData.customUniversity || '';
-                } else {
-                    fileData.universityName = selectedValue;
-                    fileData.customUniversity = '';
-                }
+                fileData.universityName = selectedValue;
+                fileData.customUniversity = selectedValue;
 
                 updateStoredFile(fileData, {
                     university_name: fileData.universityName || null
                 });
-                if (rerender || selectedValue === OTHER_UNIVERSITY_VALUE || wasOther) {
+
+                const { dropdownId } = academicUniversityIds(service, type, index);
+                document.getElementById(dropdownId)?.classList.remove('active');
+
+                if (rerender) {
                     updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
                 }
                 updateAcademicPricingSummary(service);
@@ -1535,7 +1720,9 @@
                                     thesisProjectType: '',
                                     universityChoice: '',
                                     universityName: response.university_name || '',
-                                    customUniversity: ''
+                                    customUniversity: '',
+                                    coverColor: response.cover_color || '',
+                                    writingColor: response.writing_color || ''
                                 });
                                 updateFilesList(configKey);
                             }

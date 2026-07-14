@@ -18,6 +18,8 @@ class OrderFile extends Model
         'copies',
         'thesis_project_type',
         'university_name',
+        'cover_color',
+        'writing_color',
         'research_title',
         'binding_type',
         'print_price',

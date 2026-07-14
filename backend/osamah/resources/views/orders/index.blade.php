@@ -37,7 +37,9 @@
         .done { background: #e0f2fe; color: #075985; }
         .open { background: #f1f5f9; color: #334155; }
         .cancelled { background: #fee2e2; color: #991b1b; }
-        .actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 128px)); justify-content: start; gap: 8px; align-items: stretch; }
+        .actions { display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 8px; min-width: 0; }
+        .actions > .action,
+        .actions > .inline-form { flex: 0 0 auto; width: 128px; }
         .action { display: inline-flex; align-items: center; justify-content: center; width: 100%; min-height: 40px; color: #ffffff; background: #0f172a; text-decoration: none; font-weight: 900; padding: 9px 12px; border-radius: 8px; border: 0; cursor: pointer; font-family: inherit; font-size: 13px; text-align: center; line-height: 1.4; }
         .notice-action { position: relative; }
         .order-notice-dot { position: absolute; top: -4px; left: -4px; width: 8px; height: 8px; border-radius: 999px; background: #dc2626; box-shadow: 0 0 0 2px #ffffff; }
@@ -119,8 +121,10 @@
             table { display: block; overflow-x: auto; white-space: nowrap; }
             .detail-grid, .totals-grid { grid-template-columns: 1fr; }
             .home-button, .settings-button, .logout-button, .action, .inline-form { width: 100%; justify-content: center; text-align: center; }
-            .actions, .modal-actions { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); }
-            .actions { justify-content: stretch; }
+            .actions { display: flex; flex-direction: column; justify-content: stretch; }
+            .actions > .action,
+            .actions > .inline-form { width: 100%; }
+            .modal-actions { grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); }
             .invoice-head, .invoice-grid, .invoice-totals, .invoice-summary { grid-template-columns: 1fr; }
             .invoice-head { flex-direction: column; }
             .invoice-table-wrap { border: 0; overflow: visible; }
@@ -212,8 +216,11 @@
                                     'cancelled' => 'ملغي',
                                 ];
                         $isPaid = $order->payment_status === 'paid';
-                        $isCompleted = $order->status === 'completed';
+                        $isCompleted = $isPaid && $order->status === 'completed';
                         $isCancelled = $order->status === 'cancelled';
+                        $displayStatus = $isCompleted
+                            ? 'مكتمل'
+                            : (in_array($order->status, ['completed', 'finished'], true) ? 'بانتظار الدفع' : ($statusNames[$order->status] ?? $order->status));
                         $hasDeliveredFile = in_array($order->service_type, ['formatting', 'research'], true) && $order->deliveredFiles->isNotEmpty();
                         $hasUndownloadedDeliveredFiles = $hasDeliveredFile && $order->deliveredFiles->contains(fn ($file) => blank($file->customer_downloaded_at));
                                 $projectTypes = $order->service_type === 'thesis'
@@ -228,8 +235,8 @@
                                 if ($order->service_type === 'notes' && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                                     $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                                 }
-                                if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->university_name))) {
-                                    $missingRequirements->push('اختيار الجامعة أو المعهد لكل ملف.');
+                                if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
+                                    $missingRequirements->push('اختيار لون الرسالة ولون الكتابة لكل ملف.');
                                 }
                                 if ($order->service_type === 'thesis' && $order->files->contains(fn ($file) => $file->file_type === 'pdf' && blank($file->thesis_project_type))) {
                                     $missingRequirements->push('اختيار نوع مشروع الرسالة لكل ملف PDF.');
@@ -254,7 +261,7 @@
                                 </td>
                                 <td>
                                     <span class="badge {{ $isCompleted ? 'done' : ($isCancelled ? 'cancelled' : 'open') }}">
-                                        {{ $statusNames[$order->status] ?? $order->status }}
+                                        {{ $displayStatus }}
                                     </span>
                                 </td>
                                 <td>{{ $order->grand_total }} ريال</td>
@@ -315,6 +322,20 @@
                             'supplementary' => 'بحث تكميلي',
                             'graduation' => 'بحث تخرج',
                         ];
+                        $coverColorNames = [
+                            'black' => 'أسود',
+                            'light_blue' => 'أزرق فاتح',
+                            'navy' => 'أزرق كحلي',
+                            'dark_green' => 'الأخضر الداكن',
+                            'light_green' => 'الأخضر الفاتح',
+                            'burgundy' => 'العنابي',
+                            'beige' => 'البيج',
+                            'white' => 'الأبيض',
+                        ];
+                        $writingColorNames = [
+                            'gold' => 'كتابة باللون الذهبي',
+                            'black' => 'كتابة باللون الأسود',
+                        ];
                         $bindingNames = [
                             'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
                             'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
@@ -347,8 +368,8 @@
                         if ($order->service_type === 'notes' && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                             $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                         }
-                        if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->university_name))) {
-                            $missingRequirements->push('اختيار الجامعة أو المعهد لكل ملف.');
+                        if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
+                            $missingRequirements->push('اختيار لون الرسالة ولون الكتابة لكل ملف.');
                         }
                         if ($order->service_type === 'thesis' && $order->files->contains(fn ($file) => $file->file_type === 'pdf' && blank($file->thesis_project_type))) {
                             $missingRequirements->push('اختيار نوع مشروع الرسالة لكل ملف PDF.');
@@ -368,7 +389,7 @@
                                     @if ($projectTypes->isNotEmpty())
                                         <div class="detail-card full"><span>تفصيل مشروع الرسالة</span><strong>{{ $projectTypes->implode('، ') }}</strong></div>
                                     @endif
-                                    <div class="detail-card"><span>حالة الطلب</span><strong>{{ $statusNames[$order->status] ?? $order->status }}</strong></div>
+                                    <div class="detail-card"><span>حالة الطلب</span><strong>{{ $displayStatus }}</strong></div>
                                     <div class="detail-card"><span>الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
                                     <div class="detail-card"><span>تاريخ إنشاء الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</strong></div>
                                 </div>
@@ -396,9 +417,11 @@
                                                     @if ($order->service_type === 'thesis')
                                                         <th>مشروع الرسالة</th>
                                                     @endif
-                                                    @if (in_array($order->service_type, ['thesis', 'phd'], true))
-                                                        <th>الجامعة/المعهد</th>
-                                                    @endif
+                            @if (in_array($order->service_type, ['thesis', 'phd'], true))
+                                <th>الجامعة/المعهد</th>
+                                <th>لون الرسالة</th>
+                                <th>لون الكتابة</th>
+                            @endif
                                                     <th>الصفحات</th>
                                                     @if ($order->service_type !== 'research')
                                                         <th>النسخ</th>
@@ -426,9 +449,11 @@
                                                         @if ($order->service_type === 'thesis')
                                                             <td>{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
                                                         @endif
-                                                        @if (in_array($order->service_type, ['thesis', 'phd'], true))
-                                                            <td>{{ $file->university_name ?: '-' }}</td>
-                                                        @endif
+                            @if (in_array($order->service_type, ['thesis', 'phd'], true))
+                                <td>{{ $file->university_name ?: '-' }}</td>
+                                <td>{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
+                                <td>{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
+                            @endif
                                                         <td>{{ $file->pages }}</td>
                                                         @if ($order->service_type !== 'research')
                                                             <td>{{ $file->copies }}</td>
@@ -462,6 +487,9 @@
                                         <div class="total-card"><span>سعر الطباعة</span><strong>{{ $order->print_total }} ريال</strong></div>
                                     @endif
                                     <div class="total-card"><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+                                    @if ($order->discount_amount > 0)
+                                        <div class="total-card"><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
+                                    @endif
                                     <div class="total-card"><span>الإجمالي</span><strong>{{ $order->grand_total }} ريال</strong></div>
                                 </div>
 

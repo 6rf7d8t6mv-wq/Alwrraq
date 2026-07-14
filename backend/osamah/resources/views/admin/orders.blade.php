@@ -87,32 +87,54 @@
                             'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
                             'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
                         ];
-                        $orderDotColor = in_array($order->status, ['completed', 'finished'], true)
+                        $coverColorNames = [
+                            'black' => 'أسود',
+                            'light_blue' => 'أزرق فاتح',
+                            'navy' => 'أزرق كحلي',
+                            'dark_green' => 'الأخضر الداكن',
+                            'light_green' => 'الأخضر الفاتح',
+                            'burgundy' => 'العنابي',
+                            'beige' => 'البيج',
+                            'white' => 'الأبيض',
+                        ];
+                        $writingColorNames = [
+                            'gold' => 'كتابة باللون الذهبي',
+                            'black' => 'كتابة باللون الأسود',
+                        ];
+                        $isPaid = $order->payment_status === 'paid';
+                        $isEffectivelyCompleted = $isPaid && in_array($order->status, ['completed', 'finished'], true);
+                        $displayStatus = $isEffectivelyCompleted
+                            ? 'مكتمل'
+                            : (in_array($order->status, ['completed', 'finished'], true) ? 'بانتظار الدفع' : $order->status);
+                        $orderDotColor = $isEffectivelyCompleted
                             ? 'green'
                             : (blank($order->admin_opened_at) ? 'red' : 'yellow');
                         $orderCreatedAtText = $dayNames[$order->created_at->dayOfWeek] . ' - ' . $order->created_at->format('Y-m-d H:i');
                     @endphp
 
-                    <div class="panel order-detail-section" data-order-id="{{ $order->id }}" data-open-order-url="{{ route('admin.orders.open', $order) }}" style="margin-bottom: 16px;">
+                    <div class="panel order-detail-section" data-order-id="{{ $order->id }}" data-order-paid="{{ $isPaid ? '1' : '0' }}" data-open-order-url="{{ route('admin.orders.open', $order) }}" style="margin-bottom: 16px;">
                         <div class="order-head order-detail-section">
                             <div><span class="label">رقم الطلب</span><span class="tiny-status-dot {{ $orderDotColor }}" data-order-status-dot></span>#{{ $order->id }}</div>
                             <div><span class="label">العميل</span>{{ $order->user->name }} - {{ $order->user->phone }}</div>
                             <div><span class="label">تاريخ إنشاء الطلب</span><span data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $orderCreatedAtText }}</span></div>
                             <div><span class="label">الخدمة</span>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</div>
-                            <div><span class="label">الحالة</span>{{ $order->status }}</div>
-                            <div><span class="label">الدفع</span>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
+                            <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
+                            <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
                             <div><span class="label">الإجمالي</span>
                                 @if (in_array($order->service_type, $noPrintServices, true))
                                     {{ $bindingLabel }} {{ $order->binding_total }} | الكل {{ $order->grand_total }} ريال
                                 @else
                                     طباعة {{ $order->print_total }} | {{ $bindingLabel }} {{ $order->binding_total }} | الكل {{ $order->grand_total }} ريال
                                 @endif
+                                @if ($order->discount_amount > 0)
+                                    <br><span class="muted">خصم {{ $order->discount_code }}: {{ $order->discount_amount }} ريال</span>
+                                @endif
                             </div>
-                            @if ($order->payment_status === 'paid' || auth()->user()->hasAdminPermission('orders_delete'))
+                            @if (($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view')) || auth()->user()->hasAdminPermission('orders_delete'))
                                 <div>
                                     <span class="label">الإجراءات</span>
                                     <div class="compact-actions">
-                                        @if ($order->payment_status === 'paid')
+                                        @if ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view'))
                                             <button class="invoice-admin-button" type="button" onclick="openAdminModal('فاتورة الطلب #{{ $order->id }}', 'invoice-admin-{{ $order->id }}')">الفاتورة</button>
                                         @endif
                                         @if (auth()->user()->hasAdminPermission('orders_delete'))
@@ -127,6 +149,30 @@
                             @endif
                         </div>
 
+                        @if (! $isPaid && auth()->user()->hasAdminPermission('discounts_apply'))
+                            <div class="panel order-detail-section" style="margin: 0 0 16px; background: #f8fafc;">
+                                <h2 style="margin-bottom: 10px;">كود الخصم</h2>
+                                <form method="post" action="{{ route('admin.orders.discount.apply', $order) }}">
+                                    @csrf
+                                    @method('patch')
+                                    <div class="form-grid">
+                                        <div>
+                                            <label>كود الخصم</label>
+                                            <input name="discount_code" value="{{ $order->discount_code }}" placeholder="مثال: STUDENT10" required>
+                                        </div>
+                                        <div>
+                                            <label>قيمة الخصم بالريال</label>
+                                            <input name="discount_amount" inputmode="numeric" value="{{ $order->discount_amount ?: '' }}" placeholder="مثال: 10" required>
+                                        </div>
+                                    </div>
+                                    <button class="save" type="submit">تطبيق الخصم</button>
+                                </form>
+                                @if ($order->discount_amount > 0)
+                                    <p class="muted" style="margin: 10px 0 0;">الإجمالي قبل الخصم: {{ $order->baseTotal() }} ريال، بعد الخصم: {{ $order->grand_total }} ريال.</p>
+                                @endif
+                            </div>
+                        @endif
+
                         <div class="order-detail-section order-detail-table-wrap {{ $order->service_type === 'research' ? 'research' : '' }}">
                             <table>
                                 <thead>
@@ -137,6 +183,8 @@
                                         @endif
                                         @if (in_array($order->service_type, ['thesis', 'phd'], true))
                                             <th>الجامعة/المعهد</th>
+                                            <th>لون الرسالة</th>
+                                            <th>لون الكتابة</th>
                                         @endif
                                         <th>الصفحات</th>
                                         @if ($order->service_type !== 'research')
@@ -164,6 +212,8 @@
                                             @endif
                                             @if (in_array($order->service_type, ['thesis', 'phd'], true))
                                                 <td>{{ $file->university_name ?: '-' }}</td>
+                                                <td>{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
+                                                <td>{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
                                             @endif
                                             <td>{{ $file->pages }}</td>
                                             @if ($order->service_type !== 'research')
@@ -179,7 +229,11 @@
                                             <td>{{ $file->total_price }} ريال</td>
                                             @if ($order->service_type !== 'research')
                                                 <td>
-                                                    <a class="save small-button" href="{{ route('admin.files.download', $file) }}" data-complete-order-download>تنزيل الملف</a>
+                                                    @if (auth()->user()->hasAdminPermission('files_download'))
+                                                        <a class="save small-button" href="{{ route('admin.files.download', $file) }}" data-complete-order-download>تنزيل الملف</a>
+                                                    @else
+                                                        <span class="muted">لا توجد صلاحية تحميل</span>
+                                                    @endif
                                                 </td>
                                             @endif
                                         </tr>
@@ -200,13 +254,17 @@
                                                     <div class="muted" data-local-datetime="{{ $deliveredFile->created_at->toIso8601String() }}">{{ $deliveredFile->created_at->format('Y-m-d H:i') }}</div>
                                                 </div>
                                                 <div class="delivered-file-actions">
-                                                    <a class="ghost" href="{{ route('admin.delivered-files.download', ['deliveredFile' => $deliveredFile, 'view' => 1]) }}" target="_blank" rel="noopener">عرض</a>
-                                                    <a class="save small-button" href="{{ route('admin.delivered-files.download', $deliveredFile) }}">تحميل</a>
-                                                    <form method="post" action="{{ route('admin.delivered-files.destroy', $deliveredFile) }}" onsubmit="return confirm('حذف ملف التسليم هذا؟')">
-                                                        @csrf
-                                                        @method('delete')
-                                                        <button class="danger small-button" type="submit">حذف</button>
-                                                    </form>
+                                                    @if (auth()->user()->hasAdminPermission('delivered_files_download'))
+                                                        <a class="ghost" href="{{ route('admin.delivered-files.download', ['deliveredFile' => $deliveredFile, 'view' => 1]) }}" target="_blank" rel="noopener">عرض</a>
+                                                        <a class="save small-button" href="{{ route('admin.delivered-files.download', $deliveredFile) }}">تحميل</a>
+                                                    @endif
+                                                    @if (auth()->user()->hasAdminPermission('delivered_files_delete'))
+                                                        <form method="post" action="{{ route('admin.delivered-files.destroy', $deliveredFile) }}" onsubmit="return confirm('حذف ملف التسليم هذا؟')">
+                                                            @csrf
+                                                            @method('delete')
+                                                            <button class="danger small-button" type="submit">حذف</button>
+                                                        </form>
+                                                    @endif
                                                 </div>
                                             </div>
                                         @endforeach
@@ -214,12 +272,14 @@
                                 @else
                                     <p class="muted" style="margin: 0 0 10px;">لم يتم إرفاق ملف التسليم بعد. لن يظهر زر التحميل للعميل إلا بعد رفع الملف.</p>
                                 @endif
-                                <form method="post" action="{{ route('admin.orders.delivered-file.upload', $order) }}" enctype="multipart/form-data">
-                                    @csrf
-                                    <label>إضافة ملف تسليم جديد</label>
-                                    <input type="file" name="delivered_file" required>
-                                    <button class="save" type="submit">حفظ ملف التسليم</button>
-                                </form>
+                                @if (auth()->user()->hasAdminPermission('delivered_files_upload'))
+                                    <form method="post" action="{{ route('admin.orders.delivered-file.upload', $order) }}" enctype="multipart/form-data">
+                                        @csrf
+                                        <label>إضافة ملف تسليم جديد</label>
+                                        <input type="file" name="delivered_file" required>
+                                        <button class="save" type="submit">حفظ ملف التسليم</button>
+                                    </form>
+                                @endif
                             </div>
                         @endif
                     </div>
@@ -231,7 +291,7 @@
     @endforelse
 
     @foreach ($orders as $order)
-        @if ($order->payment_status === 'paid')
+        @if ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view'))
             <template id="invoice-admin-{{ $order->id }}">
                 @include('shared.invoice', ['order' => $order, 'invoiceId' => 'adminInvoice' . $order->id])
             </template>

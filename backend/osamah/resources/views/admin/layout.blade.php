@@ -196,7 +196,8 @@
     <div class="layout">
         <aside>
             @php
-                $hasUnopenedOrdersForAdmin = \App\Models\Order::query()
+                $hasOrdersAccess = auth()->user()->hasAdminPermission('orders_view');
+                $hasUnopenedOrdersForAdmin = $hasOrdersAccess && \App\Models\Order::query()
                     ->whereNull('admin_notification_seen_at')
                     ->where('status', '!=', 'completed')
                     ->exists();
@@ -204,16 +205,22 @@
             <div class="brand">Mr-Student</div>
             <div class="admin-name">👤 {{ auth()->user()->name }}</div>
             <nav>
-                <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}">الرئيسية</a>
-                <a class="{{ request()->routeIs('admin.orders') ? 'active' : '' }}" href="{{ route('admin.orders') }}">
-                    <span class="nav-icon" aria-hidden="true">🧾</span>
-                    <span class="nav-text">الطلبات</span>
-                    @if ($hasUnopenedOrdersForAdmin)
-                        <span class="nav-notice-dot" aria-label="طلبات جديدة"></span>
-                    @endif
-                </a>
-                <a class="{{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}"><span class="nav-icon" aria-hidden="true">👥</span><span class="nav-text">المستخدمين</span></a>
-                <a class="{{ request()->routeIs('admin.customers') ? 'active' : '' }}" href="{{ route('admin.customers') }}"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-text">العملاء</span></a>
+                <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>
+                @if ($hasOrdersAccess)
+                    <a class="{{ request()->routeIs('admin.orders') ? 'active' : '' }}" href="{{ route('admin.orders') }}">
+                        <span class="nav-icon" aria-hidden="true">🧾</span>
+                        <span class="nav-text">الطلبات</span>
+                        @if ($hasUnopenedOrdersForAdmin)
+                            <span class="nav-notice-dot" aria-label="طلبات جديدة"></span>
+                        @endif
+                    </a>
+                @endif
+                @if (auth()->user()->hasAnyAdminPermission(['users_view', 'users_create', 'users_update', 'users_delete', 'users_permissions_manage']))
+                    <a class="{{ request()->routeIs('admin.users') ? 'active' : '' }}" href="{{ route('admin.users') }}"><span class="nav-icon" aria-hidden="true">👥</span><span class="nav-text">المستخدمين</span></a>
+                @endif
+                @if (auth()->user()->hasAnyAdminPermission(['customers_view', 'customers_create', 'customers_update', 'customers_delete']))
+                    <a class="{{ request()->routeIs('admin.customers') ? 'active' : '' }}" href="{{ route('admin.customers') }}"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-text">العملاء</span></a>
+                @endif
                 <a class="settings-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-text">الإعدادات</span></a>
                 <form method="post" action="{{ route('logout') }}">
                     @csrf
@@ -435,9 +442,11 @@
             const rules = [
                 { selector: 'input[name="phone"]', pattern: /^05[0-9]{8}$/, message: 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.' },
                 { selector: 'input[name="password"], input[name="password_confirmation"]', pattern: /^[A-Za-z0-9]+$/, message: 'تنبيه: كلمة المرور تقبل حروف وأرقام إنجليزية فقط.' },
-                { selector: 'input[name="postal_code"], input[name="card_cvc"], input[name="pages"], #researchPages, .copies-input', pattern: /^[0-9]+$/, message: 'تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.' },
+                { selector: 'input[name="postal_code"], input[name="card_cvc"], input[name="pages"], input[name="discount_amount"], #researchPages, .copies-input', pattern: /^[0-9]+$/, message: 'تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.' },
                 { selector: 'input[name="card_number"]', pattern: /^[0-9 ]+$/, message: 'تنبيه: رقم البطاقة يقبل الأرقام الإنجليزية والمسافات فقط.' },
                 { selector: 'input[name="card_expiry"]', pattern: /^(0[1-9]|1[0-2])\/[0-9]{2}$/, message: 'تنبيه: اكتب تاريخ الانتهاء بالأرقام الإنجليزية بصيغة MM/YY.' },
+                { selector: 'input[name="email"]', pattern: /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, message: 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.' },
+                { selector: 'input[name="discount_code"]', pattern: /^[A-Za-z0-9_-]+$/, message: 'تنبيه: كود الخصم يقبل حروف وأرقام إنجليزية فقط.' },
             ];
             const selector = rules.map((rule) => rule.selector).join(', ');
             root.querySelectorAll(selector).forEach((input) => {
@@ -474,8 +483,9 @@
             const link = event.target.closest('[data-complete-order-download]');
             if (!link) return;
 
-            const orderId = link.closest('[data-order-id]')?.dataset.orderId;
-            if (!orderId) return;
+            const orderElement = link.closest('[data-order-id]');
+            const orderId = orderElement?.dataset.orderId;
+            if (!orderId || orderElement?.dataset.orderPaid !== '1') return;
 
             document.querySelectorAll(`[data-order-id="${orderId}"] [data-order-status-dot]`).forEach((dot) => {
                 dot.classList.remove('red', 'yellow');

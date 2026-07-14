@@ -18,6 +18,10 @@ class Order extends Model
         'paid_at',
         'print_total',
         'binding_total',
+        'discount_code',
+        'discount_amount',
+        'discount_applied_by',
+        'discount_applied_at',
         'grand_total',
         'customer_notes',
         'admin_notes',
@@ -39,6 +43,7 @@ class Order extends Model
             'admin_opened_at' => 'datetime',
             'admin_notification_seen_at' => 'datetime',
             'customer_notification_seen_at' => 'datetime',
+            'discount_applied_at' => 'datetime',
             'delivered_file_uploaded_at' => 'datetime',
         ];
     }
@@ -56,5 +61,15 @@ class Order extends Model
     public function deliveredFiles(): HasMany
     {
         return $this->hasMany(OrderDeliveredFile::class)->latest();
+    }
+
+    public function discountApplier(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'discount_applied_by');
+    }
+
+    public function baseTotal(): int
+    {
+        return (int) $this->print_total + (int) $this->binding_total;
     }
 }

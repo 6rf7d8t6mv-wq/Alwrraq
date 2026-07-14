@@ -6,6 +6,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CustomerOrderController;
+use App\Http\Controllers\EducationalInstitutionController;
 use App\Http\Controllers\FileUploadController;
 
 Route::middleware('guest')->group(function () {
@@ -13,6 +14,9 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])->name('login.store');
     Route::post('/register', [AuthController::class, 'register'])->name('register.store');
 });
+
+Route::get('/educational-institutions', [EducationalInstitutionController::class, 'index'])
+    ->name('educational-institutions.index');
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -63,9 +67,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
     Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
+    Route::patch('/users/{user}/email', [AdminController::class, 'updateUserEmail'])->name('users.email.update');
     Route::patch('/users/{user}/permissions', [AdminController::class, 'updateUserPermissions'])->name('users.permissions.update');
     Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
     Route::patch('/orders/{order}/open', [AdminController::class, 'openOrder'])->name('orders.open');
+    Route::patch('/orders/{order}/discount', [AdminController::class, 'applyOrderDiscount'])->name('orders.discount.apply');
     Route::delete('/orders/{order}', [AdminController::class, 'destroyOrder'])->name('orders.destroy');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');
     Route::patch('/settings', [AdminController::class, 'updateSettings'])->name('settings.update');

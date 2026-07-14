@@ -117,6 +117,20 @@
                     'supplementary' => 'بحث تكميلي',
                     'graduation' => 'بحث تخرج',
                 ];
+                $coverColorNames = [
+                    'black' => 'أسود',
+                    'light_blue' => 'أزرق فاتح',
+                    'navy' => 'أزرق كحلي',
+                    'dark_green' => 'الأخضر الداكن',
+                    'light_green' => 'الأخضر الفاتح',
+                    'burgundy' => 'العنابي',
+                    'beige' => 'البيج',
+                    'white' => 'الأبيض',
+                ];
+                $writingColorNames = [
+                    'gold' => 'كتابة باللون الذهبي',
+                    'black' => 'كتابة باللون الأسود',
+                ];
                 $bindingNames = [
                     'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
                     'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
@@ -149,20 +163,25 @@
                 if ($order->service_type === 'notes' && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                     $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                 }
-                if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->university_name))) {
-                    $missingRequirements->push('اختيار الجامعة أو المعهد لكل ملف.');
+                if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
+                    $missingRequirements->push('اختيار لون الرسالة ولون الكتابة لكل ملف.');
                 }
                 if ($order->service_type === 'thesis' && $order->files->contains(fn ($file) => $file->file_type === 'pdf' && blank($file->thesis_project_type))) {
                     $missingRequirements->push('اختيار نوع مشروع الرسالة لكل ملف PDF.');
                 }
                 $dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
                 $createdAtText = $dayNames[$order->created_at->dayOfWeek] . ' - ' . $order->created_at->format('Y-m-d H:i');
+                $isPaid = $order->payment_status === 'paid';
+                $isCompleted = $isPaid && in_array($order->status, ['completed', 'finished'], true);
+                $displayStatus = $isCompleted
+                    ? 'مكتمل'
+                    : (in_array($order->status, ['completed', 'finished'], true) ? 'بانتظار الدفع' : ($statusNames[$order->status] ?? $order->status));
             @endphp
             <div class="meta">
                 <div class="meta-card"><span>رقم الطلب</span><strong>#{{ $order->id }}</strong></div>
                 <div class="meta-card"><span>تاريخ إنشاء الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</strong></div>
-                <div class="meta-card"><span>حالة الطلب</span><strong>{{ $statusNames[$order->status] ?? $order->status }}</strong></div>
-                <div class="meta-card"><span>الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
+                <div class="meta-card"><span>حالة الطلب</span><strong>{{ $displayStatus }}</strong></div>
+                <div class="meta-card"><span>الدفع</span><strong>{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
                 <div class="meta-card"><span>عدد الملفات</span><strong>{{ $order->files->count() }}</strong></div>
                 <div class="meta-card full"><span>الخدمة</span><strong>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</strong></div>
                 @if ($projectTypes->isNotEmpty())
@@ -197,6 +216,8 @@
                                 @endif
                                 @if (in_array($order->service_type, ['thesis', 'phd'], true))
                                     <th>الجامعة/المعهد</th>
+                                    <th>لون الرسالة</th>
+                                    <th>لون الكتابة</th>
                                 @endif
                                 <th>الصفحات</th>
                                 @if ($order->service_type !== 'research')
@@ -222,9 +243,11 @@
                                     @if ($order->service_type === 'thesis')
                                         <td>{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
                                     @endif
-                                    @if (in_array($order->service_type, ['thesis', 'phd'], true))
-                                        <td>{{ $file->university_name ?: '-' }}</td>
-                                    @endif
+                                @if (in_array($order->service_type, ['thesis', 'phd'], true))
+                                    <td>{{ $file->university_name ?: '-' }}</td>
+                                    <td>{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
+                                    <td>{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
+                                @endif
                                     <td>{{ $file->pages }}</td>
                                     @if ($order->service_type !== 'research')
                                         <td>{{ $file->copies }}</td>
@@ -252,6 +275,9 @@
                     <div class="total-card"><span>سعر الطباعة</span><strong>{{ $order->print_total }} ريال</strong></div>
                 @endif
                 <div class="total-card"><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+                @if ($order->discount_amount > 0)
+                    <div class="total-card"><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
+                @endif
                 <div class="total-card"><span>الإجمالي</span><strong>{{ $order->grand_total }} ريال</strong></div>
             </div>
         </section>

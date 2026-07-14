@@ -30,7 +30,9 @@
                     <tr>
                         <th>العميل</th>
                         <th>رقم الجوال</th>
+                        <th>البريد</th>
                         <th>الطلبات</th>
+                        <th>الحالة</th>
                         <th>الصلاحية</th>
                         <th>الإجراءات</th>
                     </tr>
@@ -45,12 +47,25 @@
                                 </div>
                             </td>
                             <td data-label="رقم الجوال">{{ $customer->phone }}</td>
+                            <td data-label="البريد">{{ $customer->email ?: '-' }}</td>
                             <td data-label="الطلبات">{{ $customer->orders_count }}</td>
+                            <td data-label="الحالة">
+                                <span class="badge">{{ $customer->is_active ? 'نشط' : 'موقوف' }}</span>
+                                @if ($customer->login_blocked)
+                                    <span class="badge">ممنوع الدخول</span>
+                                @endif
+                                @if ($customer->account_verified_at)
+                                    <span class="badge">موثق</span>
+                                @endif
+                            </td>
                             <td data-label="الصلاحية"><span class="badge">عميل</span></td>
                             <td data-label="الإجراءات">
                                 <div class="actions">
-                                    @if (auth()->user()->hasAdminPermission('customers_update'))
+                                    @if (auth()->user()->hasAnyAdminPermission(['customers_update', 'customers_status', 'customers_login_block', 'customers_password_reset', 'customers_phone_update', 'customers_email_update', 'customers_verify']))
                                         <button class="ghost" type="button" onclick="openAdminModal('تعديل عميل', 'edit-customer-{{ $customer->id }}')">تعديل</button>
+                                    @endif
+                                    @if (auth()->user()->hasAdminPermission('customers_email_update'))
+                                        <button class="ghost" type="button" onclick="openAdminModal('حفظ بريد العميل', 'email-customer-{{ $customer->id }}')">البريد</button>
                                     @endif
                                     @if (auth()->user()->hasAdminPermission('customers_delete'))
                                         <form method="post" action="{{ route('admin.users.destroy', $customer) }}" onsubmit="return confirm('حذف هذا العميل؟ سيتم حذف طلباته وملفاته من قاعدة البيانات.')">
@@ -63,7 +78,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr><td colspan="5" class="empty">لا يوجد عملاء.</td></tr>
+                        <tr><td colspan="7" class="empty">لا يوجد عملاء.</td></tr>
                     @endforelse
                 </tbody>
             </table>
@@ -77,6 +92,7 @@
                 <div class="form-grid">
                     <div><label>الاسم</label><input name="name" required></div>
                     <div><label>رقم الجوال</label><input name="phone" required></div>
+                    <div><label>البريد الإلكتروني</label><input name="email" type="email" inputmode="email" pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}" title="اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com"></div>
                     <div><label>كلمة المرور</label><input name="password" type="password" required></div>
                     <div><label>تأكيد كلمة المرور</label><input name="password_confirmation" type="password" required></div>
                 </div>
@@ -93,10 +109,44 @@
                 <div class="form-section">
                     <h3 class="form-section-title">بيانات العميل</h3>
                     <div class="form-grid">
-                        <div><label>الاسم</label><input name="name" value="{{ $customer->name }}" required></div>
-                        <div><label>رقم الجوال</label><input name="phone" value="{{ $customer->phone }}" required></div>
+                        @if (auth()->user()->hasAdminPermission('customers_update'))
+                            <div><label>الاسم</label><input name="name" value="{{ $customer->name }}" required></div>
+                        @else
+                            <input type="hidden" name="name" value="{{ $customer->name }}">
+                        @endif
+                        @if (auth()->user()->hasAdminPermission('customers_phone_update'))
+                            <div><label>رقم الجوال</label><input name="phone" value="{{ $customer->phone }}" required></div>
+                        @else
+                            <input type="hidden" name="phone" value="{{ $customer->phone }}">
+                        @endif
                     </div>
                 </div>
+                @if (auth()->user()->hasAnyAdminPermission(['customers_status', 'customers_login_block', 'customers_verify']))
+                    <div class="form-section">
+                        <h3 class="form-section-title">حالة الحساب</h3>
+                        <div class="permissions-grid">
+                            @if (auth()->user()->hasAdminPermission('customers_status'))
+                                <label class="permission-option">
+                                    <input type="checkbox" name="is_active" value="1" @checked($customer->is_active)>
+                                    <span>الحساب نشط</span>
+                                </label>
+                            @endif
+                            @if (auth()->user()->hasAdminPermission('customers_login_block'))
+                                <label class="permission-option">
+                                    <input type="checkbox" name="login_blocked" value="1" @checked($customer->login_blocked)>
+                                    <span>منع تسجيل الدخول</span>
+                                </label>
+                            @endif
+                            @if (auth()->user()->hasAdminPermission('customers_verify'))
+                                <label class="permission-option">
+                                    <input type="checkbox" name="account_verified" value="1" @checked(filled($customer->account_verified_at))>
+                                    <span>حساب موثق</span>
+                                </label>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+                @if (auth()->user()->hasAdminPermission('customers_password_reset'))
                 <div class="form-section">
                     <h3 class="form-section-title">تغيير كلمة المرور</h3>
                     <p class="form-note">اضغط الزر إذا كنت تريد تغيير كلمة مرور هذا العميل.</p>
@@ -106,7 +156,22 @@
                         <div><label>تأكيد كلمة المرور الجديدة</label><input name="password_confirmation" type="password" placeholder="تأكيد كلمة المرور"></div>
                     </div>
                 </div>
+                @endif
                 <button class="save" type="submit">حفظ التعديل</button>
+            </form>
+        </template>
+
+        <template id="email-customer-{{ $customer->id }}">
+            <form method="post" action="{{ route('admin.users.email.update', $customer) }}">
+                @csrf
+                @method('patch')
+                <div class="form-section">
+                    <h3 class="form-section-title">البريد الإلكتروني</h3>
+                    <p class="form-note">لن يتم حفظ البريد إلا بعد الضغط على زر حفظ البريد.</p>
+                    <label>البريد الإلكتروني</label>
+                    <input name="email" type="email" inputmode="email" pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}" title="اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com" value="{{ $customer->email }}" required>
+                </div>
+                <button class="save" type="submit">حفظ البريد</button>
             </form>
         </template>
     @endforeach

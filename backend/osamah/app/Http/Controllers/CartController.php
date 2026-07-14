@@ -75,8 +75,12 @@ class CartController extends Controller
         }
 
         if (in_array($order->service_type, ['thesis', 'phd'], true)) {
-            if ($order->files->contains(fn ($file) => blank($file->university_name))) {
-                return 'اختر الجامعة أو المعهد لكل ملف قبل الدفع.';
+            if ($order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
+                return 'اختر لون الرسالة ولون الكتابة لكل ملف قبل الدفع.';
+            }
+
+            if ($order->files->contains(fn ($file) => $file->writing_color === 'black' && !in_array($file->cover_color, ['beige', 'light_blue', 'light_green', 'white'], true))) {
+                return 'الكتابة باللون الأسود متاحة فقط مع البيج أو الأزرق الفاتح أو الأخضر الفاتح أو الأبيض.';
             }
         }
 

@@ -130,6 +130,9 @@
                 <div><span>سعر الطباعة</span><strong>{{ $order->print_total }} ريال</strong></div>
             @endif
             <div><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+            @if ($order->discount_amount > 0)
+                <div><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
+            @endif
             <div class="grand"><span>الإجمالي المستحق</span><strong>{{ $order->grand_total }} ريال</strong></div>
         </div>
     </div>

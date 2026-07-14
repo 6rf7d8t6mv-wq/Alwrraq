@@ -17,6 +17,8 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'phone',
+        'email',
+        'institution_name',
         'address',
         'city',
         'district',
@@ -25,6 +27,9 @@ class User extends Authenticatable
         'password',
         'role',
         'admin_permissions',
+        'is_active',
+        'login_blocked',
+        'account_verified_at',
     ];
 
     protected $hidden = [
@@ -48,7 +53,15 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'admin_permissions' => 'array',
+            'is_active' => 'boolean',
+            'login_blocked' => 'boolean',
+            'account_verified_at' => 'datetime',
         ];
+    }
+
+    public function canLogin(): bool
+    {
+        return $this->is_active && ! $this->login_blocked;
     }
 
     public function hasAdminPermission(string $permission): bool
