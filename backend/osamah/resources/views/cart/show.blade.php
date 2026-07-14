@@ -303,6 +303,7 @@
                         <div>
                             <label>اسم المدينة</label>
                             <input name="delivery_city" value="{{ $order->delivery_city }}" placeholder="مطلوب خارج المدينة المنورة">
+                            <div class="english-number-warning active" style="display:block; color:#64748b;">لخيار خارج المدينة اكتب مدينة خارج المدينة المنورة.</div>
                         </div>
                         <div>
                             <label>اسم الحي</label>

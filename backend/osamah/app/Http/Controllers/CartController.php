@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
@@ -74,6 +75,12 @@ class CartController extends Controller
             'delivery_map_url' => ['required_if:delivery_method,madinah_delivery,redbox_delivery', 'nullable', 'url', 'max:500'],
         ]);
 
+        if ($data['delivery_method'] === 'redbox_delivery' && $this->isMadinahCity($data['delivery_city'] ?? '')) {
+            throw ValidationException::withMessages([
+                'delivery_city' => 'خيار خارج المدينة لا يقبل المدينة المنورة. اكتب اسم المدينة خارج المدينة المنورة.',
+            ]);
+        }
+
         $this->refreshOrderTotals($order);
         $order->refresh();
 
@@ -106,6 +113,18 @@ class CartController extends Controller
     private function authorizeOrder(Order $order): void
     {
         abort_unless($order->user_id === Auth::id(), 403);
+    }
+
+    private function isMadinahCity(string $city): bool
+    {
+        $normalized = str_replace([' ', 'ة', 'أ', 'إ', 'آ'], ['', 'ه', 'ا', 'ا', 'ا'], trim($city));
+
+        return in_array($normalized, [
+            'المدينهالمنوره',
+            'مدينهالمنوره',
+            'المدينه',
+            'طيبه',
+        ], true);
     }
 
     private function orderPaymentBlockMessage(Order $order): ?string

@@ -96,16 +96,17 @@
                 align-items: flex-start;
                 justify-content: space-between;
                 gap: 12px;
-                padding: 8px 0;
+                padding: 10px 0;
                 border-bottom: 1px solid #f1f5f9;
-                line-height: 1.6;
+                line-height: 1.7;
+                font-size: 16px;
             }
             .files-list-item > div:last-child { border-bottom: 0; }
             .files-list-item > div::before {
                 content: attr(data-label);
                 flex: 0 0 auto;
                 color: #64748b;
-                font-size: 12px;
+                font-size: 13px;
                 font-weight: 900;
                 white-space: nowrap;
             }
@@ -114,7 +115,7 @@
                 display: block !important;
                 padding: 0 0 10px !important;
                 border-bottom: 1px solid #e2e8f0 !important;
-                font-size: 14px;
+                font-size: 17px;
                 text-align: right;
             }
             .file-name-cell::before {
@@ -122,29 +123,29 @@
                 margin-bottom: 6px;
             }
             .files-list-item:last-child { margin-bottom: 0; }
-            .file-name-cell { color: #111827; font-weight: 800; word-break: normal; overflow-wrap: anywhere; line-height: 1.6; }
-            .file-pages { color: #475569; }
-            .file-size { color: #6b7280; }
-            .file-price { color: #0f172a; font-weight: 700; }
-            .file-price-note { display: block; margin-top: 4px; color: #b91c1c; font-size: 11px; font-weight: 600; line-height: 1.4; }
-            .binding-select { width: 100%; min-width: 130px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-weight: 600; }
+            .file-name-cell { color: #111827; font-weight: 900; word-break: normal; overflow-wrap: anywhere; line-height: 1.75; }
+            .file-pages { color: #475569; font-size: 16px; font-weight: 800; }
+            .file-size { color: #6b7280; font-size: 16px; font-weight: 800; }
+            .file-price { color: #0f172a; font-size: 16px; font-weight: 900; }
+            .file-price-note { display: block; margin-top: 4px; color: #b91c1c; font-size: 12px; font-weight: 700; line-height: 1.5; }
+            .binding-select { width: 100%; min-width: 158px; padding: 12px 13px; border: 1px solid #cbd5e1; border-radius: 9px; background: #ffffff; color: #111827; font-size: 14px; font-weight: 800; }
             .binding-select:invalid { color: #6b7280; }
             .university-cell { display: flex; flex-direction: column; gap: 8px; min-width: 190px; }
-            .university-input { width: 100%; min-width: 170px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-weight: 700; }
+            .university-input { width: 100%; min-width: 198px; padding: 12px 13px; border: 1px solid #cbd5e1; border-radius: 9px; background: #ffffff; color: #111827; font-size: 14px; font-weight: 800; }
             .university-input:placeholder-shown { color: #6b7280; }
-            .university-custom-input { width: 100%; min-width: 170px; padding: 8px 10px; border: 1px solid #94a3b8; border-radius: 6px; background: #f8fafc; color: #111827; font-weight: 700; }
-            .university-picker-button { width: 100%; margin: 0; padding: 8px 10px; border: 0; border-radius: 6px; background: #0f172a; color: #ffffff; font-weight: 800; cursor: pointer; }
+            .university-custom-input { width: 100%; min-width: 198px; padding: 12px 13px; border: 1px solid #94a3b8; border-radius: 9px; background: #f8fafc; color: #111827; font-size: 14px; font-weight: 800; }
+            .university-picker-button { width: 100%; margin: 0; padding: 12px 13px; border: 0; border-radius: 9px; background: #0f172a; color: #ffffff; font-size: 14px; font-weight: 900; cursor: pointer; }
             .university-dropdown { display: none; }
             .university-dropdown.active { display: block; }
             .university-results { display: block; margin-top: 6px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; overflow: hidden; max-height: 170px; overflow-y: auto; }
-            .university-result { width: 100%; margin: 0; padding: 8px 10px; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; background: #ffffff; color: #111827; text-align: right; font-size: 12px; font-weight: 800; cursor: pointer; }
+            .university-result { width: 100%; margin: 0; padding: 10px 12px; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; background: #ffffff; color: #111827; text-align: right; font-size: 14px; font-weight: 800; cursor: pointer; }
             .university-result:hover { background: #f8fafc; }
             .university-result:last-child { border-bottom: 0; }
-            .copies-stepper { display: inline-grid; grid-template-columns: 38px 64px 38px; gap: 6px; align-items: center; }
-            .copies-stepper-button { width: 38px; height: 38px; margin: 0; padding: 0; border: 0; border-radius: 8px; background: #0f172a; color: #ffffff; font-size: 20px; font-weight: 900; line-height: 1; cursor: pointer; }
+            .copies-stepper { display: inline-grid; grid-template-columns: 44px 78px 44px; gap: 8px; align-items: center; }
+            .copies-stepper-button { width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 10px; background: #0f172a; color: #ffffff; font-size: 23px; font-weight: 900; line-height: 1; cursor: pointer; }
             .copies-stepper-button:hover { background: #1e293b; }
-            .copies-input { width: 64px; height: 38px; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #111827; font-weight: 800; text-align: center; }
-            .file-remove { cursor: pointer; color: #ef4444; font-weight: 600; text-align: center; }
+            .copies-input { width: 78px; height: 44px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; color: #111827; font-size: 15px; font-weight: 900; text-align: center; }
+            .file-remove { cursor: pointer; color: #ef4444; font-size: 15px; font-weight: 800; text-align: center; }
             .file-remove:hover { color: #b91c1c; }
             .empty-message { padding: 20px; text-align: center; color: #9ca3af; font-size: 14px; }
             
@@ -1173,6 +1174,13 @@
                 deliverySelections[service].method = method;
                 if (method === 'madinah_delivery') {
                     deliverySelections[service].city = 'المدينة المنورة';
+                } else if (method === 'redbox_delivery' && isMadinahCity(deliverySelections[service].city)) {
+                    deliverySelections[service].city = '';
+                } else if (!['madinah_delivery', 'redbox_delivery'].includes(method)) {
+                    deliverySelections[service].city = '';
+                    deliverySelections[service].district = '';
+                    deliverySelections[service].street = '';
+                    deliverySelections[service].mapUrl = '';
                 }
                 deliverySelections[service].saved = false;
                 updatePrintProductPricingSummary(service);
@@ -1220,6 +1228,13 @@
                     }
                     return;
                 }
+                if (delivery.method === 'redbox_delivery' && isMadinahCity(delivery.city)) {
+                    if (status) {
+                        status.textContent = 'خيار خارج المدينة لا يقبل المدينة المنورة. اكتب اسم المدينة خارج المدينة المنورة.';
+                        status.classList.add('error');
+                    }
+                    return;
+                }
 
                 try {
                     const response = await fetch(`/cart/${orderId}/delivery`, {
@@ -1259,6 +1274,16 @@
                         status.classList.add('error');
                     }
                 }
+            }
+
+            function isMadinahCity(city) {
+                const normalized = String(city || '')
+                    .trim()
+                    .replace(/\s+/g, '')
+                    .replace(/[ة]/g, 'ه')
+                    .replace(/[أإآ]/g, 'ا');
+
+                return ['المدينهالمنوره', 'مدينهالمنوره', 'المدينه', 'طيبه'].includes(normalized);
             }
 
             function updateNotesPricingSummary() {
