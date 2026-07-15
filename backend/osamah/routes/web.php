@@ -5,6 +5,7 @@ use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\EducationalInstitutionController;
 use App\Http\Controllers\FileUploadController;
@@ -19,6 +20,12 @@ Route::get('/educational-institutions', [EducationalInstitutionController::class
     ->name('educational-institutions.index');
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
+
+Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
+    Route::get('/conversations', [ChatController::class, 'conversations'])->name('conversations');
+    Route::get('/conversations/{conversation}', [ChatController::class, 'show'])->name('conversations.show');
+    Route::post('/conversations/{conversation}/messages', [ChatController::class, 'store'])->name('messages.store');
+});
 
 Route::get('/', function () {
     return view('public.home');

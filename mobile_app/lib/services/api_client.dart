@@ -343,6 +343,87 @@ class ApiClient {
     );
   }
 
+  static Future<Map<String, dynamic>> chatConversations() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/chat/conversations'),
+        headers: authHeaders,
+      );
+      final data = _decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': _extractMessage(data, response.statusCode),
+      };
+    } catch (_) {
+      return {
+        'success': false,
+        'message':
+            'تعذر الاتصال بـ Laravel. تأكد أن السيرفر يعمل على 127.0.0.1:8000',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> chatMessages({
+    required int conversationId,
+  }) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/chat/conversations/$conversationId'),
+        headers: authHeaders,
+      );
+      final data = _decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': _extractMessage(data, response.statusCode),
+      };
+    } catch (_) {
+      return {
+        'success': false,
+        'message':
+            'تعذر الاتصال بـ Laravel. تأكد أن السيرفر يعمل على 127.0.0.1:8000',
+      };
+    }
+  }
+
+  static Future<Map<String, dynamic>> sendChatMessage({
+    required int conversationId,
+    required String message,
+  }) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/chat/conversations/$conversationId/messages'),
+        headers: {...authHeaders, 'Content-Type': 'application/json'},
+        body: jsonEncode({'message': message}),
+      );
+      final data = _decode(response.body);
+
+      if (response.statusCode >= 200 && response.statusCode < 300) {
+        return data;
+      }
+
+      return {
+        'success': false,
+        'message': _extractMessage(data, response.statusCode),
+      };
+    } catch (_) {
+      return {
+        'success': false,
+        'message':
+            'تعذر الاتصال بـ Laravel. تأكد أن السيرفر يعمل على 127.0.0.1:8000',
+      };
+    }
+  }
+
   static Future<Map<String, dynamic>> _patchAccount({
     required String path,
     required Map<String, dynamic> payload,

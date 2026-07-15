@@ -66,10 +66,21 @@
             .dashboard-hero, .dashboard-grid { grid-template-columns: 1fr; }
             .dashboard-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .discount-form { grid-template-columns: 1fr; }
+            .dashboard-table-wrap { border: 0; overflow: visible; background: transparent; }
+            .dashboard-table-wrap table { min-width: 0; display: block; }
+            .dashboard-table-wrap thead { display: none; }
+            .dashboard-table-wrap tbody { display: grid; gap: 12px; }
+            .dashboard-table-wrap tr { display: grid; gap: 8px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
+            .dashboard-table-wrap td { display: grid; grid-template-columns: minmax(92px, 34%) minmax(0, 1fr); align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #edf2f7; white-space: normal; overflow-wrap: anywhere; }
+            .dashboard-table-wrap td:last-child { border-bottom: 0; }
+            .dashboard-table-wrap td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; }
         }
         @media (max-width: 560px) {
             .dashboard-stat-grid { grid-template-columns: 1fr; }
             .status-row { grid-template-columns: 78px minmax(0, 1fr) 38px; }
+            .dashboard-action { align-items: flex-start; flex-direction: column; }
+            .dashboard-section-title { align-items: stretch; flex-direction: column; }
+            .dashboard-link { width: 100%; }
         }
     </style>
 
@@ -182,12 +193,12 @@
                                         : (in_array($order->status, ['completed', 'finished'], true) ? 'بانتظار الدفع' : $order->status);
                                 @endphp
                                 <tr>
-                                    <td><span class="order-id">#{{ $order->id }}</span></td>
-                                    <td>{{ $order->user->name }}<br><span class="muted">{{ $order->user->phone }}</span></td>
-                                    <td>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</td>
-                                    <td><span class="badge">{{ $displayStatus }}</span></td>
-                                    <td><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span></td>
-                                    <td><strong>{{ $order->grand_total }} ريال</strong></td>
+                                    <td data-label="رقم الطلب"><span class="order-id">#{{ $order->id }}</span></td>
+                                    <td data-label="العميل">{{ $order->user->name }}<br><span class="muted">{{ $order->user->phone }}</span></td>
+                                    <td data-label="الخدمة">{{ $serviceNames[$order->service_type] ?? $order->service_type }}</td>
+                                    <td data-label="الحالة"><span class="badge">{{ $displayStatus }}</span></td>
+                                    <td data-label="الدفع"><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span></td>
+                                    <td data-label="الإجمالي"><strong>{{ $order->grand_total }} ريال</strong></td>
                                 </tr>
                             @endforeach
                         </tbody>

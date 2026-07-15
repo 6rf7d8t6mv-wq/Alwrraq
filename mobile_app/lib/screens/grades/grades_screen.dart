@@ -6,6 +6,7 @@ import '../account/account_settings_screen.dart';
 import '../auth/login_screen.dart';
 import '../cart/cart_screen.dart';
 import '../orders/my_orders_screen.dart';
+import '../../widgets/support_chat_widget.dart';
 
 class GradesScreen extends StatefulWidget {
   const GradesScreen({super.key});
@@ -113,39 +114,46 @@ class _GradesScreenState extends State<GradesScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: _background,
-        body: Column(
+        body: Stack(
           children: [
-            _Header(onNavigate: _openPage),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
-                child: Column(
-                  children: [
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 1000),
-                        child: _selectedService == null
-                            ? _ServicesPanel(onSelect: _selectService)
-                            : _UploadPanel(
-                                service: _selectedService!,
-                                onBack: () =>
-                                    setState(() => _selectedService = null),
-                                onUpload: _pickAndUpload,
-                                wordFiles: _files[_selectedService!]!['word']!,
-                                pdfFiles: _files[_selectedService!]!['pdf']!,
-                                orderId: _orderIds[_selectedService!],
-                                onBindingChanged: _updateBinding,
-                                onCopiesChanged: _updateCopies,
-                                onDelete: _deleteFile,
-                              ),
-                      ),
+            Column(
+              children: [
+                _Header(onNavigate: _openPage),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 32, 20, 0),
+                    child: Column(
+                      children: [
+                        Center(
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 1000),
+                            child: _selectedService == null
+                                ? _ServicesPanel(onSelect: _selectService)
+                                : _UploadPanel(
+                                    service: _selectedService!,
+                                    onBack: () =>
+                                        setState(() => _selectedService = null),
+                                    onUpload: _pickAndUpload,
+                                    wordFiles:
+                                        _files[_selectedService!]!['word']!,
+                                    pdfFiles:
+                                        _files[_selectedService!]!['pdf']!,
+                                    orderId: _orderIds[_selectedService!],
+                                    onBindingChanged: _updateBinding,
+                                    onCopiesChanged: _updateCopies,
+                                    onDelete: _deleteFile,
+                                  ),
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+                        const _PageFooter(),
+                      ],
                     ),
-                    const SizedBox(height: 28),
-                    const _PageFooter(),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
+            const SupportChatWidget(),
           ],
         ),
       ),
@@ -411,18 +419,87 @@ class _ServicesPanel extends StatelessWidget {
           const _BladeSectionTitle('اختر الخدمة المطلوبة'),
           const SizedBox(height: 22),
           _ServiceButton(
-            text: '📝 طباعة وتغليف المذكرات',
+            text: 'طباعة المذكرات والكتب وملفات PDF',
             onPressed: () => onSelect('notes'),
           ),
           const SizedBox(height: 20),
           _ServiceButton(
-            text: '📚 طبعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج',
+            text: 'طباعة وتجليد رسائل الماجستير',
             onPressed: () => onSelect('thesis'),
           ),
           const SizedBox(height: 20),
           _ServiceButton(
-            text: '🎓 طباعة وتجليد رسالة دكتوراه',
+            text: 'طباعة وتجليد رسائل الدكتوراه',
             onPressed: () => onSelect('phd'),
+          ),
+          const SizedBox(height: 20),
+          const _InformationalService(
+            title: 'تنسيق رسائل الدكتوراه والماجستير',
+            description: 'خدمة تنسيق أكاديمي متاحة في الموقع بنفس بياناتك.',
+          ),
+          const SizedBox(height: 20),
+          const _InformationalService(
+            title: 'تدقيق لغوي للرسائل العلمية',
+            description: 'مراجعة لغوية احترافية للرسائل والبحوث الأكاديمية.',
+          ),
+          const SizedBox(height: 20),
+          const _InformationalService(
+            title: 'إنشاء البحوث',
+            description: 'إرسال عنوان البحث وعدد الصفحات ومتابعة التسليم.',
+          ),
+          const SizedBox(height: 20),
+          const _InformationalService(
+            title: 'تجليد الكتب كعب جلد طبيعي',
+            description: 'تجليد كتب وملازم بكعب جلد طبيعي كما في الموقع.',
+          ),
+          const SizedBox(height: 20),
+          const _InformationalService(
+            title: 'طباعة الملفات بالألوان',
+            description: 'طباعة ملونة وخيارات تغليف حسب نوع الملف.',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InformationalService extends StatelessWidget {
+  const _InformationalService({required this.title, required this.description});
+
+  final String title;
+  final String description;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        border: Border.all(color: _GradesScreenState._border),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: const TextStyle(
+              color: _GradesScreenState._text,
+              fontFamily: 'Arial',
+              fontSize: 17,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            description,
+            style: const TextStyle(
+              color: _GradesScreenState._muted,
+              fontFamily: 'Arial',
+              fontSize: 13,
+              height: 1.6,
+            ),
           ),
         ],
       ),

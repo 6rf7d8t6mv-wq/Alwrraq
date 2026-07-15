@@ -25,6 +25,7 @@
         .logout { margin-top: 0; justify-content: center; background: #b91c1c; border-color: rgba(248, 113, 113, 0.5); font-weight: 800; }
         .logout:hover { background: #dc2626; border-color: #f87171; }
         .logout .nav-text { flex: 0 1 auto; }
+        .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
         main { min-width: 0; padding: clamp(16px, 3vw, 28px); overflow: auto; }
         .page-title { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 20px; }
         h1 { margin: 0; font-size: clamp(24px, 4vw, 30px); }
@@ -168,14 +169,19 @@
         .modal-close { border: 0; background: #f1f5f9; border-radius: 8px; padding: 7px 10px; cursor: pointer; font-weight: 800; }
         .full { grid-column: 1 / -1; }
         @media (max-width: 980px) {
-            :root { --sidebar-width: 132px; --page-gap: 10px; }
-            .layout { grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
-            aside { position: sticky; top: 0; height: 100vh; padding: 14px 8px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.14); }
-            nav { flex-direction: column; flex-wrap: nowrap; }
+            :root { --sidebar-width: 0px; --page-gap: 10px; }
+            .layout { grid-template-columns: minmax(0, 1fr); }
+            aside { position: sticky; top: 0; height: auto; max-height: none; padding: 12px; z-index: 30; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+            .admin-name { grid-column: 1 / -1; display: none; margin: 0 0 2px; }
+            .mobile-menu-toggle { display: inline-flex; }
+            nav { grid-column: 1 / -1; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            aside.menu-open .admin-name { display: block; }
+            aside.menu-open nav { display: grid; }
+            main { padding: 14px 10px 24px; }
             .stats, .forms-grid, .form-grid, .permissions-grid { grid-template-columns: 1fr; }
             .toolbar, .search-form { align-items: stretch; flex-direction: column; }
             .order-head { grid-template-columns: 1fr; }
-            table { display: block; overflow-x: auto; white-space: nowrap; }
+            table { width: 100%; }
             .management-table-wrap { border: 0; background: transparent; overflow: visible; }
             .management-table { display: block; table-layout: auto; }
             .management-table thead { display: none; }
@@ -213,6 +219,18 @@
             .invoice-table-wrap td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; }
             .invoice-table-wrap td:last-child { padding: 9px; border-radius: 8px; }
         }
+        @media (max-width: 560px) {
+            .page-title { align-items: stretch; flex-direction: column; }
+            .panel { padding: 14px; }
+            nav { grid-template-columns: 1fr; }
+            .order-filter-bar { gap: 7px; }
+            .order-filter-button { min-height: 50px; font-size: 11px; padding: 8px 5px; }
+            .management-table td { grid-template-columns: minmax(82px, 34%) minmax(0, 1fr); }
+            .modal-backdrop { padding: 8px; }
+            .modal { max-height: calc(100vh - 16px); border-radius: 10px; }
+            .modal-head { padding: 12px 14px; }
+            .modal-body { padding: 12px; }
+        }
     </style>
 </head>
 <body>
@@ -226,6 +244,7 @@
                     ->exists();
             @endphp
             <div class="brand">Mr-Student</div>
+            <button class="mobile-menu-toggle" type="button" onclick="toggleAdminHeader(this, event)" aria-expanded="false">☰ القائمة</button>
             <div class="admin-name">👤 {{ auth()->user()->name }}</div>
             <nav>
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>
@@ -276,6 +295,21 @@
     </div>
 
     <script>
+        function toggleAdminHeader(button, event) {
+            event?.stopPropagation();
+            const sidebar = button.closest('aside');
+            const isOpen = sidebar.classList.toggle('menu-open');
+            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        document.addEventListener('click', (event) => {
+            const sidebar = document.querySelector('aside.menu-open');
+            if (!sidebar || sidebar.contains(event.target)) return;
+
+            sidebar.classList.remove('menu-open');
+            sidebar.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
+        });
+
         function openAdminModal(title, templateId) {
             const modal = document.getElementById('adminModal');
             const body = document.getElementById('adminModalBody');
@@ -516,5 +550,6 @@
             });
         });
     </script>
+    @include('shared.chat-widget')
 </body>
 </html>

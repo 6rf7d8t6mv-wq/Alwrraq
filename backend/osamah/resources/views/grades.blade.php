@@ -24,6 +24,7 @@
             .customer-notice-dot { position: absolute; top: 8px; left: 9px; width: 7px; height: 7px; border-radius: 999px; background: #dc2626; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95); }
             .logout-button { width: 100%; background: #b91c1c; color: #f8fafc; border: 1px solid rgba(248, 113, 113, 0.5); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: center; font-weight: 800; }
             .logout-button:hover { background: #dc2626; border-color: #f87171; }
+            .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
             .container { width: min(100%, 1000px); margin: clamp(16px, 3vw, 32px) auto 24px; padding: clamp(18px, 3vw, 32px); background: #ffffff; border-radius: clamp(16px, 2vw, 24px); box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08); }
             h1 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 36px); color: #111827; }
             h2 { margin: 28px 0 16px; font-size: clamp(20px, 2.4vw, 24px); color: #1f2937; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
@@ -238,12 +239,19 @@
                 .service-entry { padding: 11px 9px; font-size: 13px; }
             }
             @media (max-width: 768px) {
-                :root { --sidebar-width: 132px; --page-gap: 10px; }
-                .page-header { padding: 14px 8px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.14); }
-                .header-inner { gap: 14px; }
+                :root { --sidebar-width: 0px; --page-gap: 10px; }
+                body { padding: 0; }
+                .page-header { position: sticky; top: 0; width: 100%; min-height: 0; max-height: none; padding: 12px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16); }
+                .header-inner { height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+                .mobile-menu-toggle { display: inline-flex; }
+                .header-actions { grid-column: 1 / -1; margin-top: 0; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+                .page-header.menu-open .header-actions { display: grid; }
+                .header-user { grid-column: 1 / -1; margin: 0; padding: 0; }
+                .header-form { margin: 0; }
                 .header-user, .header-link { padding: 9px 8px; gap: 5px; }
                 .logout-button { padding: 9px 8px; }
-                .container, .footer-content { padding: 16px; }
+                .container { width: calc(100% - 20px); margin: 14px auto 22px; padding: 16px; }
+                .footer-content { padding: 16px; }
                 .upload-section { flex-direction: column; }
                 .upload-box { min-width: 100%; }
                 .files-list { border: 0; background: transparent; overflow: visible; }
@@ -309,7 +317,7 @@
                 .research-form-grid { grid-template-columns: 1fr; }
             }
             @media (max-width: 420px) {
-                :root { --sidebar-width: 92px; --page-gap: 8px; }
+                :root { --sidebar-width: 0px; --page-gap: 8px; }
                 .brand { font-size: 16px; }
                 .brand-subtitle { font-size: 10px; }
                 .header-actions { font-size: 11px; }
@@ -330,6 +338,7 @@
                     <div class="brand">Mr-Student</div>
                     <p class="brand-subtitle">خدمات الطباعة والتجليد</p>
                 </div>
+                <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
                 <div class="header-actions">
                     @php
                         $hasCustomerOrderNotice = \App\Models\Order::query()
@@ -809,6 +818,21 @@
         <datalist id="saudiUniversitiesList"></datalist>
 
         <script>
+            function toggleMobileHeader(button, event) {
+                event?.stopPropagation();
+                const header = button.closest('.page-header');
+                const isOpen = header.classList.toggle('menu-open');
+                button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+            }
+
+            document.addEventListener('click', (event) => {
+                const header = document.querySelector('.page-header.menu-open');
+                if (!header || header.contains(event.target)) return;
+
+                header.classList.remove('menu-open');
+                header.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
+            });
+
             // Store uploaded files for each service
             const uploadedFiles = {
                 notes: { word: [], pdf: [] },
@@ -2640,6 +2664,8 @@
                 <iframe class="cart-modal-frame" id="cartModalFrame" title="السلة والدفع" src="about:blank"></iframe>
             </div>
         </div>
+
+        @include('shared.chat-widget')
 
         <footer class="page-footer" id="info">
             <div class="footer-content">

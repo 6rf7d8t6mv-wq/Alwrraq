@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>طلباتي</title>
     <style>
         * { box-sizing: border-box; }
@@ -21,6 +22,7 @@
         .header-form { margin: 0; }
         .logout-button { width: 100%; color: #ffffff; background: #b91c1c; border: 1px solid rgba(248, 113, 113, 0.5); font-weight: 800; padding: 10px 12px; border-radius: 10px; text-align: center; line-height: 1.5; cursor: pointer; }
         .logout-button:hover { background: #dc2626; border-color: #f87171; }
+        .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
         main { width: min(1040px, 100%); margin: clamp(16px, 4vw, 28px) auto; padding: 0 clamp(12px, 4vw, 20px); }
         .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: clamp(16px, 4vw, 22px); box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
         .page-title { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; }
@@ -149,8 +151,15 @@
             .detail-table-wrap .action { width: 100%; }
         }
         @media (max-width: 820px) {
-            :root { --sidebar-width: 132px; --page-gap: 10px; }
-            .header { padding: 14px 8px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.14); }
+            :root { --sidebar-width: 0px; --page-gap: 10px; }
+            body { padding: 0; }
+            .header { position: sticky; top: 0; width: 100%; min-height: 0; max-height: none; padding: 12px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16); }
+            .header-inner { height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; }
+            .mobile-menu-toggle { display: inline-flex; }
+            .header-actions { grid-column: 1 / -1; margin-top: 0; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+            .header.menu-open .header-actions { display: grid; }
+            .header-user { grid-column: 1 / -1; margin: 0; }
+            main { width: calc(100% - 20px); margin: 14px auto 24px; padding: 0; }
             .page-title { align-items: flex-start; flex-direction: column; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
             .detail-grid, .totals-grid { grid-template-columns: 1fr; }
@@ -181,6 +190,7 @@
     <header class="header">
         <div class="header-inner">
             <div class="brand">Mr-Student</div>
+            <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
             <div class="header-actions">
                 <span class="header-user">👤 {{ auth()->user()->name }}</span>
                 <a class="home-button" href="{{ route('home') }}">🏠 الصفحة الرئيسية</a>
@@ -698,6 +708,21 @@
         </section>
     </main>
     <script>
+        function toggleMobileHeader(button, event) {
+            event?.stopPropagation();
+            const header = button.closest('.header');
+            const isOpen = header.classList.toggle('menu-open');
+            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        }
+
+        document.addEventListener('click', (event) => {
+            const header = document.querySelector('.header.menu-open');
+            if (!header || header.contains(event.target)) return;
+
+            header.classList.remove('menu-open');
+            header.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
+        });
+
         function localizeDateTimes(root = document) {
             const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
                 weekday: 'long',
@@ -815,5 +840,6 @@
             openOrderModal(`orderModal${openOrderId}`);
         }
     </script>
+    @include('shared.chat-widget')
 </body>
 </html>
