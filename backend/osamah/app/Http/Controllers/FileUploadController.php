@@ -24,14 +24,14 @@ class FileUploadController extends Controller
             $type = $request->input('type', 'unknown');
             $service = $request->input('service', 'notes');
 
-            if (!in_array($service, ['notes', 'books', 'thesis', 'phd', 'formatting', 'research'], true)) {
+            if (!in_array($service, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research'], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'نوع الخدمة غير معروف'
                 ], 400);
             }
 
-            if (in_array($service, ['notes', 'books'], true) && $type !== 'pdf') {
+            if (in_array($service, ['notes', 'books', 'color_printing'], true) && $type !== 'pdf') {
                 return response()->json([
                     'success' => false,
                     'message' => 'هذه الخدمة تقبل ملفات PDF فقط'
@@ -133,7 +133,7 @@ class FileUploadController extends Controller
                 'size' => $fileSize,
                 'pages' => $pageCount,
                 'copies' => 1,
-                'print_sides' => 'two_sides',
+                'print_sides' => $service === 'color_printing' ? 'one_side' : 'two_sides',
                 'paper_color' => 'white',
                 'thesis_project_type' => null,
                 'university_name' => null,
@@ -145,7 +145,7 @@ class FileUploadController extends Controller
                 'total_price' => 0,
             ];
 
-            if (in_array($service, ['notes', 'books'], true)) {
+            if (in_array($service, ['notes', 'books', 'color_printing'], true)) {
                 $filePayload['page_size'] = 'A4';
             }
 
@@ -159,7 +159,8 @@ class FileUploadController extends Controller
                 $orderFile->writing_color,
                 $orderFile->file_type,
                 $orderFile->paper_color,
-                $orderFile->page_size
+                $orderFile->page_size,
+                $orderFile->print_sides
             );
 
             $orderFile->fill($prices)->save();
@@ -208,10 +209,10 @@ class FileUploadController extends Controller
         abort_unless($file->order->user_id === Auth::id() || Auth::user()?->role === 'admin', 403);
 
         $data = $request->validate([
-            'binding_type' => ['nullable', 'in:tape,wire,normal,none'],
+            'binding_type' => ['nullable', 'in:tape,wire,normal,thermal,none'],
             'copies' => ['nullable', 'integer', 'min:1', 'max:999'],
             'print_sides' => ['nullable', 'in:one_side,two_sides'],
-            'page_size' => ['nullable', 'in:A4,A5,B5'],
+            'page_size' => ['nullable', 'in:A4,A3,A5,B5'],
             'paper_color' => ['nullable', 'in:white,yellow'],
             'thesis_project_type' => ['nullable', 'in:thesis,supplementary,graduation'],
             'university_name' => ['nullable', 'string', 'max:255'],
@@ -231,8 +232,9 @@ class FileUploadController extends Controller
             $file->print_sides = $data['print_sides'] ?: 'two_sides';
         }
 
-        if (array_key_exists('page_size', $data) && in_array($file->order->service_type, ['notes', 'books'], true)) {
-            $file->page_size = $data['page_size'] ?: 'A4';
+        if (array_key_exists('page_size', $data) && in_array($file->order->service_type, ['notes', 'books', 'color_printing'], true)) {
+            $pageSize = $data['page_size'] ?: 'A4';
+            $file->page_size = $pageSize === 'A3' && $file->order->service_type !== 'color_printing' ? 'A4' : $pageSize;
         }
 
         if (array_key_exists('paper_color', $data) && in_array($file->order->service_type, ['notes', 'books'], true)) {
@@ -274,7 +276,8 @@ class FileUploadController extends Controller
             $file->writing_color,
             $file->file_type,
             $file->paper_color,
-            $file->page_size
+            $file->page_size,
+            $file->print_sides
         );
 
         $file->fill($prices)->save();
@@ -403,8 +406,15 @@ class FileUploadController extends Controller
     {
         try {
             $content = file_get_contents($filePath);
-            $pageMatches = preg_match_all('/\/Type\s*\/Page[^s]/i', $content);
-            return max(1, $pageMatches);
+            $pageMatches = preg_match_all('/\/Type\s*\/Page\b(?!s)/i', $content);
+            if ($pageMatches > 0) {
+                return max(1, $pageMatches);
+            }
+
+            preg_match_all('/\/Count\s+(\d+)/i', $content, $countMatches);
+            $counts = array_map('intval', $countMatches[1] ?? []);
+
+            return max(1, $counts ? max($counts) : 1);
         } catch (\Exception $e) {
             return 1;
         }
@@ -437,7 +447,7 @@ class FileUploadController extends Controller
         }
     }
 
-    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null): array
+    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null, ?string $printSides = null): array
     {
         if (in_array($service, ['thesis', 'phd'], true) && $fileType === 'word') {
             return [
@@ -457,12 +467,33 @@ class FileUploadController extends Controller
             ];
         }
 
+        if ($service === 'color_printing') {
+            $sheetCount = max(1, $pages) * max(1, $copies);
+            $pageSize = $pageSize ?: 'A4';
+            $printPrice = $this->colorPrintingPrice($sheetCount, $pageSize);
+            $thermalBindingUnits = $printSides === 'two_sides'
+                ? (int) ceil($sheetCount / 2)
+                : $sheetCount;
+            $bindingPrice = $binding === 'thermal'
+                ? $thermalBindingUnits * ($pageSize === 'A3' ? 10 : 5)
+                : $this->notesBindingPrice($pages, $binding);
+
+            return [
+                'print_price' => $printPrice,
+                'binding_price' => $bindingPrice,
+                'total_price' => $printPrice + $bindingPrice,
+            ];
+        }
+
         if (in_array($service, ['notes', 'books'], true)) {
+            $copyCount = max(1, $copies);
+            $printPages = max(1, $pages) * $copyCount;
+
             if ($service === 'books') {
                 $printPrice = $paperColor === 'yellow'
-                    ? (int) ceil($pages / 10)
-                    : (int) ceil($pages / 15);
-                $bindingPrice = $pageSize === 'A4' ? 55 : 45;
+                    ? (int) ceil($printPages / 10)
+                    : (int) ceil($printPages / 15);
+                $bindingPrice = ($pageSize === 'A4' ? 55 : 45) * $copyCount;
 
                 return [
                     'print_price' => $printPrice,
@@ -472,23 +503,9 @@ class FileUploadController extends Controller
             }
 
             $printPrice = $paperColor === 'yellow'
-                ? (int) ceil($pages / 6)
-                : $this->printPrice($pages, 1);
-            $bindingPrice = 0;
-
-            if ($binding === 'normal') {
-                $bindingPrice = 3;
-            } elseif ($binding === 'wire') {
-                if ($pages < 100) {
-                    $bindingPrice = 5;
-                } elseif ($pages < 300) {
-                    $bindingPrice = 7;
-                } elseif ($pages <= 600) {
-                    $bindingPrice = 9;
-                } else {
-                    $bindingPrice = 14;
-                }
-            }
+                ? (int) ceil($printPages / 6)
+                : (int) ceil($printPages / 12);
+            $bindingPrice = $this->notesBindingPrice($pages, $binding) * $copyCount;
 
             return [
                 'print_price' => $printPrice,
@@ -523,13 +540,61 @@ class FileUploadController extends Controller
         return (int) ceil($pages / 15) * max(1, $copies);
     }
 
+    private function colorPrintingPrice(int $sheetCount, string $pageSize): float
+    {
+        if ($pageSize === 'A3') {
+            $unitPrice = match (true) {
+                $sheetCount <= 5 => 5,
+                $sheetCount <= 10 => 3.5,
+                default => 2.5,
+            };
+
+            return $sheetCount * $unitPrice;
+        }
+
+        $unitPrice = match (true) {
+            $sheetCount <= 5 => 2,
+            $sheetCount <= 10 => 1.5,
+            default => 0.80,
+        };
+
+        return $sheetCount * $unitPrice;
+    }
+
+    private function notesBindingPrice(int $pages, ?string $binding): int
+    {
+        if ($binding === 'normal') {
+            return 3;
+        }
+
+        if ($binding === 'wire') {
+            if ($pages < 100) {
+                return 5;
+            }
+
+            if ($pages < 300) {
+                return 7;
+            }
+
+            if ($pages <= 600) {
+                return 9;
+            }
+
+            return 14;
+        }
+
+        return 0;
+    }
+
     private function refreshOrderTotals(Order $order): void
     {
         $order->load('files');
         $printTotal = 0;
         if (!in_array($order->service_type, ['formatting', 'research'], true)) {
             if (in_array($order->service_type, ['notes', 'books'], true)) {
-                $printTotal = (int) $order->files->sum('print_price');
+                $printTotal = $this->printProductPrintTotal($order);
+            } elseif ($order->service_type === 'color_printing') {
+                $printTotal = (float) $order->files->sum('print_price');
             } else {
                 $filesForPrint = $order->files->where('file_type', 'pdf');
                 $printUnits = $filesForPrint->sum(
@@ -541,12 +606,12 @@ class FileUploadController extends Controller
         $filesForBinding = in_array($order->service_type, ['thesis', 'phd'], true)
             ? $order->files->where('file_type', 'pdf')
             : $order->files;
-        $bindingTotal = (int) $filesForBinding->sum('binding_price');
+        $bindingTotal = (float) $filesForBinding->sum('binding_price');
         $baseTotal = $printTotal + $bindingTotal;
-        $discountAmount = min((int) $order->discount_amount, $baseTotal);
+        $discountAmount = min((float) $order->discount_amount, $baseTotal);
         $subtotal = max(0, $baseTotal - $discountAmount);
-        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true)
-            ? $this->deliveryFee($order->delivery_method, $subtotal)
+        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+            ? $this->deliveryFee($order->delivery_method, $baseTotal)
             : 0;
 
         $order->update([
@@ -558,7 +623,26 @@ class FileUploadController extends Controller
         ]);
     }
 
-    private function deliveryFee(?string $method, int $subtotal): int
+    private function printProductPrintTotal(Order $order): int
+    {
+        $whitePages = (int) $order->files
+            ->where('file_type', 'pdf')
+            ->filter(fn (OrderFile $file) => ($file->paper_color ?: 'white') === 'white')
+            ->sum(fn (OrderFile $file) => $file->pages * max(1, (int) $file->copies));
+        $yellowPages = (int) $order->files
+            ->where('file_type', 'pdf')
+            ->filter(fn (OrderFile $file) => $file->paper_color === 'yellow')
+            ->sum(fn (OrderFile $file) => $file->pages * max(1, (int) $file->copies));
+
+        $whiteDivisor = $order->service_type === 'notes' ? 12 : 15;
+        $whiteTotal = (int) ceil($whitePages / $whiteDivisor);
+        $yellowDivisor = $order->service_type === 'books' ? 10 : 6;
+        $yellowTotal = (int) ceil($yellowPages / $yellowDivisor);
+
+        return $whiteTotal + $yellowTotal;
+    }
+
+    private function deliveryFee(?string $method, float $subtotal): int
     {
         return match ($method) {
             'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,

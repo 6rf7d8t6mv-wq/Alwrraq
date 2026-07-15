@@ -32,6 +32,10 @@
         .badge { display: inline-flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 999px; font-weight: 900; font-size: 12px; white-space: nowrap; }
         .service-title { font-weight: 900; color: #0f172a; margin-bottom: 4px; }
         .service-detail { color: #64748b; font-size: 12px; line-height: 1.5; }
+        .uploaded-file-name { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
+        .uploaded-file-name span { min-width: 0; overflow-wrap: anywhere; word-break: normal; font-weight: 900; }
+        .uploaded-file-view { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; padding: 7px 10px; border-radius: 8px; background: #2563eb; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; white-space: nowrap; }
+        .uploaded-file-view:hover { background: #1d4ed8; }
         .paid { background: #dcfce7; color: #166534; }
         .unpaid { background: #fef3c7; color: #92400e; }
         .done { background: #e0f2fe; color: #075985; }
@@ -49,6 +53,13 @@
         .action.invoice-button { background: #0f4c81; color: #ffffff; border: 1px solid #2563eb; }
         .action.invoice-button:hover { background: #1d6fa5; }
         .inline-form { display: flex; margin: 0; width: 100%; }
+        .order-discount-box { margin-top: 10px; padding: 12px; border-radius: 12px; border: 1px solid #fbcfe8; background: #fdf2f8; }
+        .order-discount-title { margin: 0 0 8px; color: #831843; font-size: 13px; font-weight: 900; }
+        .order-discount-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+        .order-discount-form input { width: 100%; padding: 10px 11px; border: 1px solid #f9a8d4; border-radius: 9px; background: #ffffff; color: #111827; font-size: 13px; font-weight: 800; }
+        .order-discount-form button { min-height: 39px; padding: 10px 13px; border: 0; border-radius: 9px; background: #db2777; color: #ffffff; font-size: 13px; font-weight: 900; cursor: pointer; }
+        .order-discount-form button:hover { background: #be185d; }
+        .order-discount-status { margin-top: 7px; color: #047857; font-size: 12px; font-weight: 900; }
         .empty { text-align: center; color: #94a3b8; padding: 38px 16px; font-weight: 800; }
         .notice { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; background: #ecfdf5; color: #047857; font-weight: 900; }
         .errors { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; background: #fef2f2; color: #b91c1c; font-weight: 900; }
@@ -68,6 +79,16 @@
         .detail-card strong { color: #0f172a; font-size: 15px; line-height: 1.6; }
         .files-panel { width: 100%; margin-top: 16px; padding: 16px; box-sizing: border-box; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
         .files-title { margin: 0 0 12px; font-size: 19px; color: #0f172a; }
+        .orders-table { display: block; border-radius: 0; overflow: visible; }
+        .orders-table thead { display: none; }
+        .orders-table tbody { display: grid; gap: 14px; }
+        .orders-table tr { display: grid; grid-template-columns: 1fr; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 14px; background: #ffffff; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07); }
+        .orders-table td { display: grid; grid-template-columns: minmax(110px, 32%) minmax(0, 1fr); align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid #edf2f7; white-space: normal; overflow-wrap: anywhere; }
+        .orders-table td:last-child { border-bottom: 0; background: #f8fafc; }
+        .orders-table td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; }
+        .orders-table .actions { width: min(240px, 100%); }
+        .orders-table .actions > .action,
+        .orders-table .actions > .inline-form { width: 100%; }
         .detail-table-wrap { width: 100%; overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 10px; background: #ffffff; }
         .detail-table-wrap table { width: 100%; min-width: 720px; table-layout: auto; }
         .detail-table-wrap th,
@@ -114,6 +135,19 @@
         .invoice-totals .grand span { color: #cbd5e1; }
         .invoice-totals .grand strong { font-size: 22px; }
         .invoice-note { margin-top: 16px; color: #64748b; font-size: 12px; text-align: center; }
+        @media (max-width: 1100px) {
+            .detail-table-wrap { border: 0; background: transparent; overflow: visible; }
+            .detail-table-wrap table { min-width: 0; display: block; }
+            .detail-table-wrap thead { display: none; }
+            .detail-table-wrap tbody { display: grid; gap: 12px; }
+            .detail-table-wrap tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
+            .detail-table-wrap td { display: grid; grid-template-columns: minmax(92px, 34%) minmax(0, 1fr); align-items: center; gap: 8px; min-width: 0; padding: 9px 10px; border: 1px solid #edf2f7; border-radius: 9px; background: #f8fafc; white-space: normal; overflow-wrap: anywhere; word-break: normal; }
+            .detail-table-wrap td:first-child { min-width: 0; grid-column: 1 / -1; }
+            .detail-table-wrap td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; line-height: 1.5; }
+            .detail-table-wrap .price-cell { white-space: normal; }
+            .detail-table-wrap .inline-form,
+            .detail-table-wrap .action { width: 100%; }
+        }
         @media (max-width: 820px) {
             :root { --sidebar-width: 132px; --page-gap: 10px; }
             .header { padding: 14px 8px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.14); }
@@ -135,6 +169,11 @@
             .invoice-table-wrap td { display: grid; grid-template-columns: minmax(100px, 38%) minmax(0, 1fr); align-items: start; gap: 8px; padding: 0; border-bottom: 0; white-space: normal; word-break: break-word; }
             .invoice-table-wrap td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; }
             .invoice-table-wrap td:last-child { padding: 9px; border-radius: 8px; }
+        }
+        @media (max-width: 640px) {
+            .files-panel { padding: 12px; }
+            .detail-table-wrap tr { grid-template-columns: 1fr; }
+            .detail-table-wrap td { grid-template-columns: minmax(88px, 36%) minmax(0, 1fr); }
         }
     </style>
 </head>
@@ -173,7 +212,7 @@
             @if ($orders->isEmpty())
                 <div class="empty">لا توجد طلبات حتى الآن.</div>
             @else
-                <table>
+                <table class="orders-table">
                     <thead>
                         <tr>
                             <th>رقم الطلب</th>
@@ -192,6 +231,7 @@
                                 $serviceNames = [
                                     'notes' => 'مذكرات',
                                     'books' => 'كتب',
+                                    'color_printing' => 'طباعة الملفات بالألوان',
                                     'thesis' => 'ماجستير',
                                     'phd' => 'دكتوراه',
                                     'formatting' => 'تنسيق الرسائل الجامعية',
@@ -236,6 +276,9 @@
                                 if (in_array($order->service_type, ['notes', 'books'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                                     $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                                 }
+                                if ($order->service_type === 'color_printing' && $order->files->contains(fn ($file) => blank($file->binding_type))) {
+                                    $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
+                                }
                                 if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
                                     $missingRequirements->push('اختيار لون الرسالة ولون الكتابة لكل ملف.');
                                 }
@@ -249,25 +292,39 @@
                                 $createdAtText = $dayNames[$order->created_at->dayOfWeek] . ' - ' . $order->created_at->format('Y-m-d H:i');
                             @endphp
                             <tr>
-                                <td>#{{ $order->id }}</td>
-                                <td>
+                                <td data-label="رقم الطلب">#{{ $order->id }}</td>
+                                <td data-label="الخدمة">
                                     <div class="service-title">{{ $serviceNames[$order->service_type] ?? $order->service_type }}</div>
                                     <div class="service-detail">{{ $serviceDetail }}</div>
                                 </td>
-                                <td>{{ $order->files_count }}</td>
-                                <td>
+                                <td data-label="الملفات">{{ $order->files_count }}</td>
+                                <td data-label="حالة الدفع">
                                     <span class="badge {{ $isPaid ? 'paid' : 'unpaid' }}">
                                         {{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}
                                     </span>
                                 </td>
-                                <td>
+                                <td data-label="حالة الطلب">
                                     <span class="badge {{ $isCompleted ? 'done' : ($isCancelled ? 'cancelled' : 'open') }}">
                                         {{ $displayStatus }}
                                     </span>
                                 </td>
-                                <td>{{ $order->grand_total }} ريال</td>
-                                <td data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</td>
-                                <td>
+                                <td data-label="الإجمالي">{{ $order->grand_total }} ريال</td>
+                                <td data-label="تاريخ الإنشاء" data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</td>
+                                <td data-label="الإجراء">
+                                    @if (! $isPaid)
+                                        <div class="order-discount-box">
+                                            <div class="order-discount-title">كود الخصم قبل الدفع</div>
+                                            <form class="order-discount-form" method="post" action="{{ route('cart.discount.apply', $order) }}">
+                                                @csrf
+                                                @method('patch')
+                                                <input name="discount_code" value="{{ $order->discount_code }}" placeholder="اكتب كود الخصم" required>
+                                                <button type="submit">تطبيق</button>
+                                            </form>
+                                            @if ($order->discount_amount > 0)
+                                                <div class="order-discount-status">تم تطبيق {{ $order->discount_code }}: خصم {{ $order->discount_amount }} ريال</div>
+                                            @endif
+                                        </div>
+                                    @endif
                                     <div class="actions">
                                         <button class="action ghost" type="button" onclick="openOrderModal('orderModal{{ $order->id }}')">عرض الطلب</button>
                                         @if ($hasDeliveredFile)
@@ -305,14 +362,16 @@
                         $serviceNames = [
                             'notes' => 'مذكرات',
                             'books' => 'كتب',
+                            'color_printing' => 'طباعة الملفات بالألوان',
                             'thesis' => 'ماجستير',
                             'phd' => 'دكتوراه',
                             'formatting' => 'تنسيق الرسائل الجامعية',
                             'research' => 'إنشاء بحث',
                         ];
                         $serviceFullNames = [
-                            'notes' => 'طباعة المذكرات وملفات ال بي دي اف',
+                            'notes' => 'طباعة المذكرات وملفات ال PDF',
                             'books' => 'طباعة وتجليد كتب كعب جلد طبيعي',
+                            'color_printing' => 'طباعة الملفات بالألوان',
                             'thesis' => 'طباعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج',
                             'phd' => 'طباعة وتجليد رسالة دكتوراه',
                             'formatting' => 'تنسيق الرسائل الجامعية',
@@ -346,14 +405,23 @@
                                 'normal' => 'تجليد كعب جلد طبيعي',
                                 'none' => 'تجليد كعب جلد طبيعي',
                             ]
+                            : ($order->service_type === 'color_printing'
+                                ? [
+                                    'tape' => 'تغليف دبوس',
+                                    'wire' => 'تغليف سلك',
+                                    'normal' => 'تغليف عادي',
+                                    'thermal' => 'تغليف حراري',
+                                    'none' => 'بدون تغليف',
+                                ]
                             : [
                                 'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
                                 'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
                                 'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
                                 'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
-                            ];
+                            ]);
                         $bindingLabel = match ($order->service_type) {
                             'books' => 'التجليد',
+                            'color_printing' => 'التغليف',
                             'notes' => 'التغليف',
                             'formatting' => 'التنسيق',
                             'research' => 'إنشاء البحث',
@@ -361,6 +429,7 @@
                         };
                         $bindingPriceLabel = match ($order->service_type) {
                             'books' => 'سعر التجليد',
+                            'color_printing' => 'سعر التغليف',
                             'notes' => 'سعر التغليف',
                             'formatting' => 'سعر التنسيق',
                             'research' => 'سعر إنشاء البحث',
@@ -389,7 +458,7 @@
                                 ->values()
                             : collect();
                         $missingRequirements = collect();
-                        if (in_array($order->service_type, ['notes', 'books'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
+                        if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
                             $missingRequirements->push('اختيار نوع التغليف لكل ملف.');
                         }
                         if (in_array($order->service_type, ['thesis', 'phd'], true) && $order->files->contains(fn ($file) => blank($file->cover_color) || blank($file->writing_color))) {
@@ -416,7 +485,7 @@
                                     <div class="detail-card"><span>حالة الطلب</span><strong>{{ $displayStatus }}</strong></div>
                                     <div class="detail-card"><span>الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
                                     <div class="detail-card"><span>تاريخ إنشاء الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</strong></div>
-                                    @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
                                         <div class="detail-card full"><span>الاستلام والتوصيل</span><strong>
                                             {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
                                             @if ($order->delivery_method === 'islamic_university_delivery')
@@ -463,10 +532,10 @@
                                                     @if ($order->service_type !== 'research')
                                                         <th>النسخ</th>
                                                     @endif
-                                                    @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
                                                         <th>نوع الطباعة</th>
                                                     @endif
-                                                    @if (in_array($order->service_type, ['notes', 'books'], true))
+                                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true))
                                                         <th>حجم الصفحة</th>
                                                     @endif
                                                     @if (in_array($order->service_type, ['notes', 'books'], true))
@@ -486,43 +555,48 @@
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($order->files as $file)
+                                                    @foreach ($order->files as $file)
                                                     <tr>
-                                                        <td>{{ $file->original_name }}</td>
+                                                        <td data-label="الملف">
+                                                            <div class="uploaded-file-name">
+                                                                <span>{{ $file->original_name }}</span>
+                                                                <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file]) }}" target="_blank" rel="noopener">عرض الملف</a>
+                                                            </div>
+                                                        </td>
                                                         @if ($order->service_type !== 'research')
-                                                            <td>{{ strtoupper($file->file_type) }}</td>
+                                                            <td data-label="النوع">{{ strtoupper($file->file_type) }}</td>
                                                         @endif
                                                         @if ($order->service_type === 'thesis')
-                                                            <td>{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
+                                                            <td data-label="مشروع الرسالة">{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
                                                         @endif
                             @if (in_array($order->service_type, ['thesis', 'phd'], true))
-                                <td>{{ $file->university_name ?: '-' }}</td>
-                                <td>{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
-                                <td>{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
+                                <td data-label="الجامعة/المعهد">{{ $file->university_name ?: '-' }}</td>
+                                <td data-label="لون الرسالة">{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
+                                <td data-label="لون الكتابة">{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
                             @endif
-                                                        <td>{{ $file->pages }}</td>
+                                                        <td data-label="الصفحات">{{ $file->pages }}</td>
                                                         @if ($order->service_type !== 'research')
-                                                            <td>{{ $file->copies }}</td>
+                                                            <td data-label="النسخ">{{ $file->copies }}</td>
                                                         @endif
-                                                        @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
-                                                            <td>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
+                                                        @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
+                                                            <td data-label="نوع الطباعة">{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
+                                                        @endif
+                                                        @if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true))
+                                                            <td data-label="حجم الصفحة">{{ ['A4' => 'A4', 'A3' => 'A3', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</td>
                                                         @endif
                                                         @if (in_array($order->service_type, ['notes', 'books'], true))
-                                                            <td>{{ ['A4' => 'A4', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</td>
-                                                        @endif
-                                                        @if (in_array($order->service_type, ['notes', 'books'], true))
-                                                            <td>{{ ['white' => 'أبيض', 'yellow' => 'أصفر'][$file->paper_color] ?? 'أبيض' }}</td>
+                                                            <td data-label="لون الورق">{{ ['white' => 'أبيض', 'yellow' => 'أصفر'][$file->paper_color] ?? 'أبيض' }}</td>
                                                         @endif
                                                         @if (! in_array($order->service_type, $noPrintServices, true))
-                                                            <td>{{ $bindingNames[$file->binding_type] ?? '-' }}</td>
+                                                            <td data-label="{{ $bindingLabel }}">{{ $bindingNames[$file->binding_type] ?? '-' }}</td>
                                                         @endif
                                                         @if (! in_array($order->service_type, $noPrintServices, true))
-                                                            <td class="price-cell">{{ $file->print_price }} ريال</td>
+                                                            <td class="price-cell" data-label="سعر الطباعة">{{ $file->print_price }} ريال</td>
                                                         @endif
-                                                        <td class="price-cell">{{ $file->binding_price }} ريال</td>
-                                                        <td class="price-cell">{{ $file->total_price }} ريال</td>
+                                                        <td class="price-cell" data-label="{{ $bindingPriceLabel }}">{{ $file->binding_price }} ريال</td>
+                                                        <td class="price-cell" data-label="إجمالي الملف">{{ $file->total_price }} ريال</td>
                                                         @if ($order->payment_status !== 'paid')
-                                                            <td>
+                                                            <td data-label="حذف">
                                                                 <form class="inline-form" method="post" action="{{ url('/order-files/' . $file->id) }}" onsubmit="return confirm('هل تريد حذف هذا الملف من الطلب؟')">
                                                                     @csrf
                                                                     @method('delete')
@@ -545,7 +619,7 @@
                                     @if ($order->discount_amount > 0)
                                         <div class="total-card"><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
                                     @endif
-                                    @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
                                         <div class="total-card"><span>رسوم التوصيل</span><strong>{{ $order->delivery_fee }} ريال</strong></div>
                                     @endif
                                     <div class="total-card"><span>الإجمالي</span><strong>{{ $order->grand_total }} ريال</strong></div>
@@ -735,6 +809,11 @@
 
             clearDeliveredFileNotice(link);
         });
+
+        const openOrderId = new URLSearchParams(window.location.search).get('open_order');
+        if (openOrderId) {
+            openOrderModal(`orderModal${openOrderId}`);
+        }
     </script>
 </body>
 </html>

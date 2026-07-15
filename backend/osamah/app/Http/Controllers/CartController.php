@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DiscountCode;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -57,7 +58,7 @@ class CartController extends Controller
     public function updateDelivery(Request $request, Order $order)
     {
         $this->authorizeOrder($order);
-        abort_unless(in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true), 404);
+        abort_unless(in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true), 404);
 
         $data = $request->validate([
             'delivery_method' => ['required', Rule::in([
@@ -110,9 +111,78 @@ class CartController extends Controller
         ]);
     }
 
+    public function applyDiscount(Request $request, Order $order)
+    {
+        $this->authorizeOrder($order);
+
+        if ($order->payment_status === 'paid') {
+            return $this->discountError($request, 'لا يمكن تطبيق خصم بعد دفع الطلب.');
+        }
+
+        $data = $request->validate([
+            'discount_code' => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/'],
+        ]);
+
+        $discountCode = DiscountCode::query()
+            ->where('code', strtoupper($data['discount_code']))
+            ->where('is_active', true)
+            ->first();
+
+        if (! $discountCode) {
+            return $this->discountError($request, 'كود الخصم غير صحيح أو غير مفعل.');
+        }
+
+        $this->refreshOrderTotals($order);
+        $order->refresh();
+
+        $baseTotal = $order->baseTotal();
+        if ($baseTotal <= 0) {
+            return $this->discountError($request, 'لا يمكن تطبيق خصم على طلب بدون إجمالي.');
+        }
+
+        $discountAmount = min((int) $discountCode->amount, $baseTotal);
+        $subtotal = max(0, $baseTotal - $discountAmount);
+        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+            ? $this->deliveryFee($order->delivery_method, $order, $baseTotal)
+            : 0;
+
+        $order->forceFill([
+            'discount_code' => $discountCode->code,
+            'discount_amount' => $discountAmount,
+            'discount_applied_by' => null,
+            'discount_applied_at' => now(),
+            'delivery_fee' => $deliveryFee,
+            'grand_total' => $subtotal + $deliveryFee,
+        ])->save();
+
+        if (! $request->expectsJson()) {
+            return back()->with('status', 'تم تطبيق كود الخصم بنجاح.');
+        }
+
+        return response()->json([
+            'success' => true,
+            'discount_code' => $order->discount_code,
+            'discount_amount' => $order->discount_amount,
+            'delivery_fee' => $order->delivery_fee,
+            'grand_total' => $order->grand_total,
+        ]);
+    }
+
     private function authorizeOrder(Order $order): void
     {
         abort_unless($order->user_id === Auth::id(), 403);
+    }
+
+    private function discountError(Request $request, string $message)
+    {
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => false,
+                'message' => $message,
+            ], 422);
+        }
+
+        return back()->withErrors(['discount' => $message]);
     }
 
     private function isMadinahCity(string $city): bool
@@ -137,11 +207,11 @@ class CartController extends Controller
             return 'لا يمكن إتمام طلب بدون ملفات.';
         }
 
-        if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true) && blank($order->delivery_method)) {
+        if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true) && blank($order->delivery_method)) {
             return 'اختر طريقة الاستلام أو التوصيل قبل الدفع.';
         }
 
-        if (in_array($order->service_type, ['notes', 'books'], true)) {
+        if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true)) {
             if ($order->files->contains(fn ($file) => blank($file->binding_type))) {
                 return 'اختر نوع التغليف لكل ملف قبل الدفع.';
             }
@@ -183,7 +253,9 @@ class CartController extends Controller
         $printTotal = 0;
         if (!in_array($order->service_type, ['formatting', 'research'], true)) {
             if (in_array($order->service_type, ['notes', 'books'], true)) {
-                $printTotal = (int) $order->files->sum('print_price');
+                $printTotal = $this->printProductPrintTotal($order);
+            } elseif ($order->service_type === 'color_printing') {
+                $printTotal = (float) $order->files->sum('print_price');
             } else {
                 $filesForPrint = $order->files->where('file_type', 'pdf');
                 $printUnits = $filesForPrint->sum(
@@ -196,11 +268,11 @@ class CartController extends Controller
         $filesForBinding = in_array($order->service_type, ['thesis', 'phd'], true)
             ? $order->files->where('file_type', 'pdf')
             : $order->files;
-        $bindingTotal = (int) $filesForBinding->sum('binding_price');
+        $bindingTotal = (float) $filesForBinding->sum('binding_price');
         $baseTotal = $printTotal + $bindingTotal;
-        $discountAmount = min((int) $order->discount_amount, $baseTotal);
-        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true)
-            ? $this->deliveryFee($order->delivery_method, $order, max(0, $baseTotal - $discountAmount))
+        $discountAmount = min((float) $order->discount_amount, $baseTotal);
+        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+            ? $this->deliveryFee($order->delivery_method, $order, $baseTotal)
             : 0;
 
         $order->update([
@@ -212,9 +284,28 @@ class CartController extends Controller
         ]);
     }
 
-    private function deliveryFee(?string $method, Order $order, ?int $subtotal = null): int
+    private function printProductPrintTotal(Order $order): int
     {
-        $subtotal ??= $order->subtotalAfterDiscount();
+        $whitePages = (int) $order->files
+            ->where('file_type', 'pdf')
+            ->filter(fn ($file) => ($file->paper_color ?: 'white') === 'white')
+            ->sum(fn ($file) => $file->pages * max(1, (int) $file->copies));
+        $yellowPages = (int) $order->files
+            ->where('file_type', 'pdf')
+            ->filter(fn ($file) => $file->paper_color === 'yellow')
+            ->sum(fn ($file) => $file->pages * max(1, (int) $file->copies));
+
+        $whiteDivisor = $order->service_type === 'notes' ? 12 : 15;
+        $whiteTotal = (int) ceil($whitePages / $whiteDivisor);
+        $yellowDivisor = $order->service_type === 'books' ? 10 : 6;
+        $yellowTotal = (int) ceil($yellowPages / $yellowDivisor);
+
+        return $whiteTotal + $yellowTotal;
+    }
+
+    private function deliveryFee(?string $method, Order $order, ?float $subtotal = null): int
+    {
+        $subtotal ??= $order->baseTotal();
 
         return match ($method) {
             'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,

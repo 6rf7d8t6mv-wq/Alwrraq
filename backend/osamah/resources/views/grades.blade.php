@@ -29,18 +29,21 @@
             h2 { margin: 28px 0 16px; font-size: clamp(20px, 2.4vw, 24px); color: #1f2937; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
             p { margin: 0 0 26px; color: #475569; line-height: 1.7; }
             
-            .services-screen { display: flex; flex-direction: column; gap: 18px; }
-            .services-title { margin-top: 0; }
-            .service-card { display: flex; flex-direction: column; align-items: stretch; gap: 12px; padding: clamp(16px, 2.4vw, 22px); background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
-            .service-icon { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 14px; background: #f1f5f9; color: #0f172a; font-size: 25px; }
-            .service-title { margin: 0; color: #0f172a; font-size: clamp(18px, 2.2vw, 22px); font-weight: 900; line-height: 1.5; white-space: normal; overflow-wrap: break-word; }
-            .service-description { margin: 0; color: #64748b; font-size: 14px; line-height: 1.7; }
-            .service-entry { align-self: flex-start; min-width: 190px; padding: 13px 16px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 900; transition: all 0.25s ease; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18); }
+            .services-screen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 20px); align-items: stretch; }
+            .services-title-block { grid-column: 1 / -1; padding: clamp(18px, 3vw, 26px); border-radius: 20px; background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); color: #0f172a; border: 1px solid #bfdbfe; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
+            .services-title { margin: 0; color: #0f172a; border: 0; padding: 0; font-size: clamp(24px, 3.2vw, 34px); line-height: 1.4; }
+            .services-subtitle { margin: 8px 0 0; color: #475569; font-size: clamp(13px, 1.5vw, 15px); line-height: 1.8; }
+            .service-card { min-height: 250px; display: flex; flex-direction: column; align-items: stretch; gap: 13px; padding: clamp(18px, 2.6vw, 26px); background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 18px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; }
+            .service-card:hover { transform: translateY(-4px); border-color: #cbd5e1; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.13); }
+            .service-icon { width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; border-radius: 16px; background: #eef2ff; color: #0f172a; font-size: 28px; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04); }
+            .service-title { margin: 0; color: #0f172a; font-size: clamp(17px, 1.8vw, 21px); font-weight: 900; line-height: 1.5; white-space: normal; overflow-wrap: break-word; }
+            .service-description { margin: 0; color: #64748b; font-size: 14px; line-height: 1.8; flex: 1; }
+            .service-entry { width: 100%; align-self: stretch; min-width: 0; padding: 13px 16px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 900; transition: all 0.25s ease; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18); }
             .service-entry:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(15, 23, 42, 0.24); background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
             .service-entry:active { transform: translateY(0); }
             
-            .back-button { padding: 10px 16px; background: #6b7280; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: all 0.3s; align-self: flex-start; margin-bottom: 20px; }
-            .back-button:hover { background: #4b5563; }
+            .back-button { padding: 12px 19px; background: #16a34a; color: white; border: none; border-radius: 7px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all 0.3s; align-self: flex-start; margin-bottom: 20px; }
+            .back-button:hover { background: #15803d; }
             
             .upload-content { display: none; }
             .upload-content.active { display: block; }
@@ -70,12 +73,15 @@
             .files-list-item.has-thesis-project { min-width: 1320px; grid-template-columns: 2fr 0.7fr 0.7fr 0.65fr 1.15fr 1.45fr 0.85fr 0.85fr 0.85fr 0.7fr 0.45fr; }
             .files-list-header.has-formatting-price,
             .files-list-item.has-formatting-price { min-width: 820px; grid-template-columns: 2fr 0.8fr 0.8fr 1fr 1fr 0.7fr 0.45fr; }
+            .files-list-header.has-color-printing-price,
+            .files-list-item.has-color-printing-price { min-width: 1320px; grid-template-columns: 2fr 0.65fr 0.7fr 0.65fr 0.9fr 0.8fr 1fr 0.85fr 0.85fr 0.85fr 0.7fr 0.45fr; }
             .files-list { border: 0; background: transparent; overflow: visible; }
             .files-list-header { display: none; }
             .files-list-item,
-            .files-list-item.has-price,
-            .files-list-item.has-copies-price,
-            .files-list-item.has-academic-university,
+                .files-list-item.has-price,
+                .files-list-item.has-copies-price,
+                .files-list-item.has-color-printing-price,
+                .files-list-item.has-academic-university,
             .files-list-item.has-formatting-price,
             .files-list-item.has-thesis-project {
                 width: 100%;
@@ -130,6 +136,8 @@
             .file-price-note { display: block; margin-top: 4px; color: #b91c1c; font-size: 12px; font-weight: 700; line-height: 1.5; }
             .binding-select { width: 100%; min-width: 158px; padding: 12px 13px; border: 1px solid #cbd5e1; border-radius: 9px; background: #ffffff; color: #111827; font-size: 14px; font-weight: 800; }
             .binding-select:invalid { color: #6b7280; }
+            .binding-select option { padding: 12px 10px; line-height: 2; border-bottom: 1px solid #e5e7eb; background: #ffffff; color: #111827; }
+            .binding-select option:checked { background: #e0f2fe; color: #0f172a; font-weight: 900; }
             .university-cell { display: flex; flex-direction: column; gap: 8px; min-width: 190px; }
             .university-input { width: 100%; min-width: 198px; padding: 12px 13px; border: 1px solid #cbd5e1; border-radius: 9px; background: #ffffff; color: #111827; font-size: 14px; font-weight: 800; }
             .university-input:placeholder-shown { color: #6b7280; }
@@ -162,8 +170,21 @@
             .binding-required { color: #b91c1c; font-weight: 600; font-size: 12px; }
             .pricing-summary { margin-top: 16px; padding: 14px 16px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; color: #111827; font-weight: 700; line-height: 1.7; }
             .pricing-summary.empty { color: #6b7280; font-weight: 600; }
+            .discount-box { margin: 14px 0; padding: 13px; border-radius: 12px; border: 1px solid #fbcfe8; background: #fdf2f8; }
+            .discount-title { margin: 0 0 9px; color: #831843; font-weight: 900; }
+            .discount-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; }
+            .discount-input { width: 100%; padding: 11px 12px; border: 1px solid #f9a8d4; border-radius: 9px; background: #ffffff; color: #0f172a; font-weight: 800; }
+            .discount-apply { padding: 11px 14px; border: 0; border-radius: 9px; background: #db2777; color: #ffffff; font-weight: 900; cursor: pointer; }
+            .discount-apply:hover { background: #be185d; }
+            .discount-status { margin-top: 8px; color: #047857; font-weight: 900; }
+            .discount-status.error { color: #b91c1c; }
             .delivery-notice { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; font-size: 13px; font-weight: 800; line-height: 1.7; }
             .word-usage-notice { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #fff7ed; color: #9a3412; border: 1px solid #fed7aa; font-size: 13px; font-weight: 800; line-height: 1.7; }
+            .service-notice { margin: 14px 0 24px; padding: 14px 16px; border-radius: 14px; background: linear-gradient(135deg, #f8fafc 0%, #eef6ff 100%); color: #0f172a; border: 1px solid #c7ddf5; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08); display: flex; gap: 12px; align-items: flex-start; line-height: 1.8; }
+            .service-notice-icon { width: 34px; height: 34px; min-width: 34px; border-radius: 10px; background: #0f172a; color: #ffffff; display: inline-flex; align-items: center; justify-content: center; font-size: 17px; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18); }
+            .service-notice-content { flex: 1; min-width: 0; }
+            .service-notice-title { margin: 0 0 2px; color: #0f172a; font-size: 14px; font-weight: 900; }
+            .service-notice-text { margin: 0; color: #334155; font-size: 13px; font-weight: 800; }
             .research-form-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(130px, 0.6fr); gap: 14px; align-items: end; }
             .research-field { display: flex; flex-direction: column; gap: 8px; }
             .research-field label { color: #111827; font-size: 13px; font-weight: 900; }
@@ -191,7 +212,8 @@
             @media (max-width: 700px) {
                 .delivery-options,
                 .delivery-fields,
-                .delivery-fields.address-fields { grid-template-columns: 1fr; }
+                .delivery-fields.address-fields,
+                .discount-row { grid-template-columns: 1fr; }
             }
             .cart-modal-backdrop { position: fixed; inset: 0; display: none; align-items: flex-start; justify-content: center; padding: clamp(10px, 3vw, 24px) clamp(8px, 3vw, 20px); background: rgba(15, 23, 42, 0.62); z-index: 100; overflow-y: auto; }
             .cart-modal-backdrop.active { display: flex; }
@@ -203,6 +225,18 @@
             
             .page-footer { background: #0f172a; color: #cbd5e1; padding: 22px 24px; }
             .footer-content { max-width: 1000px; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+            @media (max-width: 1180px) {
+                .services-screen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                .service-card { min-height: 230px; }
+            }
+            @media (max-width: 900px) {
+                .services-screen { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+                .service-card { min-height: 220px; padding: 16px; }
+                .service-icon { width: 48px; height: 48px; font-size: 24px; }
+                .service-title { font-size: 16px; }
+                .service-description { font-size: 13px; line-height: 1.7; }
+                .service-entry { padding: 11px 9px; font-size: 13px; }
+            }
             @media (max-width: 768px) {
                 :root { --sidebar-width: 132px; --page-gap: 10px; }
                 .page-header { padding: 14px 8px; box-shadow: -8px 0 24px rgba(15, 23, 42, 0.14); }
@@ -210,7 +244,6 @@
                 .header-user, .header-link { padding: 9px 8px; gap: 5px; }
                 .logout-button { padding: 9px 8px; }
                 .container, .footer-content { padding: 16px; }
-                .service-entry { width: 100%; }
                 .upload-section { flex-direction: column; }
                 .upload-box { min-width: 100%; }
                 .files-list { border: 0; background: transparent; overflow: visible; }
@@ -218,6 +251,7 @@
                 .files-list-item,
                 .files-list-item.has-price,
                 .files-list-item.has-copies-price,
+                .files-list-item.has-color-printing-price,
                 .files-list-item.has-academic-university,
                 .files-list-item.has-formatting-price,
                 .files-list-item.has-thesis-project {
@@ -281,6 +315,11 @@
                 .header-actions { font-size: 11px; }
                 .header-user, .header-link { padding: 8px 6px; }
                 .container { padding: 14px; border-radius: 14px; }
+                .services-screen { grid-template-columns: 1fr; }
+                .service-card { min-height: 0; }
+                .service-title { font-size: 17px; }
+                .service-description { font-size: 14px; }
+                .service-entry { font-size: 14px; }
             }
         </style>
     </head>
@@ -321,13 +360,23 @@
         <main class="container" id="services">
             <!-- Services Selection Screen -->
             <div id="servicesScreen" class="services-screen">
-                <h2 class="services-title">اختر الخدمة المطلوبة</h2>
+                <div class="services-title-block">
+                    <h2 class="services-title">اختر الخدمة المطلوبة</h2>
+                    <p class="services-subtitle">حدد الخدمة المناسبة، ثم ارفع ملفاتك وشاهد السعر مباشرة قبل إتمام الطلب.</p>
+                </div>
 
                 <article class="service-card">
                     <div class="service-icon">📝</div>
-                    <h3 class="service-title">طباعة المذكرات وملفات ال بي دي اف</h3>
-                    <p class="service-description">طباعة جميع المذكرات بجميع أحجامها وتغليفها.</p>
+                    <h3 class="service-title">طباعة المذكرات وملفات ال PDF</h3>
+                    <p class="service-description">طباعة أبيض وأسود بدون ألوان للمذكرات وملفات ال PDF بجميع أحجامها وتغليفها.</p>
                     <button class="service-entry" type="button" onclick="selectService('notes')">الدخول للخدمة</button>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon">🎨</div>
+                    <h3 class="service-title">طباعة الملفات بالألوان</h3>
+                    <p class="service-description">طباعة ملفات PDF ملونة مع اختيار حجم الصفحة وعدد النسخ والتغليف.</p>
+                    <button class="service-entry" type="button" onclick="selectService('color_printing')">الدخول للخدمة</button>
                 </article>
 
                 <article class="service-card">
@@ -370,6 +419,13 @@
             <div id="uploadNotes" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
                 <h2>تحميل ملفات مذكرات</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">معلومة مهمة قبل رفع الملفات</p>
+                        <p class="service-notice-text">يمكنك رفع أكثر من ملف داخل الطلب نفسه، وإذا ظهر خيار عدد النسخ يمكنك تحديد عدد مرات تنفيذ العمل على كل ملف.</p>
+                    </div>
+                </div>
                 
                 <div class="upload-section">
                     <div class="upload-box" id="notesPdfBox">
@@ -413,6 +469,13 @@
             <div id="uploadBooks" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
                 <h2>تحميل ملفات الكتب</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">معلومة مهمة قبل رفع الملفات</p>
+                        <p class="service-notice-text">يمكنك رفع أكثر من ملف داخل الطلب نفسه، وإذا ظهر خيار عدد النسخ يمكنك تحديد عدد مرات تنفيذ العمل على كل ملف.</p>
+                    </div>
+                </div>
 
                 <div class="upload-section">
                     <div class="upload-box" id="booksPdfBox">
@@ -451,10 +514,69 @@
                 </div>
             </div>
 
+            <!-- Upload Section for Color Printing -->
+            <div id="uploadColorPrinting" class="upload-content">
+                <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
+                <h2>تحميل ملفات الطباعة بالألوان</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">معلومة مهمة قبل رفع الملفات</p>
+                        <p class="service-notice-text">يمكنك رفع أكثر من ملف داخل الطلب نفسه، وإذا ظهر خيار عدد النسخ يمكنك تحديد عدد مرات تنفيذ العمل على كل ملف.</p>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <div class="upload-box" id="colorPrintingPdfBox">
+                        <div class="file-icon">📕</div>
+                        <h3>تحميل ملفات PDF</h3>
+                        <input type="file" id="colorPrintingPdfFile" accept=".pdf" multiple />
+                        <p class="file-info">صيغ مدعومة: .pdf</p>
+                        <p class="file-info">يدعم A4 و A3 و A5 و B5</p>
+                        <button class="upload-button" id="colorPrintingPdfUploadBtn" onclick="document.getElementById('colorPrintingPdfFile').click()">اختر ملفات</button>
+                        <div class="progress-bar" id="colorPrintingPdfProgress"><div class="progress-bar-fill"></div></div>
+                        <div id="colorPrintingPdfError" class="error-msg" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; margin-bottom: 40px;">
+                    <h3 style="margin-bottom: 16px; color: #111827;">🎨 ملفات PDF المحملة</h3>
+                    <div class="files-list">
+                        <div class="files-list-header has-color-printing-price">
+                            <div>اسم الملف</div>
+                            <div>الصفحات</div>
+                            <div>الحجم</div>
+                            <div>النسخ</div>
+                            <div>نوع الطباعة</div>
+                            <div>حجم الصفحة</div>
+                            <div>التغليف</div>
+                            <div>سعر الطباعة</div>
+                            <div>سعر التغليف</div>
+                            <div>الإجمالي</div>
+                            <div>الحالة</div>
+                            <div></div>
+                        </div>
+                        <div id="colorPrintingPdfFilesList" class="empty-message">لم يتم تحميل أي ملفات</div>
+                    </div>
+                </div>
+
+                <div class="binding-section">
+                    <h3>إجمالي طباعة الملفات بالألوان</h3>
+                    <div id="color_printingPricingSummary" class="pricing-summary empty">اختر التغليف لكل ملف لعرض السعر.</div>
+                </div>
+            </div>
+
             <!-- Upload Section for Thesis -->
             <div id="uploadThesis" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
                 <h2>تحميل ملفات رسالة ماجستير أو بحث</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">معلومة مهمة قبل رفع الملفات</p>
+                        <p class="service-notice-text">يمكنك رفع أكثر من ملف داخل الطلب نفسه، وإذا ظهر خيار عدد النسخ يمكنك تحديد عدد مرات تنفيذ العمل على كل ملف.</p>
+                    </div>
+                </div>
                 
                 <div class="upload-section">
                     <div class="upload-box" id="thesisWordBox">
@@ -531,6 +653,13 @@
             <div id="uploadPhd" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
                 <h2>تحميل ملفات رسالة دكتوراه</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">معلومة مهمة قبل رفع الملفات</p>
+                        <p class="service-notice-text">يمكنك رفع أكثر من ملف داخل الطلب نفسه، وإذا ظهر خيار عدد النسخ يمكنك تحديد عدد مرات تنفيذ العمل على كل ملف.</p>
+                    </div>
+                </div>
                 
                 <div class="upload-section">
                     <div class="upload-box" id="phdWordBox">
@@ -606,6 +735,13 @@
             <div id="uploadFormatting" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
                 <h2>تنسيق الرسائل الجامعية</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">معلومة مهمة قبل رفع الملفات</p>
+                        <p class="service-notice-text">يمكنك رفع أكثر من ملف داخل الطلب نفسه، وإذا ظهر خيار عدد النسخ يمكنك تحديد عدد مرات تنفيذ العمل على كل ملف.</p>
+                    </div>
+                </div>
 
                 <div class="upload-section">
                     <div class="upload-box" id="formattingWordBox">
@@ -677,6 +813,7 @@
             const uploadedFiles = {
                 notes: { word: [], pdf: [] },
                 books: { word: [], pdf: [] },
+                color_printing: { word: [], pdf: [] },
                 thesis: { word: [], pdf: [] },
                 phd: { word: [], pdf: [] },
                 formatting: { word: [], pdf: [] },
@@ -685,15 +822,26 @@
             const currentOrders = {
                 notes: null,
                 books: null,
+                color_printing: null,
                 thesis: null,
                 phd: null,
                 formatting: null,
                 research: null
             };
-            const deliveryServices = ['notes', 'books', 'thesis', 'phd'];
+            const orderDiscounts = {
+                notes: { code: '', amount: 0, applied: false },
+                books: { code: '', amount: 0, applied: false },
+                color_printing: { code: '', amount: 0, applied: false },
+                thesis: { code: '', amount: 0, applied: false },
+                phd: { code: '', amount: 0, applied: false },
+                formatting: { code: '', amount: 0, applied: false },
+                research: { code: '', amount: 0, applied: false }
+            };
+            const deliveryServices = ['notes', 'books', 'color_printing', 'thesis', 'phd'];
             const deliverySelections = {
                 notes: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
                 books: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
+                color_printing: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
                 thesis: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' },
                 phd: { method: '', fee: 0, saved: false, unit: '', floor: '', room: '', city: '', district: '', street: '', mapUrl: '' }
             };
@@ -847,6 +995,7 @@
             const fileConfigs = {
                 notesPdf: { inputId: 'notesPdfFile', boxId: 'notesPdfBox', progressId: 'notesPdfProgress', errorId: 'notesPdfError', listId: 'notesPdfFilesList', service: 'notes', type: 'pdf' },
                 booksPdf: { inputId: 'booksPdfFile', boxId: 'booksPdfBox', progressId: 'booksPdfProgress', errorId: 'booksPdfError', listId: 'booksPdfFilesList', service: 'books', type: 'pdf' },
+                colorPrintingPdf: { inputId: 'colorPrintingPdfFile', boxId: 'colorPrintingPdfBox', progressId: 'colorPrintingPdfProgress', errorId: 'colorPrintingPdfError', listId: 'colorPrintingPdfFilesList', service: 'color_printing', type: 'pdf' },
                 thesisWord: { inputId: 'thesisWordFile', boxId: 'thesisWordBox', progressId: 'thesisWordProgress', errorId: 'thesisWordError', listId: 'thesisWordFilesList', service: 'thesis', type: 'word' },
                 thesisPdf: { inputId: 'thesisPdfFile', boxId: 'thesisPdfBox', progressId: 'thesisPdfProgress', errorId: 'thesisPdfError', listId: 'thesisPdfFilesList', service: 'thesis', type: 'pdf' },
                 phdWord: { inputId: 'phdWordFile', boxId: 'phdWordBox', progressId: 'phdWordProgress', errorId: 'phdWordError', listId: 'phdWordFilesList', service: 'phd', type: 'word' },
@@ -859,17 +1008,25 @@
                 pdf: { types: ['application/pdf'], extensions: ['.pdf'] }
             };
 
+            function getConfigKey(service, type) {
+                return Object.keys(fileConfigs).find(key => fileConfigs[key].service === service && fileConfigs[key].type === type);
+            }
+
             function selectService(service) {
                 initializeSaudiUniversitiesList();
+                const uploadIds = {
+                    color_printing: 'uploadColorPrinting'
+                };
                 document.getElementById('servicesScreen').style.display = 'none';
-                document.getElementById('upload' + service.charAt(0).toUpperCase() + service.slice(1)).classList.add('active');
+                document.getElementById(uploadIds[service] || ('upload' + service.charAt(0).toUpperCase() + service.slice(1))).classList.add('active');
                 initializeService(service);
             }
 
             function backToServices() {
-                document.getElementById('servicesScreen').style.display = 'flex';
+                document.getElementById('servicesScreen').style.display = '';
                 document.getElementById('uploadNotes').classList.remove('active');
                 document.getElementById('uploadBooks').classList.remove('active');
+                document.getElementById('uploadColorPrinting').classList.remove('active');
                 document.getElementById('uploadThesis').classList.remove('active');
                 document.getElementById('uploadPhd').classList.remove('active');
                 document.getElementById('uploadFormatting').classList.remove('active');
@@ -918,6 +1075,11 @@
                 return Number(String(value ?? '').trim());
             }
 
+            function formatMoney(value) {
+                const amount = Number(value || 0);
+                return Number.isInteger(amount) ? String(amount) : amount.toFixed(2).replace(/0+$/, '').replace(/\.$/, '');
+            }
+
             function bindEnglishNumberWarnings(root = document) {
                 const selector = '#researchPages, .copies-input';
                 root.querySelectorAll(selector).forEach((input) => {
@@ -945,10 +1107,17 @@
                 });
             }
 
-            function calculateNotesFilePrice(pages, binding, paperColor = 'white', service = 'notes', pageSize = 'A4') {
+            function calculateNotesFilePrice(pages, binding, paperColor = 'white', service = 'notes', pageSize = 'A4', copies = 1) {
+                if (service === 'color_printing') {
+                    return calculateColorPrintingFilePrice(pages, binding, pageSize, copies, 'one_side');
+                }
+
+                const copyCount = Math.max(1, numericValue(copies) || 1);
+                const printPages = Math.max(1, numericValue(pages) || 1) * copyCount;
+
                 if (service === 'books') {
-                    const printPrice = paperColor === 'yellow' ? Math.ceil(pages / 10) : Math.ceil(pages / 15);
-                    const bindingPrice = pageSize === 'A4' ? 55 : 45;
+                    const printPrice = paperColor === 'yellow' ? Math.ceil(printPages / 10) : Math.ceil(printPages / 15);
+                    const bindingPrice = (pageSize === 'A4' ? 55 : 45) * copyCount;
 
                     return {
                         printPrice,
@@ -958,24 +1127,10 @@
                     };
                 }
 
-                const printPrice = paperColor === 'yellow' ? Math.ceil(pages / 6) : Math.ceil(pages / 15);
-                let bindingPrice = 0;
-                let note = '';
+                const printPrice = paperColor === 'yellow' ? Math.ceil(printPages / 6) : Math.ceil(printPages / 12);
+                const bindingPrice = calculateNotesBindingPrice(pages, binding) * copyCount;
+                const note = binding === 'wire' && pages > 600 ? 'الملف لازم يتقسم على ملفين' : '';
 
-                if (binding === 'normal') {
-                    bindingPrice = 3;
-                } else if (binding === 'wire') {
-                    if (pages < 100) {
-                        bindingPrice = 5;
-                    } else if (pages < 300) {
-                        bindingPrice = 7;
-                    } else if (pages <= 600) {
-                        bindingPrice = 9;
-                    } else {
-                        bindingPrice = 14;
-                        note = 'الملف لازم يتقسم على ملفين';
-                    }
-                }
 
                 return {
                     printPrice,
@@ -983,6 +1138,71 @@
                     total: printPrice + bindingPrice,
                     note
                 };
+            }
+
+            function calculateColorPrintingFilePrice(pages, binding, pageSize = 'A4', copies = 1, printSides = 'one_side') {
+                const sheetCount = Math.max(1, numericValue(pages) || 1) * Math.max(1, numericValue(copies) || 1);
+                const unitPrice = pageSize === 'A3'
+                    ? (sheetCount <= 5 ? 5 : (sheetCount <= 10 ? 3.5 : 2.5))
+                    : (sheetCount <= 5 ? 2 : (sheetCount <= 10 ? 1.5 : 0.80));
+                const printPrice = sheetCount * unitPrice;
+                const thermalBindingUnits = printSides === 'two_sides' ? Math.ceil(sheetCount / 2) : sheetCount;
+
+                const bindingPrice = binding === 'thermal'
+                    ? thermalBindingUnits * (pageSize === 'A3' ? 10 : 5)
+                    : calculateNotesBindingPrice(pages, binding);
+                const note = binding === 'thermal'
+                    ? (printSides === 'two_sides'
+                        ? 'تنبيه: عند اختيار وجهين يتم حساب كل ورقتين بقيمة ورقة واحدة في التغليف الحراري.'
+                        : 'تنبيه: التغليف الحراري يحسب على كل ورقة لحالها.')
+                    : '';
+
+                return {
+                    printPrice,
+                    bindingPrice,
+                    total: printPrice + bindingPrice,
+                    note
+                };
+            }
+
+            function calculateNotesBindingPrice(pages, binding) {
+                const pageCount = Math.max(1, numericValue(pages) || 1);
+
+                if (binding === 'normal') {
+                    return 3;
+                }
+
+                if (binding === 'wire') {
+                    if (pageCount < 100) {
+                        return 5;
+                    }
+
+                    if (pageCount < 300) {
+                        return 7;
+                    }
+
+                    if (pageCount <= 600) {
+                        return 9;
+                    }
+
+                    return 14;
+                }
+
+                return 0;
+            }
+
+            function calculatePrintProductPrintTotal(files, service) {
+                const totalsByPaper = files.reduce((sum, fileData) => {
+                    const paperColor = fileData.paperColor === 'yellow' ? 'yellow' : 'white';
+                    sum[paperColor] += (numericValue(fileData.pages) || 0) * Math.max(1, numericValue(fileData.copies) || 1);
+                    return sum;
+                }, { white: 0, yellow: 0 });
+                const whiteDivisor = service === 'notes' ? 12 : 15;
+                const whiteTotal = Math.ceil(totalsByPaper.white / whiteDivisor);
+                const yellowDivisor = service === 'books' ? 10 : 6;
+                const yellowTotal = Math.ceil(totalsByPaper.yellow / yellowDivisor);
+
+                return whiteTotal + yellowTotal;
             }
 
             function getPrintPrice(pages) {
@@ -1043,6 +1263,10 @@
                 return uploadedFiles.books.pdf;
             }
 
+            function getAllColorPrintingFiles() {
+                return uploadedFiles.color_printing.pdf;
+            }
+
             function getAllServiceFiles(service) {
                 return [
                     ...uploadedFiles[service].word,
@@ -1074,19 +1298,23 @@
                 };
                 const productBindingLabel = service === 'books'
                     ? 'سعر التجليد'
-                    : (service === 'notes' ? 'سعر التغليف' : (noPrintServiceLabels[service] || 'سعر التجليد'));
+                    : (['notes', 'color_printing'].includes(service) ? 'سعر التغليف' : (noPrintServiceLabels[service] || 'سعر التجليد'));
 
                 const totalsText = noPrintServiceLabels[service]
-                    ? `${noPrintServiceLabels[service]}: ${totals.binding} ريال | الإجمالي: ${totals.total} ريال`
-                    : `سعر الطباعة: ${totals.print} ريال | ${productBindingLabel}: ${totals.binding} ريال | الإجمالي: ${totals.total} ريال`;
+                    ? `${noPrintServiceLabels[service]}: ${formatMoney(totals.binding)} ريال | الإجمالي: ${formatMoney(totals.total)} ريال`
+                    : `سعر الطباعة: ${formatMoney(totals.print)} ريال | ${productBindingLabel}: ${formatMoney(totals.binding)} ريال | الإجمالي: ${formatMoney(totals.total)} ريال`;
+                const discount = orderDiscounts[service] || { code: '', amount: 0, applied: false };
+                const discountAmount = discount.applied ? Math.min(discount.amount, totals.total) : 0;
+                const discountedTotal = Math.max(0, totals.total - discountAmount);
+                const discountHtml = renderDiscountBox(service, discount, discountAmount);
                 const deliveryHtml = deliveryServices.includes(service)
                     ? renderDeliveryBox(service, totals.total)
                     : '';
                 const delivery = deliverySelections[service];
                 const deliveryFee = deliveryServices.includes(service) && delivery?.saved ? estimateDeliveryFee(delivery.method, totals.total) : 0;
                 const grandTotalText = deliveryServices.includes(service) && delivery?.saved
-                    ? `<div>رسوم التوصيل: ${deliveryFee} ريال | الإجمالي بعد التوصيل: ${totals.total + deliveryFee} ريال</div>`
-                    : '';
+                    ? `<div>رسوم التوصيل: ${formatMoney(deliveryFee)} ريال | الإجمالي بعد الخصم والتوصيل: ${formatMoney(discountedTotal + deliveryFee)} ريال</div>`
+                    : (discountAmount > 0 ? `<div>الإجمالي بعد الخصم: ${formatMoney(discountedTotal)} ريال</div>` : '');
                 const canProceed = !deliveryServices.includes(service) || delivery?.saved;
                 const deliveryNoticeMessages = {
                     formatting: 'سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي فور الانتهاء من التنسيق إن شاء الله.',
@@ -1099,6 +1327,7 @@
                 summary.innerHTML = `
                     <div>${totalsText}</div>
                     ${deliveryHtml}
+                    ${discountHtml}
                     ${grandTotalText}
                     ${deliveryNotice}
                     <div class="checkout-row">
@@ -1109,12 +1338,89 @@
                 `;
             }
 
+            function renderDiscountBox(service, discount, discountAmount) {
+                const status = discount.applied
+                    ? `تم تطبيق الكود ${discount.code}. قيمة الخصم: ${formatMoney(discountAmount)} ريال.`
+                    : 'أدخل كود الخصم قبل إتمام الطلب إذا كان لديك كود.';
+
+                return `
+                    <div class="discount-box">
+                        <div class="discount-title">كود الخصم</div>
+                        <div class="discount-row">
+                            <input class="discount-input" id="${service}DiscountCode" value="${escapeHtml(discount.code || '')}" placeholder="اكتب كود الخصم" oninput="setDiscountCode('${service}', this.value)">
+                            <button class="discount-apply" type="button" onclick="applyDiscountCode('${service}')">تطبيق الخصم</button>
+                        </div>
+                        <div id="${service}DiscountStatus" class="discount-status">${status}</div>
+                    </div>
+                `;
+            }
+
+            function setDiscountCode(service, value) {
+                orderDiscounts[service].code = value.trim().toUpperCase();
+                orderDiscounts[service].applied = false;
+                orderDiscounts[service].amount = 0;
+            }
+
+            async function applyDiscountCode(service) {
+                const orderId = currentOrders[service];
+                const discount = orderDiscounts[service];
+                const status = document.getElementById(`${service}DiscountStatus`);
+
+                if (!orderId) return;
+                if (!discount.code) {
+                    if (status) {
+                        status.textContent = 'اكتب كود الخصم أولًا.';
+                        status.classList.add('error');
+                    }
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/cart/${orderId}/discount`, {
+                        method: 'PATCH',
+                        headers: {
+                            'X-CSRF-TOKEN': getCsrfToken(),
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            discount_code: discount.code
+                        })
+                    });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.success) {
+                        throw new Error(result.message || 'تعذر تطبيق كود الخصم');
+                    }
+
+                    discount.code = result.discount_code;
+                    discount.amount = Number(result.discount_amount || 0);
+                    discount.applied = true;
+
+                    if (service === 'notes' || service === 'books' || service === 'color_printing') {
+                        updatePrintProductPricingSummary(service);
+                    } else if (service === 'thesis' || service === 'phd') {
+                        updateAcademicPricingSummary(service);
+                    } else if (service === 'formatting') {
+                        updateFormattingPricingSummary();
+                    } else if (service === 'research') {
+                        updateResearchPricingSummary();
+                    }
+                } catch (error) {
+                    if (status) {
+                        status.textContent = error.message || 'تعذر تطبيق كود الخصم';
+                        status.classList.add('error');
+                    }
+                }
+            }
+
             function renderDeliveryBox(service, subtotal) {
                 const delivery = deliverySelections[service] || {};
                 const method = delivery.method || '';
                 const campusFee = subtotal >= 35 ? 0 : 5;
+                const displayedFee = estimateDeliveryFee(method, subtotal);
                 const status = delivery.saved
-                    ? `تم حفظ طريقة التوصيل. الرسوم: ${delivery.fee} ريال.`
+                    ? `تم حفظ طريقة التوصيل. الرسوم: ${displayedFee} ريال.`
                     : 'اختر طريقة الاستلام أو التوصيل ثم اضغط حفظ.';
 
                 return `
@@ -1263,7 +1569,7 @@
 
                     delivery.fee = Number(result.delivery_fee || 0);
                     delivery.saved = true;
-                    if (service === 'notes' || service === 'books') {
+                    if (service === 'notes' || service === 'books' || service === 'color_printing') {
                         updatePrintProductPricingSummary(service);
                     } else {
                         updateAcademicPricingSummary(service);
@@ -1298,7 +1604,9 @@
                 const summary = document.getElementById(`${service}PricingSummary`);
                 if (!summary) return;
 
-                const files = service === 'books' ? getAllBookFiles() : getAllNotesFiles();
+                const files = service === 'books'
+                    ? getAllBookFiles()
+                    : (service === 'color_printing' ? getAllColorPrintingFiles() : getAllNotesFiles());
 
                 if (files.length === 0) {
                     renderCheckoutSummary(summary, service, 'ارفع الملفات لعرض الإجمالي.');
@@ -1311,12 +1619,19 @@
                 }
 
                 const totals = files.reduce((sum, fileData) => {
-                    const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize);
-                    sum.print += price.printPrice;
+                    const price = service === 'color_printing'
+                        ? calculateColorPrintingFilePrice(fileData.pages, fileData.binding, fileData.pageSize, fileData.copies, fileData.printSides)
+                        : calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize, fileData.copies);
+                    if (service === 'color_printing') {
+                        sum.print += price.printPrice;
+                    }
                     sum.binding += price.bindingPrice;
-                    sum.total += price.total;
                     return sum;
                 }, { print: 0, binding: 0, total: 0 });
+                if (service !== 'color_printing') {
+                    totals.print = calculatePrintProductPrintTotal(files, service);
+                }
+                totals.total = totals.print + totals.binding;
 
                 renderCheckoutSummary(summary, service, '', totals, true);
             }
@@ -1480,9 +1795,16 @@
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         const content = e.target.result;
-                        const pageMatches = content.match(/\/Type\s*\/Page[^s]/g);
-                        const pageCount = pageMatches ? pageMatches.length : 1;
-                        resolve(pageCount);
+                        const pageMatches = content.match(/\/Type\s*\/Page\b(?!s)/g);
+                        if (pageMatches && pageMatches.length > 0) {
+                            resolve(pageMatches.length);
+                            return;
+                        }
+
+                        const countMatches = [...content.matchAll(/\/Count\s+(\d+)/g)]
+                            .map(match => numericValue(match[1]))
+                            .filter(count => count > 0);
+                        resolve(countMatches.length ? Math.max(...countMatches) : 1);
                     };
                     reader.readAsText(file);
                 });
@@ -1544,12 +1866,13 @@
                 const config = fileConfigs[configKey];
                 const listDiv = document.getElementById(config.listId);
                 const files = uploadedFiles[config.service][config.type];
-                const showPrice = config.service === 'notes' || config.service === 'books';
+                const showPrice = config.service === 'notes' || config.service === 'books' || config.service === 'color_printing';
+                const showColorPrintingPrice = config.service === 'color_printing';
                 const showAcademicPrice = (config.service === 'thesis' || config.service === 'phd') && config.type === 'pdf';
                 const showFormattingPrice = config.service === 'formatting';
                 const showThesisProject = config.service === 'thesis' && config.type === 'pdf';
-                const showPrintSides = (['notes', 'books'].includes(config.service) && config.type === 'pdf') || showAcademicPrice;
-                const showPageSize = ['notes', 'books'].includes(config.service) && config.type === 'pdf';
+                const showPrintSides = (['notes', 'books', 'color_printing'].includes(config.service) && config.type === 'pdf') || showAcademicPrice;
+                const showPageSize = ['notes', 'books', 'color_printing'].includes(config.service) && config.type === 'pdf';
 
                 if (files.length === 0) {
                     listDiv.innerHTML = '<div class="empty-message">لم يتم تحميل أي ملفات</div>';
@@ -1565,7 +1888,11 @@
 
                 let html = '';
                 files.forEach((fileData, index) => {
-                    const price = showPrice && (fileData.binding || config.service === 'books') ? calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, config.service, fileData.pageSize) : null;
+                    const price = showPrice && (fileData.binding || config.service === 'books')
+                        ? (showColorPrintingPrice
+                            ? calculateColorPrintingFilePrice(fileData.pages, fileData.binding, fileData.pageSize, fileData.copies, fileData.printSides)
+                            : calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, config.service, fileData.pageSize, fileData.copies))
+                        : null;
                     const bindingHtml = showPrice
                         ? `
                             <div data-label="${config.service === 'books' ? 'التجليد' : 'التغليف'}">
@@ -1576,19 +1903,20 @@
                                     <option value="tape" ${fileData.binding === 'tape' ? 'selected' : ''}>تغليف دبوس</option>
                                     <option value="wire" ${fileData.binding === 'wire' ? 'selected' : ''}>تغليف سلك</option>
                                     <option value="normal" ${fileData.binding === 'normal' ? 'selected' : ''}>تغليف عادي</option>
+                                    ${showColorPrintingPrice ? `<option value="thermal" ${fileData.binding === 'thermal' ? 'selected' : ''}>تغليف حراري - يحسب على كل ورقة</option>` : ''}
                                     <option value="none" ${fileData.binding === 'none' ? 'selected' : ''}>بدون أي تغليف</option>
                                 </select>`}
                             </div>
                         `
                         : '';
                     const notesPrintPriceHtml = showPrice
-                        ? `<div class="file-price" data-label="سعر الطباعة">${price ? `${price.printPrice} ريال` : '-'}</div>`
+                        ? `<div class="file-price" data-label="سعر الطباعة">${price ? `${formatMoney(price.printPrice)} ريال` : '-'}</div>`
                         : '';
                     const notesBindingPriceHtml = showPrice
-                        ? `<div class="file-price" data-label="${config.service === 'books' ? 'سعر التجليد' : 'سعر التغليف'}">${price ? `${price.bindingPrice} ريال` : '-'}</div>`
+                        ? `<div class="file-price" data-label="${config.service === 'books' ? 'سعر التجليد' : 'سعر التغليف'}">${price ? `${formatMoney(price.bindingPrice)} ريال` : '-'}</div>`
                         : '';
                     const notesTotalPriceHtml = showPrice
-                        ? `<div class="file-price" data-label="الإجمالي">${price ? `${price.total} ريال` : 'اختر التغليف'}${price?.note ? `<span class="file-price-note">${price.note}</span>` : ''}</div>`
+                        ? `<div class="file-price" data-label="الإجمالي">${price ? `${formatMoney(price.total)} ريال` : 'اختر التغليف'}${price?.note ? `<span class="file-price-note">${price.note}</span>` : ''}</div>`
                         : '';
                     const paperColorHtml = config.service === 'notes' || config.service === 'books'
                         ? `
@@ -1604,8 +1932,8 @@
                         ? `
                             <div data-label="نوع الطباعة">
                                 <select class="binding-select" onchange="setFilePrintSides('${config.service}', '${config.type}', ${index}, this.value)">
+                                    <option value="one_side" ${(fileData.printSides || (showColorPrintingPrice ? 'one_side' : 'two_sides')) === 'one_side' ? 'selected' : ''}>وجه واحد</option>
                                     <option value="two_sides" ${(fileData.printSides || 'two_sides') === 'two_sides' ? 'selected' : ''}>وجهين</option>
-                                    <option value="one_side" ${fileData.printSides === 'one_side' ? 'selected' : ''}>وجه واحد</option>
                                 </select>
                             </div>
                         `
@@ -1615,6 +1943,7 @@
                             <div data-label="حجم الصفحة">
                                 <select class="binding-select" onchange="setFilePageSize('${config.service}', '${config.type}', ${index}, this.value)">
                                     <option value="A4" ${(fileData.pageSize || 'A4') === 'A4' ? 'selected' : ''}>A4</option>
+                                    ${showColorPrintingPrice ? `<option value="A3" ${fileData.pageSize === 'A3' ? 'selected' : ''}>A3</option>` : ''}
                                     <option value="A5" ${fileData.pageSize === 'A5' ? 'selected' : ''}>A5</option>
                                     <option value="B5" ${fileData.pageSize === 'B5' ? 'selected' : ''}>B5</option>
                                 </select>
@@ -1625,12 +1954,13 @@
                     const academicPrice = showAcademicPrice ? calculateAcademicFilePrice(config.service, fileData.pages, fileData.copies, fileData.writingColor) : null;
                     const formattingPrice = showFormattingPrice ? calculateFormattingFilePrice(fileData.pages) : null;
                     const copiesKey = `${config.service}-${config.type}-${index}`;
-                    const copiesHtml = showAcademicPrice
+                    const showPrintProductCopies = showPrice && ['notes', 'books', 'color_printing'].includes(config.service);
+                    const copiesHtml = showAcademicPrice || showPrintProductCopies
                         ? `<div data-label="عدد النسخ">
                             <div class="copies-stepper">
-                                <button class="copies-stepper-button" type="button" onclick="changeAcademicFileCopies('${config.service}', '${config.type}', ${index}, -1)">-</button>
-                                <input class="copies-input" data-copies-input="${copiesKey}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${fileData.copies || 1}" oninput="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="setAcademicFileCopies('${config.service}', '${config.type}', ${index}, this.value, true)" />
-                                <button class="copies-stepper-button" type="button" onclick="changeAcademicFileCopies('${config.service}', '${config.type}', ${index}, 1)">+</button>
+                                <button class="copies-stepper-button" type="button" onclick="${showPrintProductCopies ? 'changePrintProductFileCopies' : 'changeAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, -1)">-</button>
+                                <input class="copies-input" data-copies-input="${copiesKey}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${fileData.copies || 1}" oninput="${showPrintProductCopies ? 'setPrintProductFileCopies' : 'setAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="${showPrintProductCopies ? 'setPrintProductFileCopies' : 'setAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, this.value, true)" />
+                                <button class="copies-stepper-button" type="button" onclick="${showPrintProductCopies ? 'changePrintProductFileCopies' : 'changeAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, 1)">+</button>
                             </div>
                         </div>`
                         : '';
@@ -1690,7 +2020,7 @@
                         : '';
 
                     html += `
-                        <div class="files-list-item${showPrice ? ' has-price' : ''}${showAcademicPrice ? ' has-academic-university' : ''}${showThesisProject ? ' has-thesis-project' : ''}${showFormattingPrice ? ' has-formatting-price' : ''}">
+                        <div class="files-list-item${showPrice ? ' has-price' : ''}${showColorPrintingPrice ? ' has-color-printing-price' : ''}${showAcademicPrice ? ' has-academic-university' : ''}${showThesisProject ? ' has-thesis-project' : ''}${showFormattingPrice ? ' has-formatting-price' : ''}">
                             <div class="file-name-cell" data-label="اسم الملف">${fileData.filename}</div>
                             <div class="file-pages" data-label="الصفحات">${fileData.pages} صفحة</div>
                             <div class="file-size" data-label="الحجم">${fileData.size}</div>
@@ -1750,7 +2080,7 @@
                 uploadedFiles[service][type].splice(index, 1);
                 const configKey = Object.keys(fileConfigs).find(key => fileConfigs[key].service === service && fileConfigs[key].type === type);
                 updateFilesList(configKey);
-                if (service === 'notes' || service === 'books') {
+                if (service === 'notes' || service === 'books' || service === 'color_printing') {
                     updatePrintProductPricingSummary(service);
                 } else if (service === 'thesis' || service === 'phd') {
                     updateAcademicPricingSummary(service);
@@ -1762,37 +2092,113 @@
             function setPrintProductFileBinding(service, type, index, binding) {
                 const fileData = uploadedFiles[service][type][index];
                 fileData.binding = binding;
-                const price = calculateNotesFilePrice(fileData.pages, binding, fileData.paperColor, service, fileData.pageSize);
+                const price = service === 'color_printing'
+                    ? calculateColorPrintingFilePrice(fileData.pages, binding, fileData.pageSize, fileData.copies, fileData.printSides)
+                    : calculateNotesFilePrice(fileData.pages, binding, fileData.paperColor, service, fileData.pageSize, fileData.copies);
                 updateStoredFile(fileData, {
                     binding_type: binding,
+                    ...(service === 'color_printing' ? { print_sides: fileData.printSides || 'one_side' } : {}),
                     print_price: price.printPrice,
                     binding_price: price.bindingPrice,
                     total_price: price.total
                 });
-                updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                updateFilesList(getConfigKey(service, type));
+                updatePrintProductPricingSummary(service);
+            }
+
+            function setPrintProductFileCopies(service, type, index, copies, rerender = true) {
+                const fileData = uploadedFiles[service][type][index];
+                const copiesValue = String(copies ?? '').trim();
+                if (!/^[0-9]+$/.test(copiesValue)) {
+                    if (rerender) {
+                        updateFilesList(getConfigKey(service, type));
+                    }
+                    updatePrintProductPricingSummary(service);
+                    return;
+                }
+
+                fileData.copies = Math.max(1, numericValue(copiesValue) || 1);
+                const price = service === 'color_printing'
+                    ? calculateColorPrintingFilePrice(fileData.pages, fileData.binding, fileData.pageSize, fileData.copies, fileData.printSides)
+                    : calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize, fileData.copies);
+                const payload = {
+                    copies: fileData.copies,
+                    print_price: price.printPrice,
+                    binding_price: price.bindingPrice,
+                    total_price: price.total
+                };
+                if (service === 'color_printing') {
+                    payload.print_sides = fileData.printSides || 'one_side';
+                }
+                updateStoredFile(fileData, payload);
+                if (rerender) {
+                    updateFilesList(getConfigKey(service, type));
+                }
+                updatePrintProductPricingSummary(service);
+            }
+
+            function changePrintProductFileCopies(service, type, index, delta) {
+                const fileData = uploadedFiles[service][type][index];
+                const currentCopies = Math.max(1, numericValue(fileData.copies) || 1);
+                const nextCopies = Math.min(999, Math.max(1, currentCopies + delta));
+                const key = `${service}-${type}-${index}`;
+                const input = document.querySelector(`[data-copies-input="${key}"]`);
+
+                fileData.copies = nextCopies;
+                if (input) {
+                    input.value = nextCopies;
+                }
+
+                const price = service === 'color_printing'
+                    ? calculateColorPrintingFilePrice(fileData.pages, fileData.binding, fileData.pageSize, fileData.copies, fileData.printSides)
+                    : calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize, fileData.copies);
+                const payload = {
+                    copies: fileData.copies,
+                    print_price: price.printPrice,
+                    binding_price: price.bindingPrice,
+                    total_price: price.total
+                };
+                if (service === 'color_printing') {
+                    payload.print_sides = fileData.printSides || 'one_side';
+                }
+                updateStoredFile(fileData, payload);
+                updateFilesList(getConfigKey(service, type));
                 updatePrintProductPricingSummary(service);
             }
 
             function setPrintProductPaperColor(service, type, index, paperColor) {
                 const fileData = uploadedFiles[service][type][index];
                 fileData.paperColor = paperColor || 'white';
-                const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize);
+                const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize, fileData.copies);
                 updateStoredFile(fileData, {
                     paper_color: fileData.paperColor,
                     print_price: price.printPrice,
                     binding_price: price.bindingPrice,
                     total_price: price.total
                 });
-                updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                updateFilesList(getConfigKey(service, type));
                 updatePrintProductPricingSummary(service);
             }
 
             function setFilePrintSides(service, type, index, printSides) {
                 const fileData = uploadedFiles[service][type][index];
-                fileData.printSides = printSides || 'two_sides';
-                updateStoredFile(fileData, {
+                fileData.printSides = printSides || (service === 'color_printing' ? 'one_side' : 'two_sides');
+                const payload = {
                     print_sides: fileData.printSides
-                });
+                };
+
+                if (service === 'color_printing') {
+                    const price = calculateColorPrintingFilePrice(fileData.pages, fileData.binding, fileData.pageSize, fileData.copies, fileData.printSides);
+                    payload.print_price = price.printPrice;
+                    payload.binding_price = price.bindingPrice;
+                    payload.total_price = price.total;
+                }
+
+                updateStoredFile(fileData, payload);
+                if (service === 'color_printing') {
+                    updateFilesList(getConfigKey(service, type));
+                    updatePrintProductPricingSummary(service);
+                }
             }
 
             function setFilePageSize(service, type, index, pageSize) {
@@ -1802,16 +2208,21 @@
                     page_size: fileData.pageSize
                 };
 
-                if (service === 'books') {
-                    const price = calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize);
+                if (service === 'books' || service === 'color_printing') {
+                    const price = service === 'color_printing'
+                        ? calculateColorPrintingFilePrice(fileData.pages, fileData.binding, fileData.pageSize, fileData.copies, fileData.printSides)
+                        : calculateNotesFilePrice(fileData.pages, fileData.binding, fileData.paperColor, service, fileData.pageSize, fileData.copies);
                     payload.print_price = price.printPrice;
                     payload.binding_price = price.bindingPrice;
                     payload.total_price = price.total;
+                    if (service === 'color_printing') {
+                        payload.print_sides = fileData.printSides || 'one_side';
+                    }
                 }
 
                 updateStoredFile(fileData, payload);
-                if (service === 'books') {
-                    updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                if (service === 'books' || service === 'color_printing') {
+                    updateFilesList(getConfigKey(service, type));
                     updatePrintProductPricingSummary(service);
                 }
             }
@@ -2151,9 +2562,9 @@
                                     size: formatFileSize(response.size),
                                     binding: response.binding_type || (config.service === 'books' ? 'normal' : ''),
                                     copies: 1,
-                                    printSides: response.print_sides || 'two_sides',
+                                    printSides: response.print_sides || (config.service === 'color_printing' ? 'one_side' : 'two_sides'),
                                     pageSize: response.page_size || 'A4',
-                                    paperColor: response.paper_color || 'white',
+                                    paperColor: response.paper_color || (config.service === 'color_printing' ? '' : 'white'),
                                     thesisProjectType: '',
                                     universityChoice: '',
                                     universityName: response.university_name || '',
@@ -2162,7 +2573,7 @@
                                     writingColor: response.writing_color || ''
                                 });
                                 updateFilesList(configKey);
-                                if (config.service === 'notes' || config.service === 'books') {
+                                if (config.service === 'notes' || config.service === 'books' || config.service === 'color_printing') {
                                     updatePrintProductPricingSummary(config.service);
                                 } else if (config.service === 'thesis' || config.service === 'phd') {
                                     updateAcademicPricingSummary(config.service);

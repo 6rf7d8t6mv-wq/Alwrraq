@@ -7,6 +7,7 @@
         $serviceNames = [
             'notes' => 'مذكرات',
             'books' => 'كتب',
+            'color_printing' => 'طباعة الملفات بالألوان',
             'thesis' => 'ماجستير',
             'phd' => 'دكتوراه',
             'formatting' => 'تنسيق الرسائل الجامعية',
@@ -28,6 +29,18 @@
         .dashboard-action { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; border-radius: 10px; background: #ffffff; border: 1px solid #e5e7eb; color: #0f172a; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06); }
         .dashboard-action span { color: #64748b; font-size: 12px; font-weight: 800; }
         .dashboard-action strong { color: #0f172a; }
+        .discount-panel { margin: -4px 0 18px; padding: 16px; border: 1px solid #fbcfe8; border-radius: 12px; background: #fdf2f8; box-shadow: 0 12px 28px rgba(190, 24, 93, 0.08); }
+        .discount-panel h2 { margin: 0 0 12px; color: #831843; font-size: 20px; }
+        .discount-form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(120px, 0.35fr) auto; gap: 10px; align-items: end; }
+        .discount-form label { display: block; color: #9d174d; font-size: 12px; font-weight: 900; margin-bottom: 6px; }
+        .discount-form input { width: 100%; padding: 11px 12px; border: 1px solid #f9a8d4; border-radius: 9px; background: #ffffff; color: #0f172a; font-weight: 800; }
+        .discount-submit { padding: 12px 18px; border: 0; border-radius: 9px; background: #db2777; color: #ffffff; font-weight: 900; cursor: pointer; }
+        .discount-submit:hover { background: #be185d; }
+        .discount-codes-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+        .discount-chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 8px 7px 10px; border-radius: 999px; background: #ffffff; border: 1px solid #f9a8d4; color: #831843; font-size: 12px; font-weight: 900; }
+        .discount-delete-form { display: inline-flex; margin: 0; }
+        .discount-delete { width: 24px; height: 24px; border: 0; border-radius: 999px; background: #fee2e2; color: #991b1b; font-size: 13px; font-weight: 900; line-height: 1; cursor: pointer; }
+        .discount-delete:hover { background: #fecaca; }
         .dashboard-stat-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 18px; }
         .dashboard-stat { position: relative; min-height: 112px; padding: 16px; border-radius: 12px; background: #ffffff; border: 1px solid #e5e7eb; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.06); overflow: hidden; }
         .dashboard-stat span { display: block; color: #64748b; font-size: 12px; font-weight: 900; margin-bottom: 8px; }
@@ -52,6 +65,7 @@
         @media (max-width: 980px) {
             .dashboard-hero, .dashboard-grid { grid-template-columns: 1fr; }
             .dashboard-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .discount-form { grid-template-columns: 1fr; }
         }
         @media (max-width: 560px) {
             .dashboard-stat-grid { grid-template-columns: 1fr; }
@@ -91,6 +105,38 @@
             @endif
         </section>
     </div>
+
+    @if (auth()->user()->hasAdminPermission('discounts_apply'))
+        <section class="discount-panel">
+            <h2>كود الخصم</h2>
+            <form class="discount-form" method="post" action="{{ route('admin.discount-codes.store') }}">
+                @csrf
+                <div>
+                    <label>كود الخصم</label>
+                    <input name="discount_code" placeholder="مثال: STUDENT10" required>
+                </div>
+                <div>
+                    <label>القيمة</label>
+                    <input name="discount_amount" inputmode="numeric" placeholder="مثال: 10" required>
+                </div>
+                <button class="discount-submit" type="submit">تطبيق الخصم</button>
+            </form>
+            @if ($discountCodes->isNotEmpty())
+                <div class="discount-codes-list">
+                    @foreach ($discountCodes as $discountCode)
+                        <span class="discount-chip">
+                            {{ $discountCode->code }} - {{ $discountCode->amount }} ريال
+                            <form class="discount-delete-form" method="post" action="{{ route('admin.discount-codes.destroy', $discountCode) }}" onsubmit="return confirm('هل تريد حذف كود الخصم؟')">
+                                @csrf
+                                @method('delete')
+                                <button class="discount-delete" type="submit" aria-label="حذف كود الخصم">×</button>
+                            </form>
+                        </span>
+                    @endforeach
+                </div>
+            @endif
+        </section>
+    @endif
 
     <section class="dashboard-stat-grid">
         <div class="dashboard-stat primary"><span>كل الطلبات</span><strong>{{ $stats['orders'] }}</strong><small>إجمالي الطلبات المسجلة</small></div>

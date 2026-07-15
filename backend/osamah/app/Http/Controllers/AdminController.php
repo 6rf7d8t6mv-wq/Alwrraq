@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
+use App\Models\DiscountCode;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -63,6 +64,11 @@ class AdminController extends Controller
             ->withCount('orders')
             ->latest()
             ->get();
+        $discountCodes = DiscountCode::query()
+            ->with('creator')
+            ->latest()
+            ->take(6)
+            ->get();
 
         $stats = [
             'orders' => $orders->count(),
@@ -87,7 +93,37 @@ class AdminController extends Controller
             'grand_total' => $orders->sum('grand_total'),
         ];
 
-        return view('admin.dashboard', compact('orders', 'users', 'stats'));
+        return view('admin.dashboard', compact('orders', 'users', 'stats', 'discountCodes'));
+    }
+
+    public function storeDiscountCode(Request $request)
+    {
+        $this->ensureAdmin();
+        $this->ensurePermission('discounts_apply');
+
+        $data = $request->validate([
+            'discount_code' => ['required', 'string', 'max:40', 'regex:/^[A-Za-z0-9_-]+$/', 'unique:discount_codes,code'],
+            'discount_amount' => ['required', 'integer', 'min:1'],
+        ]);
+
+        DiscountCode::query()->create([
+            'code' => strtoupper($data['discount_code']),
+            'amount' => (int) $data['discount_amount'],
+            'created_by' => Auth::id(),
+            'is_active' => true,
+        ]);
+
+        return back()->with('status', 'تم إنشاء كود الخصم العام بنجاح.');
+    }
+
+    public function destroyDiscountCode(DiscountCode $discountCode)
+    {
+        $this->ensureAdmin();
+        $this->ensurePermission('discounts_apply');
+
+        $discountCode->delete();
+
+        return back()->with('status', 'تم حذف كود الخصم بنجاح.');
     }
 
     public function orders(Request $request)
@@ -156,14 +192,14 @@ class AdminController extends Controller
         ]);
 
         $baseTotal = $order->baseTotal();
-        if ((int) $data['discount_amount'] >= $baseTotal) {
-            return back()->withErrors(['discount' => 'قيمة الخصم يجب أن تكون أقل من إجمالي الطلب قبل الخصم.']);
+        if ($baseTotal <= 0) {
+            return back()->withErrors(['discount' => 'لا يمكن تطبيق خصم على طلب بدون إجمالي.']);
         }
 
-        $discountAmount = (int) $data['discount_amount'];
+        $discountAmount = min((int) $data['discount_amount'], $baseTotal);
         $subtotal = max(0, $baseTotal - $discountAmount);
         $deliveryFee = match ($order->delivery_method) {
-            'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,
+            'islamic_university_delivery' => $baseTotal >= 35 ? 0 : 5,
             'madinah_delivery' => 20,
             'redbox_delivery' => 30,
             default => 0,
@@ -481,6 +517,74 @@ class AdminController extends Controller
         }
 
         return Response::download($absolutePath, $file->original_name);
+    }
+
+    public function viewFile(Request $request, OrderFile $file)
+    {
+        $this->ensureAdmin();
+        $this->ensurePermission('files_download');
+
+        $file->load('order.user');
+
+        $absolutePath = storage_path('app/' . $file->path);
+
+        abort_unless(is_file($absolutePath), 404);
+
+        if ($request->boolean('raw')) {
+            return response()->file($absolutePath, [
+                'Content-Type' => File::mimeType($absolutePath) ?: 'application/octet-stream',
+                'Content-Disposition' => 'inline; filename="' . addslashes($file->original_name) . '"',
+            ]);
+        }
+
+        $order = $file->order;
+        $printSideNames = ['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'];
+        $pageSizeNames = ['A4' => 'A4', 'A3' => 'A3', 'A5' => 'A5', 'B5' => 'B5'];
+        $bindingNames = $order->service_type === 'books'
+            ? [
+                'tape' => 'تجليد كعب جلد طبيعي',
+                'wire' => 'تجليد كعب جلد طبيعي',
+                'normal' => 'تجليد كعب جلد طبيعي',
+                'none' => 'تجليد كعب جلد طبيعي',
+            ]
+            : ($order->service_type === 'color_printing'
+                ? [
+                    'tape' => 'تغليف دبوس',
+                    'wire' => 'تغليف سلك',
+                    'normal' => 'تغليف عادي',
+                    'thermal' => 'تغليف حراري',
+                    'none' => 'بدون تغليف',
+                ]
+                : [
+                    'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
+                    'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
+                    'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
+                    'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
+                ]);
+
+        $serviceNames = [
+            'notes' => 'طباعة المذكرات وملفات ال PDF',
+            'books' => 'طباعة وتجليد كتب كعب جلد طبيعي',
+            'color_printing' => 'طباعة الملفات بالألوان',
+            'thesis' => 'طباعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج',
+            'phd' => 'طباعة وتجليد رسالة دكتوراه',
+            'formatting' => 'تنسيق الرسائل الجامعية',
+            'research' => 'إنشاء بحث',
+        ];
+
+        $isPrintablePreview = strtolower($file->file_type) === 'pdf';
+        $printColor = $order->service_type === 'color_printing' ? 'ألوان' : 'أبيض وأسود';
+
+        return view('admin.file-viewer', compact(
+            'file',
+            'order',
+            'printSideNames',
+            'pageSizeNames',
+            'bindingNames',
+            'serviceNames',
+            'isPrintablePreview',
+            'printColor'
+        ));
     }
 
     public function uploadDeliveredFile(Request $request, Order $order)

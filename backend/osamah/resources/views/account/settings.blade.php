@@ -88,6 +88,9 @@
 
         @php
             $user = auth()->user();
+            $nameParts = preg_split('/\s+/', trim($user->name), 2);
+            $firstName = $nameParts[0] ?? '';
+            $secondName = $nameParts[1] ?? '';
             $hasAddress = filled($user->city) && filled($user->district) && filled($user->street) && filled($user->postal_code);
         @endphp
 
@@ -102,30 +105,46 @@
 
                 <div class="details-grid">
                     <div class="detail">
-                        <div class="detail-label">اسم المستخدم</div>
-                        <div class="detail-value">{{ $user->name }}</div>
+                        <div class="detail-label">الاسم الأول</div>
+                        <div class="detail-value">{{ $firstName }}</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">الاسم الثاني</div>
+                        <div class="detail-value {{ $secondName ? '' : 'empty' }}">{{ $secondName ?: 'لم تتم الإضافة بعد' }}</div>
                     </div>
                     <div class="detail">
                         <div class="detail-label">رقم الجوال</div>
                         <div class="detail-value">{{ $user->phone }}</div>
+                    </div>
+                    <div class="detail">
+                        <div class="detail-label">البريد الإلكتروني</div>
+                        <div class="detail-value {{ $user->email ? '' : 'empty' }}">{{ $user->email ?: 'لم تتم الإضافة بعد' }}</div>
                     </div>
                 </div>
                 <div class="section-actions">
                     <button class="secondary" type="button" onclick="togglePanel('profilePanel')">تعديل بياناتي</button>
                 </div>
 
-                <div id="profilePanel" class="edit-panel {{ $errors->has('name') || $errors->has('phone') ? 'active' : '' }}">
+                <div id="profilePanel" class="edit-panel {{ $errors->has('first_name') || $errors->has('second_name') || $errors->has('phone') || $errors->has('email') ? 'active' : '' }}">
                     <form method="post" action="{{ route('account.profile.update') }}">
                         @csrf
                         @method('patch')
                         <div class="form-grid">
                             <div>
-                                <label>الاسم</label>
-                                <input name="name" value="{{ old('name', $user->name) }}" required>
+                                <label>الاسم الأول</label>
+                                <input name="first_name" value="{{ old('first_name', $firstName) }}" required>
+                            </div>
+                            <div>
+                                <label>الاسم الثاني</label>
+                                <input name="second_name" value="{{ old('second_name', $secondName) }}" required>
                             </div>
                             <div>
                                 <label>رقم الجوال</label>
                                 <input name="phone" inputmode="numeric" value="{{ old('phone', $user->phone) }}" required>
+                            </div>
+                            <div>
+                                <label>البريد الإلكتروني</label>
+                                <input name="email" type="email" inputmode="email" value="{{ old('email', $user->email) }}" placeholder="اختياري">
                             </div>
                         </div>
                         <button type="submit">حفظ بياناتي</button>
@@ -287,6 +306,10 @@
 
         document.querySelectorAll('input[name="phone"]').forEach((input) => {
             bindInputRule(input, /^05[0-9]{8}$/, 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.');
+        });
+
+        document.querySelectorAll('input[name="email"]').forEach((input) => {
+            bindInputRule(input, /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.');
         });
 
         document.querySelectorAll('input[name="postal_code"]').forEach((input) => {

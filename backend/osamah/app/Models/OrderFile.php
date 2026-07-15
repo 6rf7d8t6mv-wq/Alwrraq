@@ -30,6 +30,15 @@ class OrderFile extends Model
         'total_price',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'print_price' => 'decimal:2',
+            'binding_price' => 'decimal:2',
+            'total_price' => 'decimal:2',
+        ];
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);

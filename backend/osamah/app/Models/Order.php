@@ -54,6 +54,11 @@ class Order extends Model
             'customer_notification_seen_at' => 'datetime',
             'discount_applied_at' => 'datetime',
             'delivered_file_uploaded_at' => 'datetime',
+            'print_total' => 'decimal:2',
+            'binding_total' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'delivery_fee' => 'decimal:2',
+            'grand_total' => 'decimal:2',
         ];
     }
 
@@ -77,13 +82,13 @@ class Order extends Model
         return $this->belongsTo(User::class, 'discount_applied_by');
     }
 
-    public function baseTotal(): int
+    public function baseTotal(): float
     {
-        return (int) $this->print_total + (int) $this->binding_total;
+        return (float) $this->print_total + (float) $this->binding_total;
     }
 
-    public function subtotalAfterDiscount(): int
+    public function subtotalAfterDiscount(): float
     {
-        return max(0, $this->baseTotal() - (int) $this->discount_amount);
+        return max(0, $this->baseTotal() - (float) $this->discount_amount);
     }
 }

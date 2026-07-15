@@ -40,6 +40,7 @@ Route::delete('/order-files/{file}', [FileUploadController::class, 'destroyFile'
 Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {
     Route::get('/{order}', [CartController::class, 'show'])->name('show');
     Route::patch('/{order}/delivery', [CartController::class, 'updateDelivery'])->name('delivery.update');
+    Route::patch('/{order}/discount', [CartController::class, 'applyDiscount'])->name('discount.apply');
     Route::post('/{order}/pay', [CartController::class, 'pay'])->name('pay');
 });
 
@@ -49,6 +50,9 @@ Route::get('/my-orders', [CustomerOrderController::class, 'index'])
 Route::delete('/my-orders/{order}', [CustomerOrderController::class, 'destroy'])
     ->middleware('auth')
     ->name('orders.destroy');
+Route::get('/my-orders/{order}/files/{file}', [CustomerOrderController::class, 'viewUploadedFile'])
+    ->middleware('auth')
+    ->name('orders.file.view');
 Route::get('/my-orders/{order}/delivered-files/{deliveredFile}', [CustomerOrderController::class, 'downloadDeliveredFile'])
     ->middleware('auth')
     ->name('orders.delivered-file');
@@ -67,6 +71,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
+    Route::post('/discount-codes', [AdminController::class, 'storeDiscountCode'])->name('discount-codes.store');
+    Route::delete('/discount-codes/{discountCode}', [AdminController::class, 'destroyDiscountCode'])->name('discount-codes.destroy');
     Route::patch('/users/{user}', [AdminController::class, 'updateUser'])->name('users.update');
     Route::patch('/users/{user}/email', [AdminController::class, 'updateUserEmail'])->name('users.email.update');
     Route::patch('/users/{user}/permissions', [AdminController::class, 'updateUserPermissions'])->name('users.permissions.update');
@@ -79,5 +85,6 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::post('/orders/{order}/delivered-file', [AdminController::class, 'uploadDeliveredFile'])->name('orders.delivered-file.upload');
     Route::get('/delivered-files/{deliveredFile}/download', [AdminController::class, 'downloadDeliveredFile'])->name('delivered-files.download');
     Route::delete('/delivered-files/{deliveredFile}', [AdminController::class, 'destroyDeliveredFile'])->name('delivered-files.destroy');
+    Route::get('/files/{file}/view', [AdminController::class, 'viewFile'])->name('files.view');
     Route::get('/files/{file}/download', [AdminController::class, 'download'])->name('files.download');
 });

@@ -111,7 +111,7 @@ class ApiController extends Controller
             ], 422);
         }
 
-        if (in_array($order->service_type, ['notes', 'books'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
+        if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
             return response()->json([
                 'success' => false,
                 'message' => 'اختر نوع التغليف لكل ملف قبل الدفع.',

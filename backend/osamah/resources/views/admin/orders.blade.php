@@ -37,6 +37,7 @@
         $serviceNames = [
             'notes' => 'مذكرات',
             'books' => 'كتب',
+            'color_printing' => 'طباعة الملفات بالألوان',
             'thesis' => 'ماجستير',
             'phd' => 'دكتوراه',
             'formatting' => 'تنسيق الرسائل الجامعية',
@@ -78,6 +79,7 @@
                     @php
                         $bindingLabel = match ($order->service_type) {
                             'books' => 'التجليد',
+                            'color_printing' => 'التغليف',
                             'notes' => 'التغليف',
                             'formatting' => 'التنسيق',
                             'research' => 'إنشاء البحث',
@@ -85,6 +87,7 @@
                         };
                         $bindingPriceLabel = match ($order->service_type) {
                             'books' => 'سعر التجليد',
+                            'color_printing' => 'سعر التغليف',
                             'notes' => 'سعر التغليف',
                             'formatting' => 'سعر التنسيق',
                             'research' => 'سعر إنشاء البحث',
@@ -97,12 +100,20 @@
                                 'normal' => 'تجليد كعب جلد طبيعي',
                                 'none' => 'تجليد كعب جلد طبيعي',
                             ]
+                            : ($order->service_type === 'color_printing'
+                                ? [
+                                    'tape' => 'تغليف دبوس',
+                                    'wire' => 'تغليف سلك',
+                                    'normal' => 'تغليف عادي',
+                                    'thermal' => 'تغليف حراري',
+                                    'none' => 'بدون تغليف',
+                                ]
                             : [
                                 'tape' => $order->service_type === 'notes' ? 'تغليف دبوس' : 'تجليد دبوس',
                                 'wire' => $order->service_type === 'notes' ? 'تغليف سلك' : 'تجليد سلك',
                                 'normal' => $order->service_type === 'notes' ? 'تغليف عادي' : 'تجليد عادي',
                                 'none' => $order->service_type === 'notes' ? 'بدون تغليف' : 'بدون تجليد',
-                            ];
+                            ]);
                         $deliveryMethodNames = [
                             'branch_pickup' => 'استلام من الفرع',
                             'islamic_university_delivery' => 'توصيل داخل الجامعة الإسلامية',
@@ -142,7 +153,7 @@
                             <div><span class="label">الخدمة</span>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</div>
                             <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
                             <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
-                            @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
+                            @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
                                 <div><span class="label">التوصيل</span>
                                     {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
                                     @if ($order->delivery_method === 'islamic_university_delivery')
@@ -184,115 +195,96 @@
                             @endif
                         </div>
 
-                        @if (! $isPaid && auth()->user()->hasAdminPermission('discounts_apply'))
-                            <div class="panel order-detail-section" style="margin: 0 0 16px; background: #f8fafc;">
-                                <h2 style="margin-bottom: 10px;">كود الخصم</h2>
-                                <form method="post" action="{{ route('admin.orders.discount.apply', $order) }}">
-                                    @csrf
-                                    @method('patch')
-                                    <div class="form-grid">
-                                        <div>
-                                            <label>كود الخصم</label>
-                                            <input name="discount_code" value="{{ $order->discount_code }}" placeholder="مثال: STUDENT10" required>
-                                        </div>
-                                        <div>
-                                            <label>قيمة الخصم بالريال</label>
-                                            <input name="discount_amount" inputmode="numeric" value="{{ $order->discount_amount ?: '' }}" placeholder="مثال: 10" required>
-                                        </div>
+                        <div class="order-detail-section order-files-cards {{ $order->service_type === 'research' ? 'research' : '' }}">
+                            @foreach ($order->files as $file)
+                                <div class="order-file-card">
+                                    <div class="order-file-field file-name">
+                                        <span>الملف</span>
+                                        <strong>{{ $file->original_name }}</strong>
                                     </div>
-                                    <button class="save" type="submit">تطبيق الخصم</button>
-                                </form>
-                                @if ($order->discount_amount > 0)
-                                    <p class="muted" style="margin: 10px 0 0;">الإجمالي قبل الخصم: {{ $order->baseTotal() }} ريال، رسوم التوصيل: {{ $order->delivery_fee }} ريال، بعد الخصم والتوصيل: {{ $order->grand_total }} ريال.</p>
-                                @endif
-                            </div>
-                        @endif
-
-                        <div class="order-detail-section order-detail-table-wrap {{ $order->service_type === 'research' ? 'research' : '' }}">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>الملف</th>
-                                        @if ($order->service_type !== 'research')
-                                            <th>النوع</th>
-                                        @endif
-                                        @if (in_array($order->service_type, ['thesis', 'phd'], true))
-                                            <th>الجامعة/المعهد</th>
-                                            <th>لون الرسالة</th>
-                                            <th>لون الكتابة</th>
-                                        @endif
-                                        <th>الصفحات</th>
-                                        @if ($order->service_type !== 'research')
-                                            <th>النسخ</th>
-                                        @endif
-                                        @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
-                                            <th>نوع الطباعة</th>
-                                        @endif
-                                        @if (in_array($order->service_type, ['notes', 'books'], true))
-                                            <th>حجم الصفحة</th>
-                                        @endif
-                                        @if (in_array($order->service_type, ['notes', 'books'], true))
-                                            <th>لون الورق</th>
-                                        @endif
-                                        @if (! in_array($order->service_type, $noPrintServices, true))
-                                            <th>{{ $bindingLabel }}</th>
-                                        @endif
-                                        @if (! in_array($order->service_type, $noPrintServices, true))
-                                            <th>سعر الطباعة</th>
-                                        @endif
-                                        <th>{{ $bindingPriceLabel }}</th>
-                                        <th>الإجمالي</th>
-                                        @if ($order->service_type !== 'research')
-                                            <th>تحميل</th>
-                                        @endif
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($order->files as $file)
-                                        <tr>
-                                            <td>{{ $file->original_name }}</td>
-                                            @if ($order->service_type !== 'research')
-                                                <td>{{ strtoupper($file->file_type) }}</td>
+                                    @if ($order->service_type !== 'research')
+                                        <div class="order-file-field">
+                                            <span>النوع</span>
+                                            <strong>{{ strtoupper($file->file_type) }}</strong>
+                                        </div>
+                                    @endif
+                                    @if (in_array($order->service_type, ['thesis', 'phd'], true))
+                                        <div class="order-file-field">
+                                            <span>الجامعة/المعهد</span>
+                                            <strong>{{ $file->university_name ?: '-' }}</strong>
+                                        </div>
+                                        <div class="order-file-field">
+                                            <span>لون الرسالة</span>
+                                            <strong>{{ $coverColorNames[$file->cover_color] ?? '-' }}</strong>
+                                        </div>
+                                        <div class="order-file-field">
+                                            <span>لون الكتابة</span>
+                                            <strong>{{ $writingColorNames[$file->writing_color] ?? '-' }}</strong>
+                                        </div>
+                                    @endif
+                                    <div class="order-file-field">
+                                        <span>الصفحات</span>
+                                        <strong>{{ $file->pages }}</strong>
+                                    </div>
+                                    @if ($order->service_type !== 'research')
+                                        <div class="order-file-field">
+                                            <span>النسخ</span>
+                                            <strong>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : $file->copies }}</strong>
+                                        </div>
+                                    @endif
+                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
+                                        <div class="order-file-field">
+                                            <span>نوع الطباعة</span>
+                                            <strong>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</strong>
+                                        </div>
+                                    @endif
+                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true))
+                                        <div class="order-file-field">
+                                            <span>حجم الصفحة</span>
+                                            <strong>{{ ['A4' => 'A4', 'A3' => 'A3', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</strong>
+                                        </div>
+                                    @endif
+                                    @if (in_array($order->service_type, ['notes', 'books'], true))
+                                        <div class="order-file-field">
+                                            <span>لون الورق</span>
+                                            <strong>{{ ['white' => 'أبيض', 'yellow' => 'أصفر'][$file->paper_color] ?? 'أبيض' }}</strong>
+                                        </div>
+                                    @endif
+                                    @if (! in_array($order->service_type, $noPrintServices, true))
+                                        <div class="order-file-field">
+                                            <span>{{ $bindingLabel }}</span>
+                                            <strong>{{ $bindingNames[$file->binding_type] ?? '-' }}</strong>
+                                        </div>
+                                    @endif
+                                    @if (! in_array($order->service_type, $noPrintServices, true))
+                                        <div class="order-file-field price">
+                                            <span>سعر الطباعة</span>
+                                            <strong>{{ $file->print_price }} ريال</strong>
+                                        </div>
+                                    @endif
+                                    <div class="order-file-field price">
+                                        <span>{{ $bindingPriceLabel }}</span>
+                                        <strong>{{ $file->binding_price }} ريال</strong>
+                                    </div>
+                                    <div class="order-file-field price total">
+                                        <span>الإجمالي</span>
+                                        <strong>{{ $file->total_price }} ريال</strong>
+                                    </div>
+                                    @if ($order->service_type !== 'research')
+                                        <div class="order-file-field actions-field">
+                                            <span>الملف</span>
+                                            @if (auth()->user()->hasAdminPermission('files_download'))
+                                                <div class="file-action-buttons">
+                                                    <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}" target="_blank" rel="noopener">عرض الملف</a>
+                                                    <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-complete-order-download>تحميل الملف</a>
+                                                </div>
+                                            @else
+                                                <strong class="muted">لا توجد صلاحية تحميل</strong>
                                             @endif
-                                            @if (in_array($order->service_type, ['thesis', 'phd'], true))
-                                                <td>{{ $file->university_name ?: '-' }}</td>
-                                                <td>{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
-                                                <td>{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
-                                            @endif
-                                            <td>{{ $file->pages }}</td>
-                                            @if ($order->service_type !== 'research')
-                                                <td>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : $file->copies }}</td>
-                                            @endif
-                                            @if (in_array($order->service_type, ['notes', 'books', 'thesis', 'phd'], true))
-                                                <td>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
-                                            @endif
-                                            @if (in_array($order->service_type, ['notes', 'books'], true))
-                                                <td>{{ ['A4' => 'A4', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</td>
-                                            @endif
-                                            @if (in_array($order->service_type, ['notes', 'books'], true))
-                                                <td>{{ ['white' => 'أبيض', 'yellow' => 'أصفر'][$file->paper_color] ?? 'أبيض' }}</td>
-                                            @endif
-                                            @if (! in_array($order->service_type, $noPrintServices, true))
-                                                <td>{{ $bindingNames[$file->binding_type] ?? '-' }}</td>
-                                            @endif
-                                            @if (! in_array($order->service_type, $noPrintServices, true))
-                                                <td>{{ $file->print_price }} ريال</td>
-                                            @endif
-                                            <td>{{ $file->binding_price }} ريال</td>
-                                            <td>{{ $file->total_price }} ريال</td>
-                                            @if ($order->service_type !== 'research')
-                                                <td>
-                                                    @if (auth()->user()->hasAdminPermission('files_download'))
-                                                        <a class="save small-button" href="{{ route('admin.files.download', $file) }}" data-complete-order-download>تنزيل الملف</a>
-                                                    @else
-                                                        <span class="muted">لا توجد صلاحية تحميل</span>
-                                                    @endif
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
 
                         @if (in_array($order->service_type, $noPrintServices, true))

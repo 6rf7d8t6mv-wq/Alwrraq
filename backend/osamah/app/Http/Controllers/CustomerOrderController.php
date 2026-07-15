@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderDeliveredFile;
+use App\Models\OrderFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
@@ -54,6 +55,27 @@ class CustomerOrderController extends Controller
         return redirect()
             ->route('orders.index')
             ->with('status', 'تم حذف الطلب وجميع ملفاته بنجاح.');
+    }
+
+    public function viewUploadedFile(Order $order, OrderFile $file)
+    {
+        abort_unless($order->user_id === Auth::id(), 403);
+        abort_unless($file->order_id === $order->id, 404);
+
+        $absolutePath = storage_path('app/' . $file->path);
+
+        abort_unless(File::isFile($absolutePath), 404);
+
+        if (request()->boolean('raw')) {
+            return response()->file($absolutePath, [
+                'Content-Type' => File::mimeType($absolutePath) ?: 'application/octet-stream',
+                'Content-Disposition' => 'inline; filename="' . addslashes($file->original_name) . '"',
+            ]);
+        }
+
+        $isPreviewable = strtolower($file->file_type) === 'pdf';
+
+        return view('orders.file-viewer', compact('order', 'file', 'isPreviewable'));
     }
 
     public function downloadDeliveredFile(Order $order, OrderDeliveredFile $deliveredFile)

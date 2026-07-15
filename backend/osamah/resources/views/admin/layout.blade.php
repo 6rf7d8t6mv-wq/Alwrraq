@@ -95,6 +95,19 @@
         .order-detail-table-wrap.research table { min-width: 0; table-layout: fixed; }
         .order-detail-table-wrap.research th,
         .order-detail-table-wrap.research td { width: 25%; white-space: normal; word-break: break-word; }
+        .order-files-cards { display: flex; flex-direction: column; gap: 12px; }
+        .order-file-card { display: grid; grid-template-columns: 1fr; gap: 0; overflow: hidden; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; box-shadow: 0 10px 26px rgba(15, 23, 42, 0.06); }
+        .order-file-field { min-width: 0; padding: 12px 14px; border-bottom: 1px solid #edf2f7; border-inline-start: 1px solid #edf2f7; }
+        .order-file-field,
+        .order-file-field:nth-child(3n) { border-inline-start: 0; }
+        .order-file-field span { display: block; margin-bottom: 5px; color: #64748b; font-size: 12px; font-weight: 900; line-height: 1.5; }
+        .order-file-field strong { display: block; color: #0f172a; font-size: 14px; font-weight: 900; line-height: 1.7; word-break: break-word; }
+        .order-file-field.file-name { grid-column: 1 / -1; background: #f8fafc; }
+        .order-file-field.file-name strong { font-size: 15px; }
+        .order-file-field.price strong { color: #047857; }
+        .order-file-field.total { background: #f0fdf4; }
+        .order-file-field.actions-field { grid-column: 1 / -1; background: #f8fafc; }
+        .order-file-field.actions-field .file-action-buttons { max-width: 360px; }
         .id-badge { display: inline-flex; align-items: center; margin-inline-start: 8px; padding: 2px 7px; border-radius: 999px; background: #f1f5f9; color: #64748b; font-size: 11px; font-weight: 800; }
         .identity { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
         .muted { color: #64748b; font-size: 12px; }
@@ -105,6 +118,12 @@
         .delivered-file-actions .ghost,
         .delivered-file-actions .save,
         .delivered-file-actions .danger { min-width: 110px; justify-content: center; text-align: center; }
+        .file-action-buttons { display: grid; grid-template-columns: repeat(2, minmax(92px, 1fr)); gap: 8px; min-width: 200px; }
+        .file-action-button { min-height: 34px; display: inline-flex; align-items: center; justify-content: center; padding: 8px 10px; border-radius: 8px; color: #ffffff; font-size: 12px; font-weight: 900; text-decoration: none; text-align: center; white-space: nowrap; }
+        .file-action-button.view { background: #2563eb; }
+        .file-action-button.view:hover { background: #1d4ed8; }
+        .file-action-button.download { background: #16a34a; }
+        .file-action-button.download:hover { background: #15803d; }
         .invoice-toolbar { display: flex; justify-content: flex-end; margin-bottom: 12px; }
         .invoice-toolbar .action { display: inline-flex; min-width: 142px; justify-content: center; padding: 12px 18px; border-radius: 10px; border: 0; background: #047857; color: #ffffff; font-size: 15px; font-weight: 900; cursor: pointer; font-family: inherit; text-decoration: none; }
         .invoice-admin-button { display: inline-flex; align-items: center; justify-content: center; padding: 7px 10px; border: 1px solid #2563eb; border-radius: 7px; background: #0f4c81; color: #ffffff; font-size: 12px; font-weight: 900; cursor: pointer; font-family: inherit; text-decoration: none; }
@@ -169,6 +188,9 @@
             .management-table .empty { display: block; }
             .management-table .empty::before { display: none; }
             .order-detail-table-wrap table { display: table; overflow: visible; white-space: normal; }
+            .order-file-card { grid-template-columns: 1fr; }
+            .order-file-field,
+            .order-file-field:nth-child(3n) { border-inline-start: 0; }
             .order-detail-table-wrap.research th,
             .order-detail-table-wrap.research td { font-size: 12px; padding: 9px 7px; }
             .search-form input { min-width: 0; }
@@ -176,6 +198,7 @@
             nav a, .logout, .save, .danger, .ghost { width: 100%; text-align: center; justify-content: center; }
             .delivered-file-item { align-items: stretch; flex-direction: column; }
             .delivered-file-actions { width: 100%; }
+            .file-action-buttons { grid-template-columns: 1fr; min-width: 0; }
             .invoice-head, .invoice-grid, .invoice-totals, .invoice-summary { grid-template-columns: 1fr; }
             .invoice-head { flex-direction: column; }
             .compact-actions { width: 100%; }
