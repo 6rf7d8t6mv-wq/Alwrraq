@@ -77,6 +77,11 @@ class Order extends Model
         return $this->hasMany(OrderDeliveredFile::class)->latest();
     }
 
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class)->latest();
+    }
+
     public function discountApplier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'discount_applied_by');

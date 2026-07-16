@@ -12,6 +12,7 @@
         .header { width: var(--sidebar-width); min-height: 100vh; max-height: 100vh; overflow-y: auto; background: #0f172a; color: #ffffff; padding: clamp(16px, 2vw, 24px) clamp(12px, 1.6vw, 18px); position: fixed; top: 0; right: 0; z-index: 20; box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15); }
         .header-inner { height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 0; }
         .brand { font-size: clamp(18px, 2vw, 24px); font-weight: 700; letter-spacing: 0.02em; overflow-wrap: anywhere; margin-bottom: 4px; }
+        .brand-logo { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; background: #ffffff; border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 12px 26px rgba(0,0,0,0.18); margin-bottom: 10px; display: block; }
         .header-actions { display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 1.2vw, 12px); color: #cbd5e1; font-size: clamp(12px, 1.15vw, 14px); margin-top: 24px; }
         .header-actions a { color: #f8fafc; text-decoration: none; }
         .header-user { display: block; color: #cbd5e1; font-size: clamp(12px, 1.15vw, 14px); margin: 0 0 12px; line-height: 1.6; }
@@ -53,8 +54,10 @@
         .payment-options { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; align-items: start; }
         .pay-card { border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; background: #f8fafc; }
         .apple-pay { width: 100%; background: #000000; color: #ffffff; border: 0; border-radius: 9px; padding: 14px; font-size: 17px; font-weight: 900; cursor: pointer; }
+        .wallet-buttons { display: grid; gap: 10px; }
+        .google-pay { width: 100%; background: #ffffff; color: #111827; border: 1px solid #cbd5e1; border-radius: 9px; padding: 14px; font-size: 17px; font-weight: 900; cursor: pointer; }
         label { display: block; color: #334155; font-weight: 800; font-size: 13px; margin: 12px 0 6px; }
-        input { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 16px; }
+        input, select { width: 100%; padding: 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 16px; background: #ffffff; }
         .english-number-warning { display: none; margin-top: 5px; color: #b91c1c; font-size: 12px; font-weight: 800; }
         .english-number-warning.active { display: block; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
@@ -100,13 +103,14 @@
             .meta, .totals, .form-grid, .delivery-options, .delivery-fields, .delivery-fields.address-fields, .discount-form { grid-template-columns: 1fr; }
             .meta-card.full { grid-column: auto; }
             table { display: block; overflow-x: auto; white-space: nowrap; }
-            .home-button, .settings-button, .logout-button, .submit-card, .apple-pay, .close-to-orders { width: 100%; text-align: center; }
+            .home-button, .settings-button, .logout-button, .submit-card, .apple-pay, .google-pay, .close-to-orders { width: 100%; text-align: center; }
         }
     </style>
 </head>
 <body>
     <header class="header">
         <div class="header-inner">
+            <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
             <div class="brand">الورّاق</div>
             <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
             <div class="header-actions">
@@ -300,21 +304,35 @@
             @else
                 <div class="payment-options">
                     <div class="pay-card">
-                        <h2>Apple Pay</h2>
-                        <p>اعتماد الطلب والدفع عبر Apple Pay.</p>
-                        <form method="post" action="{{ route('cart.pay', $order) }}">
-                            @csrf
-                            <input type="hidden" name="payment_method" value="apple_pay">
-                            <button class="apple-pay" type="submit">Apple Pay</button>
-                        </form>
+                        <h2>المحافظ الرقمية</h2>
+                        <p>اختر طريقة الدفع المناسبة لجهازك.</p>
+                        <div class="wallet-buttons">
+                            <form method="post" action="{{ route('cart.pay', $order) }}">
+                                @csrf
+                                <input type="hidden" name="payment_method" value="apple_pay">
+                                <button class="apple-pay" type="submit">Apple Pay</button>
+                            </form>
+                            <form method="post" action="{{ route('cart.pay', $order) }}">
+                                @csrf
+                                <input type="hidden" name="payment_method" value="google_pay">
+                                <button class="google-pay" type="submit">Google Pay</button>
+                            </form>
+                        </div>
                     </div>
 
                     <div class="pay-card">
                         <h2>بطاقة بنكية</h2>
                         <form method="post" action="{{ route('cart.pay', $order) }}">
                             @csrf
-                            <input type="hidden" name="payment_method" value="card">
                             <div class="form-grid">
+                                <div class="full">
+                                    <label>طريقة البطاقة</label>
+                                    <select name="payment_method" required>
+                                        <option value="mada">Mada</option>
+                                        <option value="visa">Visa</option>
+                                        <option value="mastercard">Mastercard</option>
+                                    </select>
+                                </div>
                                 <div class="full">
                                     <label>اسم حامل البطاقة</label>
                                     <input name="card_name" autocomplete="cc-name" required>

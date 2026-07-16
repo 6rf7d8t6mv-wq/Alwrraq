@@ -12,6 +12,7 @@
         .layout { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
         aside { background: #0f172a; color: #f8fafc; padding: clamp(16px, 2vw, 24px) clamp(12px, 1.6vw, 18px); position: sticky; top: 0; height: 100vh; overflow-y: auto; box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15); }
         .brand { font-size: clamp(18px, 2vw, 24px); font-weight: 700; letter-spacing: 0.02em; overflow-wrap: anywhere; margin-bottom: 4px; }
+        .brand-logo { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; background: #ffffff; border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 12px 26px rgba(0,0,0,0.18); margin-bottom: 10px; display: block; }
         .admin-name { color: #cbd5e1; font-size: clamp(12px, 1.15vw, 14px); margin: 0 0 24px; line-height: 1.6; }
         nav { display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 1.2vw, 12px); }
         nav a, .logout { display: flex; align-items: center; gap: 8px; width: 100%; color: #f8fafc; text-decoration: none; border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 10px; padding: 9px 10px; background: rgba(255, 255, 255, 0.055); text-align: right; font: inherit; font-size: clamp(12px, 1.15vw, 14px); font-weight: 800; line-height: 1.45; cursor: pointer; box-sizing: border-box; white-space: normal; transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
@@ -135,6 +136,8 @@
         .invoice-head { display: flex; justify-content: space-between; gap: 16px; align-items: stretch; padding: 18px; border-radius: 12px; background: #0f172a; color: #ffffff; margin-bottom: 18px; }
         .invoice-brand { display: flex; align-items: center; gap: 12px; }
         .invoice-logo { width: 48px; height: 48px; border-radius: 12px; display: grid; place-items: center; background: #ffffff; color: #0f172a; font-size: 24px; font-weight: 900; }
+                        .invoice-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
+        .invoice-logo img { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; display: block; }
         .invoice-head h2 { margin: 0; font-size: 28px; color: #ffffff; }
         .invoice-head p { margin: 4px 0 0; color: #cbd5e1; }
         .invoice-number { min-width: 140px; text-align: center; padding: 12px; border: 1px solid rgba(255,255,255,0.18); border-radius: 12px; background: rgba(255,255,255,0.08); }
@@ -243,6 +246,7 @@
                     ->where('status', '!=', 'completed')
                     ->exists();
             @endphp
+            <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
             <div class="brand">الورّاق</div>
             <button class="mobile-menu-toggle" type="button" onclick="toggleAdminHeader(this, event)" aria-expanded="false">☰ القائمة</button>
             <div class="admin-name">👤 {{ auth()->user()->name }}</div>

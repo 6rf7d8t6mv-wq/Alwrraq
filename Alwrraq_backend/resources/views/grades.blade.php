@@ -12,6 +12,7 @@
             .page-header { width: var(--sidebar-width); min-height: 100vh; max-height: 100vh; overflow-y: auto; background: #0f172a; color: #f8fafc; padding: clamp(16px, 2vw, 24px) clamp(12px, 1.6vw, 18px); box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15); position: fixed; top: 0; right: 0; z-index: 10; }
             .header-inner { height: 100%; display: flex; flex-direction: column; justify-content: flex-start; align-items: stretch; gap: 0; }
             .brand { font-size: clamp(18px, 2vw, 24px); font-weight: 700; letter-spacing: 0.02em; overflow-wrap: anywhere; margin-bottom: 4px; }
+            .brand-logo { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; background: #ffffff; border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 12px 26px rgba(0,0,0,0.18); margin-bottom: 10px; display: block; }
             .brand-subtitle { margin: 4px 0 0; color: #cbd5e1; font-size: clamp(11px, 1.2vw, 14px); }
             .header-actions { display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 1.2vw, 12px); color: #cbd5e1; font-size: clamp(12px, 1.15vw, 14px); margin-top: 24px; }
             .header-actions a { color: #f8fafc; text-decoration: none; }
@@ -335,6 +336,7 @@
         <header class="page-header">
             <div class="header-inner">
                 <div>
+                    <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                     <div class="brand">الورّاق</div>
                     <p class="brand-subtitle">خدمات الطباعة والتجليد</p>
                 </div>

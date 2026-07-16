@@ -289,6 +289,10 @@ class _PaymentPanel extends StatelessWidget {
                   isPaying: isPaying,
                   onPay: () => onPay(paymentMethod: 'apple_pay'),
                 ),
+                _GooglePayCard(
+                  isPaying: isPaying,
+                  onPay: () => onPay(paymentMethod: 'google_pay'),
+                ),
                 _CardPayCard(isPaying: isPaying, onPay: onPay),
               ],
             ),
@@ -363,6 +367,52 @@ class _ApplePayCard extends StatelessWidget {
   }
 }
 
+class _GooglePayCard extends StatelessWidget {
+  const _GooglePayCard({required this.isPaying, required this.onPay});
+
+  final bool isPaying;
+  final VoidCallback onPay;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 320,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF8FAFC),
+          border: Border.all(color: CartScreen._border),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Google Pay',
+              style: TextStyle(
+                color: CartScreen._text,
+                fontFamily: 'Arial',
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'اعتماد الطلب والدفع عبر Google Pay.',
+              style: TextStyle(color: CartScreen._muted),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: isPaying ? null : onPay,
+              child: Text(isPaying ? 'جاري الدفع...' : 'Google Pay'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _CardPayCard extends StatefulWidget {
   const _CardPayCard({required this.isPaying, required this.onPay});
 
@@ -381,6 +431,7 @@ class _CardPayCard extends StatefulWidget {
 }
 
 class _CardPayCardState extends State<_CardPayCard> {
+  var _paymentMethod = 'mada';
   final _cardName = TextEditingController();
   final _cardNumber = TextEditingController();
   final _cardExpiry = TextEditingController();
@@ -419,6 +470,30 @@ class _CardPayCardState extends State<_CardPayCard> {
               ),
             ),
             const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: DropdownButtonFormField<String>(
+                initialValue: _paymentMethod,
+                decoration: const InputDecoration(
+                  labelText: 'طريقة البطاقة',
+                  border: OutlineInputBorder(),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'mada', child: Text('Mada')),
+                  DropdownMenuItem(value: 'visa', child: Text('Visa')),
+                  DropdownMenuItem(
+                    value: 'mastercard',
+                    child: Text('Mastercard'),
+                  ),
+                ],
+                onChanged: widget.isPaying
+                    ? null
+                    : (value) {
+                        if (value == null) return;
+                        setState(() => _paymentMethod = value);
+                      },
+              ),
+            ),
             _PaymentField(label: 'اسم حامل البطاقة', controller: _cardName),
             _PaymentField(
               label: 'رقم البطاقة',
@@ -439,7 +514,7 @@ class _CardPayCardState extends State<_CardPayCard> {
               onPressed: widget.isPaying
                   ? null
                   : () => widget.onPay(
-                      paymentMethod: 'card',
+                      paymentMethod: _paymentMethod,
                       cardName: _cardName.text.trim(),
                       cardNumber: _cardNumber.text.trim(),
                       cardExpiry: _cardExpiry.text.trim(),

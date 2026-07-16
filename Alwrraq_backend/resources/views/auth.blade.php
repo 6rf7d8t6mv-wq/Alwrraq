@@ -12,6 +12,7 @@
         .web-back { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 16px; padding: 11px 14px; border-radius: 12px; background: linear-gradient(135deg, #0f4c81, #1d6fa5); color: #fff; text-decoration: none; font-size: 14px; font-weight: 900; border: 1px solid rgba(96, 165, 250, 0.35); box-shadow: 0 12px 24px rgba(15, 76, 129, 0.18); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
         .web-back:hover { background: linear-gradient(135deg, #123f68, #0f4c81); transform: translateY(-1px); box-shadow: 0 14px 28px rgba(15, 76, 129, 0.24); }
         .brand { margin-bottom: 22px; text-align: center; }
+        .brand-logo { width: 92px; height: 92px; display: block; margin: 0 auto 12px; border-radius: 22px; object-fit: cover; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12); }
         h1 { margin: 0; font-size: clamp(24px, 7vw, 28px); }
         h2 { margin: 0 0 6px; font-size: clamp(20px, 5vw, 22px); }
         p { margin: 0; color: #64748b; line-height: 1.7; }
@@ -75,6 +76,7 @@
             <a class="web-back" href="{{ route('public.home') }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
             @include('shared.language-switcher')
             <div class="brand">
+                <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                 <h1>الورّاق</h1>
                 <p>خدمات الطباعة والتجليد</p>
             </div>

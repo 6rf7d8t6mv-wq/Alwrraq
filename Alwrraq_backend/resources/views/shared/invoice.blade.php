@@ -76,6 +76,10 @@
     };
     $paymentMethod = [
         'apple_pay' => 'Apple Pay',
+        'google_pay' => 'Google Pay',
+        'mada' => 'Mada',
+        'visa' => 'Visa',
+        'mastercard' => 'Mastercard',
         'card' => 'بطاقة بنكية',
     ][$order->payment_method] ?? ($order->payment_method ?: '-');
     $deliveryMethodNames = [
@@ -93,7 +97,7 @@
 <section class="invoice-document" id="{{ $invoiceId }}" dir="rtl">
     <div class="invoice-head">
         <div class="invoice-brand">
-            <div class="invoice-logo">M</div>
+            <div class="invoice-logo"><img src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق"></div>
             <div>
                 <h2>الورّاق</h2>
                 <p>خدمات الطباعة والتجليد</p>

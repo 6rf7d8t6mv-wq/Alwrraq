@@ -140,8 +140,8 @@
                 const notification = new Notification(title, {
                     body,
                     tag,
-                    badge: '/favicon.ico',
-                    icon: '/favicon.ico',
+                    badge: '{{ asset('images/alwrraq-logo.jpeg') }}',
+                    icon: '{{ asset('images/alwrraq-logo.jpeg') }}',
                     dir: 'rtl',
                 });
 

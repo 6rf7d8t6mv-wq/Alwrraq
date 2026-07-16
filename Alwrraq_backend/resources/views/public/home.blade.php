@@ -19,6 +19,8 @@
     <title>{{ $pageTitle }}</title>
     <meta name="description" content="{{ $pageDescription }}">
     <link rel="canonical" href="{{ $pageUrl }}">
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/alwrraq-logo.jpeg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/alwrraq-logo.jpeg') }}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="{{ $isEnglish ? 'en_US' : 'ar_SA' }}">
     <meta property="og:title" content="{{ $pageTitle }}">
@@ -34,7 +36,8 @@
         .site-header { position: sticky; top: 0; z-index: 20; background: rgba(255, 255, 255, 0.90); border-bottom: 1px solid rgba(203, 213, 225, 0.74); backdrop-filter: blur(16px); box-shadow: 0 10px 35px rgba(15, 23, 42, 0.05); }
         .nav { min-height: 74px; display: flex; align-items: center; justify-content: space-between; gap: 18px; }
         .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-weight: 900; font-size: 22px; }
-        .logo { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 14px; background: linear-gradient(135deg, #0f4c81, #10233f); color: #ffffff; font-weight: 900; box-shadow: 0 14px 30px rgba(15, 76, 129, 0.24); }
+        .logo { width: 48px; height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 16px; background: #ffffff; overflow: hidden; box-shadow: 0 14px 30px rgba(15, 76, 129, 0.18); border: 1px solid #dbe3ef; }
+        .logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .nav-links { display: flex; align-items: center; gap: 18px; color: #334155; font-size: 14px; font-weight: 800; }
         .nav-links a { text-decoration: none; padding: 8px 0; border-bottom: 2px solid transparent; transition: color 0.18s ease, border-color 0.18s ease; }
         .nav-links a:hover { color: #0f4c81; border-color: #6ea8d8; }
@@ -82,6 +85,8 @@
         .device-phone::before { content: ""; position: absolute; top: 9px; left: 50%; width: 74px; height: 20px; border-radius: 999px; background: #05070d; transform: translateX(-50%); z-index: 3; }
         .screen { width: 100%; height: 100%; background: #f8fafc; overflow: hidden; color: #0f172a; }
         .mini-header { height: 62px; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: linear-gradient(135deg, #0f172a, #0f4c81); color: #ffffff; }
+        .mini-brand-wrap { display: inline-flex; align-items: center; gap: 8px; }
+        .mini-logo { width: 34px; height: 34px; border-radius: 10px; object-fit: cover; background: #ffffff; border: 1px solid rgba(255,255,255,0.22); }
         .mini-brand { font-weight: 900; line-height: 1.2; }
         .mini-brand small { display: block; color: #bfdbfe; font-size: 10px; font-weight: 800; }
         .mini-user { padding: 6px 10px; border-radius: 999px; background: rgba(255, 255, 255, 0.14); font-size: 11px; font-weight: 900; }
@@ -175,7 +180,7 @@
     <header class="site-header">
         <div class="container nav">
             <a class="brand" href="{{ route('public.home') }}" aria-label="الورّاق">
-                <span class="logo">و</span>
+                <span class="logo"><img src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق"></span>
                 <span>الورّاق</span>
             </a>
             <nav class="nav-links" aria-label="روابط الصفحة">
@@ -248,7 +253,7 @@
                         <div class="device device-desktop">
                             <div class="screen">
                                 <div class="mini-header">
-                                    <div class="mini-brand">الورّاق<small>خدمات الطباعة والتجليد</small></div>
+                                    <div class="mini-brand-wrap"><img class="mini-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt=""><div class="mini-brand">الورّاق<small>خدمات الطباعة والتجليد</small></div></div>
                                     <div class="mini-user">semi</div>
                                 </div>
                                 <div class="mini-body">
@@ -280,7 +285,7 @@
                         <div class="device device-phone">
                             <div class="screen phone-screen">
                                 <div class="mini-header">
-                                    <div class="mini-brand">الورّاق<small>خدمات الطباعة والتجليد</small></div>
+                                    <div class="mini-brand-wrap"><img class="mini-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt=""><div class="mini-brand">الورّاق<small>خدمات الطباعة والتجليد</small></div></div>
                                 </div>
                                 <div class="mini-body">
                                     <h3 class="phone-home-title">اختر الخدمة المطلوبة</h3>

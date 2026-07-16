@@ -13,6 +13,7 @@
         .side { padding: 16px; }
         .brand { padding: 16px; margin-bottom: 14px; border-radius: 12px; background: #0f172a; color: #ffffff; }
         .brand h1 { margin: 0; font-size: 22px; }
+        .brand-logo { width: 54px; height: 54px; border-radius: 14px; object-fit: cover; display: block; margin-bottom: 10px; background: #ffffff; border: 1px solid rgba(255,255,255,0.18); }
         .brand p { margin: 6px 0 0; color: #cbd5e1; font-weight: 700; line-height: 1.7; }
         .file-name { margin: 0 0 14px; color: #0f172a; font-size: 16px; font-weight: 900; line-height: 1.8; word-break: break-word; }
         .meta { display: grid; gap: 8px; }
@@ -42,6 +43,7 @@
         <div class="viewer">
             <aside class="panel side">
                 <div class="brand">
+                    <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                     <h1>الورّاق</h1>
                     <p>عرض الملف المرفوع داخل طلبك.</p>
                 </div>

@@ -152,7 +152,7 @@
                             <div><span class="label">تاريخ إنشاء الطلب</span><span data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $orderCreatedAtText }}</span></div>
                             <div><span class="label">الخدمة</span>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</div>
                             <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
-                            <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
+                            <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'google_pay' => 'Google Pay', 'mada' => 'Mada', 'visa' => 'Visa', 'mastercard' => 'Mastercard', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
                             @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
                                 <div><span class="label">التوصيل</span>
                                     {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
