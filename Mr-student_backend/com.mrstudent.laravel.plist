@@ -13,14 +13,14 @@
         <string>--port=8000</string>
     </array>
     <key>WorkingDirectory</key>
-    <string>/Users/aus.os/Documents/mobil/backend/osamah</string>
+    <string>/Users/aus.os/Documents/Mr-student/Mr-student_backend</string>
     <key>RunAtLoad</key>
     <true/>
     <key>KeepAlive</key>
     <true/>
     <key>StandardOutPath</key>
-    <string>/Users/aus.os/Documents/mobil/backend/osamah/storage/logs/launch-artisan-serve.log</string>
+    <string>/Users/aus.os/Documents/Mr-student/Mr-student_backend/storage/logs/launch-artisan-serve.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/aus.os/Documents/mobil/backend/osamah/storage/logs/launch-artisan-serve-error.log</string>
+    <string>/Users/aus.os/Documents/Mr-student/Mr-student_backend/storage/logs/launch-artisan-serve-error.log</string>
 </dict>
 </plist>
