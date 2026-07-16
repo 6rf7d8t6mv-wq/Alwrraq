@@ -4,24 +4,24 @@
 /flutter/
 
 # Laravel local/runtime files.
-Mr-student_backend/.env
-Mr-student_backend/vendor/
-Mr-student_backend/node_modules/
-Mr-student_backend/storage/app/*.plist
-Mr-student_backend/storage/framework/cache/*
-Mr-student_backend/storage/framework/sessions/*
-Mr-student_backend/storage/framework/testing/*
-Mr-student_backend/storage/framework/views/*
-Mr-student_backend/storage/logs/*
-Mr-student_backend/bootstrap/cache/*
-!Mr-student_backend/storage/**/.gitignore
-!Mr-student_backend/bootstrap/cache/.gitignore
+Alwrraq_backend/.env
+Alwrraq_backend/vendor/
+Alwrraq_backend/node_modules/
+Alwrraq_backend/storage/app/*.plist
+Alwrraq_backend/storage/framework/cache/*
+Alwrraq_backend/storage/framework/sessions/*
+Alwrraq_backend/storage/framework/testing/*
+Alwrraq_backend/storage/framework/views/*
+Alwrraq_backend/storage/logs/*
+Alwrraq_backend/bootstrap/cache/*
+!Alwrraq_backend/storage/**/.gitignore
+!Alwrraq_backend/bootstrap/cache/.gitignore
 
 # Flutter generated files.
-Mr-student_app/.dart_tool/
-Mr-student_app/.flutter-plugins
-Mr-student_app/.flutter-plugins-dependencies
-Mr-student_app/build/
+Alwrraq_app/.dart_tool/
+Alwrraq_app/.flutter-plugins
+Alwrraq_app/.flutter-plugins-dependencies
+Alwrraq_app/build/
 
 # IDE/local files.
-Mr-student_app/.idea/
+Alwrraq_app/.idea/
