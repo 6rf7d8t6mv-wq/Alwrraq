@@ -1,15 +1,18 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminStationeryProductController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\EducationalInstitutionController;
 use App\Http\Controllers\FileUploadController;
+use App\Http\Controllers\StationeryController;
+use App\Models\Order;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -62,10 +65,10 @@ Route::get('/home', function (Request $request) {
             $units = ['Bytes', 'KB', 'MB', 'GB'];
             $index = min((int) floor(log($bytes, 1024)), count($units) - 1);
 
-            return round($bytes / (1024 ** $index), 2) . ' ' . $units[$index];
+            return round($bytes / (1024 ** $index), 2).' '.$units[$index];
         };
 
-        $editOrder = \App\Models\Order::query()
+        $editOrder = Order::query()
             ->where('user_id', auth()->id())
             ->where('payment_status', '!=', 'paid')
             ->with('files')
@@ -90,7 +93,12 @@ Route::get('/home', function (Request $request) {
                     'university_name' => $file->university_name,
                     'cover_color' => $file->cover_color,
                     'writing_color' => $file->writing_color,
+                    'cd_type' => $file->cd_type,
+                    'cd_copies' => $file->cd_copies,
+                    'cd_price' => $file->cd_price,
                     'research_title' => $file->research_title,
+                    'research_student_name' => $file->research_student_name,
+                    'research_instructor_name' => $file->research_instructor_name,
                     'print_price' => $file->print_price,
                     'binding_price' => $file->binding_price,
                     'total_price' => $file->total_price,
@@ -106,6 +114,13 @@ Route::post('/upload-file', [FileUploadController::class, 'upload'])->middleware
 Route::post('/research-order', [FileUploadController::class, 'saveResearchOrder'])->middleware('auth');
 Route::patch('/order-files/{file}', [FileUploadController::class, 'updateFile'])->middleware('auth');
 Route::delete('/order-files/{file}', [FileUploadController::class, 'destroyFile'])->middleware('auth');
+
+Route::middleware('auth')->prefix('stationery')->name('stationery.')->group(function () {
+    Route::get('/', [StationeryController::class, 'index'])->name('index');
+    Route::post('/products/{product}/add', [StationeryController::class, 'add'])->name('products.add');
+    Route::delete('/products/{product}/remove', [StationeryController::class, 'remove'])->name('products.remove');
+    Route::delete('/items/{item}', [StationeryController::class, 'removeItem'])->name('items.destroy');
+});
 
 Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'showAll'])->name('index');
@@ -141,7 +156,12 @@ Route::middleware('auth')->prefix('account')->name('account.')->group(function (
 Route::get('/admin', [AuthController::class, 'showAdminLogin'])->name('admin.dashboard');
 
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/stationery-products', [AdminStationeryProductController::class, 'index'])->name('stationery-products.index');
+    Route::post('/stationery-products', [AdminStationeryProductController::class, 'store'])->name('stationery-products.store');
+    Route::patch('/stationery-products/{product}', [AdminStationeryProductController::class, 'update'])->name('stationery-products.update');
+    Route::delete('/stationery-products/{product}', [AdminStationeryProductController::class, 'destroy'])->name('stationery-products.destroy');
     Route::get('/orders', [AdminController::class, 'orders'])->name('orders');
+    Route::get('/live-status', [AdminController::class, 'liveStatus'])->name('live-status');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');

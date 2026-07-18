@@ -10,7 +10,7 @@ class CartPricingService
 {
     public function refreshCartTotals(Collection $orders): array
     {
-        $orders->each->load('files');
+        $orders->each->load(['files', 'productItems']);
 
         $printAllocations = $this->cartPrintAllocations($orders);
 
@@ -19,7 +19,10 @@ class CartPricingService
                 ? $order->files->where('file_type', 'pdf')
                 : $order->files;
 
-            return [$order->id => (float) ($printAllocations[$order->id] ?? 0) + (float) $filesForBinding->sum('binding_price')];
+            return [$order->id => (float) ($printAllocations[$order->id] ?? 0)
+                + (float) $filesForBinding->sum('binding_price')
+                + (float) $order->productItems->sum('total_price')
+                + (float) $order->files->sum('cd_price')];
         })->all();
 
         $cartBaseTotal = array_sum($baseTotals);
@@ -29,7 +32,7 @@ class CartPricingService
             array_filter($baseTotals, fn (float $baseTotal) => $baseTotal > 0)
         );
         $deliveryOrders = $orders->filter(
-            fn (Order $order) => in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+            fn (Order $order) => in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)
         );
         $deliveryAnchor = $deliveryOrders->first(fn (Order $order) => filled($order->delivery_method))
             ?? $deliveryOrders->first();
@@ -55,8 +58,10 @@ class CartPricingService
                 ? $order->files->where('file_type', 'pdf')
                 : $order->files;
             $bindingTotal = (float) $filesForBinding->sum('binding_price');
+            $bindingTotal += (float) $order->productItems->sum('total_price');
+            $cdTotal = (float) $order->files->sum('cd_price');
             $printTotal = (float) ($printAllocations[$order->id] ?? 0);
-            $baseTotal = $printTotal + $bindingTotal;
+            $baseTotal = $printTotal + $bindingTotal + $cdTotal;
             $discountAmount = (float) ($discountAllocations[$order->id] ?? 0);
             $orderDeliveryFee = $deliveryAnchor?->id === $order->id ? $deliveryFee : 0;
 
@@ -68,7 +73,7 @@ class CartPricingService
                 'grand_total' => max(0, $baseTotal - $discountAmount) + $orderDeliveryFee,
             ];
 
-            if ($sharedDelivery && in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)) {
+            if ($sharedDelivery && in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)) {
                 $totals = array_merge($totals, $sharedDelivery);
             }
 
@@ -98,8 +103,10 @@ class CartPricingService
         return [
             'orders_count' => $orders->count(),
             'files_count' => $orders->sum(fn (Order $order) => $order->files->count()),
+            'products_count' => $orders->sum(fn (Order $order) => $order->productItems->sum('quantity')),
             'print_total' => (float) $orders->sum('print_total'),
             'binding_total' => (float) $orders->sum('binding_total'),
+            'cd_total' => (float) $orders->sum(fn (Order $order) => $order->files->sum('cd_price')),
             'discount_amount' => (float) $orders->sum('discount_amount'),
             'delivery_fee' => (float) $orders->sum('delivery_fee'),
             'grand_total' => (float) $orders->sum('grand_total'),

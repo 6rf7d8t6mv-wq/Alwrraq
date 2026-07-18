@@ -3,14 +3,13 @@
 @section('title', 'الإعدادات - لوحة المدير')
 
 @section('content')
-    <div class="page-title">
+    <div class="page-title compact-page-title">
         <div>
             <h1>الإعدادات</h1>
-            <p class="subtitle">تعديل بيانات حساب المدير الحالي.</p>
         </div>
     </div>
 
-    <div class="panel">
+    <div class="panel compact-settings-panel">
         <form method="post" action="{{ route('admin.settings.update') }}">
             @csrf
             @method('patch')
@@ -38,7 +37,7 @@
     </div>
 
     @if (auth()->user()->admin_permissions !== null)
-        <div class="panel">
+        <div class="panel compact-settings-panel">
             <div class="form-section">
                 <h3 class="form-section-title">حذف الحساب</h3>
                 <p class="form-note">يمكن حذف حساب المستخدم الحالي نهائيًا عند الحاجة.</p>

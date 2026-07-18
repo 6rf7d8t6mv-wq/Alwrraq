@@ -4,7 +4,9 @@
     @endphp
 
     <style>
-        .support-chat-launcher { position: fixed; left: 18px; bottom: 18px; z-index: 90; display: inline-flex; align-items: center; gap: 9px; min-height: 46px; padding: 12px 16px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #0f4c81, #10233f); color: #ffffff; box-shadow: 0 18px 44px rgba(15, 23, 42, 0.24); cursor: pointer; font-family: inherit; font-weight: 900; }
+        .support-chat-launcher,
+        .support-chat-panel button { margin: 0; }
+        .support-chat-launcher { position: fixed; left: 18px; bottom: 18px; z-index: 90; width: auto; display: inline-flex; align-items: center; gap: 9px; min-height: 46px; padding: 12px 16px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #0f4c81, #10233f); color: #ffffff; box-shadow: 0 18px 44px rgba(15, 23, 42, 0.24); cursor: pointer; font-family: inherit; font-weight: 900; }
         .support-chat-launcher:hover { transform: translateY(-1px); }
         .support-chat-launcher .chat-count { display: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #dc2626; color: #ffffff; font-size: 12px; line-height: 20px; text-align: center; }
         .support-chat-launcher.has-unread .chat-count { display: inline-block; }
@@ -13,7 +15,7 @@
         .support-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; background: #0f172a; color: #ffffff; }
         .support-chat-title { margin: 0; font-size: 15px; font-weight: 900; }
         .support-chat-subtitle { margin: 2px 0 0; color: #cbd5e1; font-size: 12px; }
-        .support-chat-close { border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: #ffffff; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-weight: 900; }
+        .support-chat-close { width: auto; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: #ffffff; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-weight: 900; }
         .support-chat-layout { min-height: 0; flex: 1; display: grid; grid-template-columns: {{ $chatIsAdmin ? '150px minmax(0, 1fr)' : '1fr' }}; overscroll-behavior: contain; }
         .support-chat-threads { display: {{ $chatIsAdmin ? 'block' : 'none' }}; overflow-y: auto; border-left: 1px solid #e5e7eb; background: #f8fafc; }
         .support-chat-thread { width: 100%; display: block; padding: 11px 10px; border: 0; border-bottom: 1px solid #e5e7eb; background: transparent; text-align: right; cursor: pointer; font-family: inherit; }
@@ -34,12 +36,14 @@
         .support-message-time { display: block; margin-top: 5px; font-size: 10px; opacity: 0.66; }
         .support-chat-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e5e7eb; background: #ffffff; }
         .support-chat-input { flex: 1; min-width: 0; resize: none; min-height: 42px; max-height: 96px; padding: 10px 11px; border: 1px solid #cbd5e1; border-radius: 11px; font-family: inherit; font-size: 14px; }
-        .support-chat-send { flex: 0 0 auto; padding: 10px 14px; border: 0; border-radius: 11px; background: #16a34a; color: #ffffff; font-family: inherit; font-weight: 900; cursor: pointer; }
+        .support-chat-send { flex: 0 0 auto; width: auto; padding: 10px 14px; border: 0; border-radius: 11px; background: #16a34a; color: #ffffff; font-family: inherit; font-weight: 900; cursor: pointer; }
         @media (max-width: 560px) {
             .support-chat-launcher { left: 12px; bottom: 12px; }
             .support-chat-panel { left: 10px; bottom: 66px; width: calc(100vw - 20px); height: min(620px, calc(100vh - 78px)); }
+            .support-chat-panel.keyboard-visible { top: calc(var(--chat-viewport-top, 0px) + 6px); bottom: auto; height: calc(var(--chat-viewport-height, 100dvh) - 12px); max-height: none; border-radius: 14px; }
             .support-chat-layout { grid-template-columns: 1fr; }
             .support-chat-threads { max-height: 132px; border-left: 0; border-bottom: 1px solid #e5e7eb; }
+            .support-chat-input { font-size: 16px; }
         }
     </style>
 
@@ -92,6 +96,8 @@
             let pollTimer = null;
             let previousUnreadTotal = null;
             let initialMessagesLoaded = false;
+            let viewportFrame = null;
+            let expandedViewportHeight = window.visualViewport?.height || window.innerHeight;
             const notifiedReadMessages = new Set();
 
             const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -213,18 +219,58 @@
                 panel.classList.add('active');
                 document.body.dataset.chatScrollLocked = '1';
                 document.body.style.overflow = 'hidden';
+                syncChatViewport();
             };
 
             const closeChatPanel = () => {
+                input.blur();
                 panel.classList.remove('active');
+                panel.classList.remove('keyboard-visible');
                 delete document.body.dataset.chatScrollLocked;
                 document.body.style.overflow = '';
             };
 
             const focusChatInput = () => {
-                requestAnimationFrame(() => {
+                if (!panel.classList.contains('active')) return;
+
+                try {
+                    input.focus({ preventScroll: true });
+                } catch {
                     input.focus();
+                }
+                input.setSelectionRange(input.value.length, input.value.length);
+
+                requestAnimationFrame(() => {
+                    if (!panel.classList.contains('active') || document.activeElement === input) return;
+                    input.focus({ preventScroll: true });
                     input.setSelectionRange(input.value.length, input.value.length);
+                });
+            };
+
+            const syncChatViewport = () => {
+                if (viewportFrame) cancelAnimationFrame(viewportFrame);
+
+                viewportFrame = requestAnimationFrame(() => {
+                    viewportFrame = null;
+                    const viewport = window.visualViewport;
+                    const viewportHeight = viewport?.height || window.innerHeight;
+                    const viewportTop = viewport?.offsetTop || 0;
+                    if (document.activeElement !== input) {
+                        expandedViewportHeight = Math.max(expandedViewportHeight, viewportHeight);
+                    }
+                    const keyboardInset = Math.max(
+                        0,
+                        window.innerHeight - viewportHeight - viewportTop,
+                        expandedViewportHeight - viewportHeight
+                    );
+
+                    panel.style.setProperty('--chat-viewport-height', `${Math.round(viewportHeight)}px`);
+                    panel.style.setProperty('--chat-viewport-top', `${Math.round(viewportTop)}px`);
+                    panel.classList.toggle('keyboard-visible', panel.classList.contains('active') && keyboardInset > 100);
+
+                    if (panel.classList.contains('active')) {
+                        messagesEl.scrollTop = messagesEl.scrollHeight;
+                    }
                 });
             };
 
@@ -324,8 +370,9 @@
             };
 
             launcher.addEventListener('click', async () => {
-                await requestBrowserNotificationPermission();
                 openChatPanel();
+                focusChatInput();
+                await requestBrowserNotificationPermission();
                 await refresh();
                 scanOrderAlerts();
                 focusChatInput();
@@ -377,11 +424,17 @@
                 form.requestSubmit();
             });
 
+            window.visualViewport?.addEventListener('resize', syncChatViewport);
+            window.visualViewport?.addEventListener('scroll', syncChatViewport);
+            window.addEventListener('resize', syncChatViewport);
+            window.addEventListener('orientationchange', syncChatViewport);
+
             refresh();
             requestAnimationFrame(scanOrderAlerts);
             pollTimer = setInterval(refresh, 12000);
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollTimer);
+                if (viewportFrame) cancelAnimationFrame(viewportFrame);
                 if (document.body.dataset.chatScrollLocked === '1') {
                     document.body.style.overflow = '';
                 }

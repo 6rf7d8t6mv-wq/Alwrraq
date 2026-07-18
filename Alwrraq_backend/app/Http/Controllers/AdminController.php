@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
-use App\Models\DiscountCode;
 use App\Models\User;
+use App\Services\AdminLiveUpdateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -56,7 +57,7 @@ class AdminController extends Controller
         $this->ensureAdmin();
 
         $orders = Order::query()
-            ->with(['user', 'files', 'deliveredFiles'])
+            ->with(['user', 'files', 'productItems', 'deliveredFiles'])
             ->latest()
             ->get();
 
@@ -69,6 +70,12 @@ class AdminController extends Controller
             ->latest()
             ->take(6)
             ->get();
+        $serviceTypes = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research', 'stationery'];
+        $serviceTotals = collect($serviceTypes)->mapWithKeys(fn (string $service) => [
+            $service => (float) $orders
+                ->where('service_type', $service)
+                ->sum(fn (Order $order) => $order->baseTotal()),
+        ])->all();
 
         $stats = [
             'orders' => $orders->count(),
@@ -90,6 +97,7 @@ class AdminController extends Controller
             'admins' => $users->where('role', 'admin')->whereNotNull('admin_permissions')->count(),
             'print_total' => $orders->sum('print_total'),
             'binding_total' => $orders->sum('binding_total'),
+            'service_totals' => $serviceTotals,
             'grand_total' => $orders->sum('grand_total'),
         ];
 
@@ -147,10 +155,10 @@ class AdminController extends Controller
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($searchQuery) use ($search) {
                     $searchQuery->where('id', $search)
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery->where('name', 'like', "%{$search}%")
-                            ->orWhere('phone', 'like', "%{$search}%");
-                    });
+                        ->orWhereHas('user', function ($userQuery) use ($search) {
+                            $userQuery->where('name', 'like', "%{$search}%")
+                                ->orWhere('phone', 'like', "%{$search}%");
+                        });
                 });
             })
             ->when($statusFilter === 'new', function ($query) {
@@ -175,6 +183,16 @@ class AdminController extends Controller
             ->get();
 
         return view('admin.orders', compact('orders', 'search', 'statusFilter'));
+    }
+
+    public function liveStatus(AdminLiveUpdateService $liveUpdates)
+    {
+        $this->ensureAdmin();
+        $this->ensurePermission('orders_view');
+
+        return response()
+            ->json($liveUpdates->snapshot())
+            ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
     public function applyOrderDiscount(Request $request, Order $order)
@@ -307,7 +325,7 @@ class AdminController extends Controller
         $this->ensurePermission($data['role'] === 'admin' ? 'users_create' : 'customers_create');
 
         if (filled($data['first_name'] ?? null)) {
-            $data['name'] = trim($data['first_name'] . ' ' . ($data['second_name'] ?? ''));
+            $data['name'] = trim($data['first_name'].' '.($data['second_name'] ?? ''));
         }
 
         if ($data['role'] === 'admin') {
@@ -353,23 +371,23 @@ class AdminController extends Controller
         $prefix = $user->role === 'admin' ? 'users' : 'customers';
 
         if (filled($data['first_name'] ?? null)) {
-            $data['name'] = trim($data['first_name'] . ' ' . ($data['second_name'] ?? ''));
+            $data['name'] = trim($data['first_name'].' '.($data['second_name'] ?? ''));
         }
 
         if (($data['name'] ?? null) !== $user->name) {
-            $this->ensurePermission($prefix . '_update');
+            $this->ensurePermission($prefix.'_update');
         }
 
         if (($data['phone'] ?? null) !== $user->phone) {
-            $this->ensurePermission($prefix . '_phone_update');
+            $this->ensurePermission($prefix.'_phone_update');
         }
 
         if (($data['email'] ?? null) !== $user->email) {
-            $this->ensurePermission($prefix . '_email_update');
+            $this->ensurePermission($prefix.'_email_update');
         }
 
         if (filled($data['password'] ?? null)) {
-            $this->ensurePermission($prefix . '_password_reset');
+            $this->ensurePermission($prefix.'_password_reset');
         }
 
         if (blank($data['password'] ?? null)) {
@@ -378,21 +396,21 @@ class AdminController extends Controller
         unset($data['first_name'], $data['second_name'], $data['password_confirmation']);
 
         if ($request->has('is_active')) {
-            $this->ensurePermission($prefix . '_status');
+            $this->ensurePermission($prefix.'_status');
             $data['is_active'] = $request->boolean('is_active');
         } else {
             unset($data['is_active']);
         }
 
         if ($request->has('login_blocked')) {
-            $this->ensurePermission($prefix . '_login_block');
+            $this->ensurePermission($prefix.'_login_block');
             $data['login_blocked'] = $request->boolean('login_blocked');
         } else {
             unset($data['login_blocked']);
         }
 
         if ($request->has('account_verified')) {
-            $this->ensurePermission($prefix . '_verify');
+            $this->ensurePermission($prefix.'_verify');
             $data['account_verified_at'] = $request->boolean('account_verified') ? now() : null;
         }
         unset($data['account_verified']);
@@ -417,7 +435,7 @@ class AdminController extends Controller
         }
 
         $prefix = $user->role === 'admin' ? 'users' : 'customers';
-        $this->ensurePermission($prefix . '_email_update');
+        $this->ensurePermission($prefix.'_email_update');
 
         $data = $request->validate([
             'email' => ['required', 'email:rfc,dns', 'max:255', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', Rule::unique('users', 'email')->ignore($user->id)],
@@ -522,7 +540,7 @@ class AdminController extends Controller
         $this->ensureAdmin();
         $this->ensurePermission('files_download');
 
-        $absolutePath = storage_path('app/' . $file->path);
+        $absolutePath = storage_path('app/'.$file->path);
 
         abort_unless(is_file($absolutePath), 404);
 
@@ -543,14 +561,14 @@ class AdminController extends Controller
 
         $file->load('order.user');
 
-        $absolutePath = storage_path('app/' . $file->path);
+        $absolutePath = storage_path('app/'.$file->path);
 
         abort_unless(is_file($absolutePath), 404);
 
         if ($request->boolean('raw')) {
             return response()->file($absolutePath, [
                 'Content-Type' => File::mimeType($absolutePath) ?: 'application/octet-stream',
-                'Content-Disposition' => 'inline; filename="' . addslashes($file->original_name) . '"',
+                'Content-Disposition' => 'inline; filename="'.addslashes($file->original_name).'"',
             ]);
         }
 
@@ -615,25 +633,25 @@ class AdminController extends Controller
         ]);
 
         $file = $data['delivered_file'];
-        $storagePath = 'delivered/orders/' . $order->id;
-        $fullPath = storage_path('app/' . $storagePath);
+        $storagePath = 'delivered/orders/'.$order->id;
+        $fullPath = storage_path('app/'.$storagePath);
 
-        if (!is_dir($fullPath)) {
+        if (! is_dir($fullPath)) {
             mkdir($fullPath, 0777, true);
         }
 
         $extension = strtolower($file->getClientOriginalExtension());
-        $storedName = 'delivered_' . now()->format('YmdHis') . '_' . $order->id . ($extension ? '.' . $extension : '');
+        $storedName = 'delivered_'.now()->format('YmdHis').'_'.$order->id.($extension ? '.'.$extension : '');
         $file->move($fullPath, $storedName);
 
-        $path = $storagePath . '/' . $storedName;
+        $path = $storagePath.'/'.$storedName;
 
         $order->deliveredFiles()->create([
             'original_name' => $file->getClientOriginalName(),
             'stored_name' => $storedName,
             'path' => $path,
             'mime' => $file->getClientMimeType(),
-            'size' => filesize($fullPath . '/' . $storedName) ?: 0,
+            'size' => filesize($fullPath.'/'.$storedName) ?: 0,
             'uploaded_by' => Auth::id(),
         ]);
 
@@ -644,7 +662,7 @@ class AdminController extends Controller
             'delivered_file_stored_name' => $storedName,
             'delivered_file_path' => $path,
             'delivered_file_mime' => $file->getClientMimeType(),
-            'delivered_file_size' => filesize($fullPath . '/' . $storedName) ?: 0,
+            'delivered_file_size' => filesize($fullPath.'/'.$storedName) ?: 0,
             'delivered_file_uploaded_at' => now(),
         ]);
 
@@ -671,14 +689,14 @@ class AdminController extends Controller
         $this->ensureAdmin();
         $this->ensurePermission('delivered_files_download');
 
-        $absolutePath = storage_path('app/' . $deliveredFile->path);
+        $absolutePath = storage_path('app/'.$deliveredFile->path);
 
         abort_unless(File::isFile($absolutePath), 404);
 
         if (request()->boolean('view')) {
             return response()->file($absolutePath, [
                 'Content-Type' => $deliveredFile->mime ?: 'application/octet-stream',
-                'Content-Disposition' => 'inline; filename="' . addslashes($deliveredFile->original_name) . '"',
+                'Content-Disposition' => 'inline; filename="'.addslashes($deliveredFile->original_name).'"',
             ]);
         }
 
@@ -690,7 +708,7 @@ class AdminController extends Controller
         $this->ensureAdmin();
         $this->ensurePermission('delivered_files_delete');
 
-        $absolutePath = storage_path('app/' . $deliveredFile->path);
+        $absolutePath = storage_path('app/'.$deliveredFile->path);
         if (File::isFile($absolutePath)) {
             File::delete($absolutePath);
         }
@@ -719,21 +737,21 @@ class AdminController extends Controller
         $order->load(['files', 'deliveredFiles']);
 
         foreach ($order->files as $file) {
-            $absolutePath = storage_path('app/' . $file->path);
+            $absolutePath = storage_path('app/'.$file->path);
             if (File::isFile($absolutePath)) {
                 File::delete($absolutePath);
             }
         }
 
         foreach ($order->deliveredFiles as $deliveredFile) {
-            $absolutePath = storage_path('app/' . $deliveredFile->path);
+            $absolutePath = storage_path('app/'.$deliveredFile->path);
             if (File::isFile($absolutePath)) {
                 File::delete($absolutePath);
             }
         }
 
         if (filled($order->delivered_file_path)) {
-            $deliveredPath = storage_path('app/' . $order->delivered_file_path);
+            $deliveredPath = storage_path('app/'.$order->delivered_file_path);
             if (File::isFile($deliveredPath)) {
                 File::delete($deliveredPath);
             }

@@ -25,7 +25,6 @@
             .customer-notice-dot { position: absolute; top: 8px; left: 9px; width: 7px; height: 7px; border-radius: 999px; background: #dc2626; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95); }
             .logout-button { width: 100%; background: #b91c1c; color: #f8fafc; border: 1px solid rgba(248, 113, 113, 0.5); border-radius: 10px; padding: 10px 12px; cursor: pointer; text-align: center; font-weight: 800; }
             .logout-button:hover { background: #dc2626; border-color: #f87171; }
-            .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
             .container { width: min(100%, 1000px); margin: clamp(16px, 3vw, 32px) auto 24px; padding: clamp(18px, 3vw, 32px); background: #ffffff; border-radius: clamp(16px, 2vw, 24px); box-shadow: 0 24px 60px rgba(15, 23, 42, 0.08); }
             h1 { margin: 0 0 8px; font-size: clamp(26px, 4vw, 36px); color: #111827; }
             h2 { margin: 28px 0 16px; font-size: clamp(20px, 2.4vw, 24px); color: #1f2937; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
@@ -154,6 +153,7 @@
             .copies-stepper { display: inline-grid; grid-template-columns: 44px 78px 44px; gap: 8px; align-items: center; }
             .copies-stepper-button { width: 44px; height: 44px; margin: 0; padding: 0; border: 0; border-radius: 10px; background: #0f172a; color: #ffffff; font-size: 23px; font-weight: 900; line-height: 1; cursor: pointer; }
             .copies-stepper-button:hover { background: #1e293b; }
+            .copies-stepper-button:disabled { background: #cbd5e1; color: #64748b; cursor: not-allowed; }
             .copies-input { width: 78px; height: 44px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; color: #111827; font-size: 15px; font-weight: 900; text-align: center; }
             .file-remove { cursor: pointer; color: #ef4444; font-size: 15px; font-weight: 800; text-align: center; }
             .file-remove:hover { color: #b91c1c; }
@@ -179,10 +179,20 @@
             .service-notice-content { flex: 1; min-width: 0; }
             .service-notice-title { margin: 0 0 2px; color: #0f172a; font-size: 14px; font-weight: 900; }
             .service-notice-text { margin: 0; color: #334155; font-size: 13px; font-weight: 800; }
-            .research-form-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(130px, 0.6fr); gap: 14px; align-items: end; }
-            .research-field { display: flex; flex-direction: column; gap: 8px; }
-            .research-field label { color: #111827; font-size: 13px; font-weight: 900; }
-            .research-input { width: 100%; padding: 12px 13px; border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; color: #111827; font-weight: 700; }
+            #uploadResearch .binding-section { margin-top: 12px; padding: 10px; }
+            #uploadResearch .binding-section h3 { margin-bottom: 7px; font-size: 14px; }
+            .research-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; align-items: end; }
+            .research-field { display: flex; flex-direction: column; gap: 3px; }
+            .research-field label { color: #111827; font-size: 11px; font-weight: 900; }
+            .research-input { width: 100%; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #111827; font-size: 16px; line-height: 1.1; font-weight: 700; }
+            .research-pages-save-row { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+            .research-pages-save-row .research-field { flex: 1; min-width: 0; flex-direction: row; align-items: center; gap: 7px; }
+            .research-pages-save-row .research-field label { flex: 0 1 auto; margin: 0; font-size: 10px; line-height: 1.2; white-space: nowrap; }
+            .research-pages-stepper { flex: 0 0 auto; grid-template-columns: 30px 52px 30px; gap: 4px; }
+            .research-pages-stepper .copies-stepper-button { width: 30px; height: 30px; border-radius: 7px; font-size: 16px; }
+            .research-pages-stepper .copies-input { width: 52px; height: 30px; border-radius: 7px; }
+            #researchSaveButton { flex: 0 0 auto; min-height: 30px; margin: 0; padding: 6px 12px; border-radius: 7px; font-size: 11px; }
+            .research-delivery-notice { margin: 0 0 6px; padding: 5px 7px; border-radius: 6px; background: #eff6ff; color: #1e3a8a; border: 1px solid #bfdbfe; font-size: 9.5px; font-weight: 800; line-height: 1.35; }
             .research-input:focus { outline: 2px solid rgba(14, 165, 233, 0.18); border-color: #38bdf8; }
             .english-number-warning { display: none; margin-top: 5px; color: #b91c1c; font-size: 12px; font-weight: 800; }
             .english-number-warning.active { display: block; }
@@ -216,10 +226,7 @@
                 .brand-logo { width: 34px; height: 34px; border-radius: 10px; margin: 0; flex: 0 0 auto; }
                 .brand { margin: 0; font-size: 17px; line-height: 1.2; white-space: nowrap; }
                 .brand-subtitle { display: none; }
-                .mobile-menu-toggle { display: inline-flex; min-width: 96px; padding: 7px 14px; border-radius: 8px; font-size: 12px; line-height: 1.2; white-space: nowrap; background: #22c55e; border-color: #86efac; color: #052e16; }
-                .mobile-menu-toggle:hover { background: #4ade80; }
                 .header-actions { grid-column: 1 / -1; margin-top: 0; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-                .page-header.menu-open .header-actions { display: grid; }
                 .header-user { grid-column: 1 / -1; margin: 0; padding: 0; }
                 .header-form { margin: 0; }
                 .header-user, .header-link { padding: 9px 8px; gap: 5px; }
@@ -388,6 +395,16 @@
                 .copies-stepper { grid-template-columns: 28px minmax(34px, 1fr) 28px; gap: 4px; }
                 .copies-stepper-button { width: 28px; height: 28px; border-radius: 7px; font-size: 15px; }
                 .copies-input { width: 100%; height: 28px; padding: 4px 5px; border-radius: 7px; font-size: 11px; }
+                .research-pages-stepper .copies-stepper-button { width: 28px; height: 28px; border-radius: 7px; font-size: 15px; }
+                .research-pages-stepper .copies-input { width: 100%; height: 28px; border-radius: 7px; }
+                .research-pages-stepper { width: auto; min-width: 0; flex: 0 0 98px; grid-template-columns: 28px 34px 28px; }
+                .research-pages-save-row { gap: 5px; }
+                .research-pages-save-row .research-field { gap: 4px; }
+                .research-pages-save-row .research-field label { font-size: 9px; white-space: normal; }
+                #researchSaveButton { padding: 5px 8px; font-size: 10px; }
+                .academic-copies-cell .copies-stepper { grid-template-columns: 22px minmax(24px, 1fr) 22px; gap: 2px; }
+                .academic-copies-cell .copies-stepper-button { width: 22px; height: 26px; border-radius: 6px; font-size: 13px; }
+                .academic-copies-cell .copies-input { height: 26px; padding: 3px; font-size: 10px; }
                 .file-pages,
                 .file-size,
                 .file-price,
@@ -455,11 +472,12 @@
                 .header-actions { font-size: 11px; }
                 .header-user, .header-link { padding: 8px 6px; }
                 .container { padding: 14px; border-radius: 14px; }
-                .services-screen { grid-template-columns: 1fr; }
-                .service-card { min-height: 0; }
-                .service-title { font-size: 17px; }
-                .service-description { font-size: 14px; }
-                .service-entry { font-size: 14px; }
+                .services-screen { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+                .service-card { min-width: 0; min-height: 0; gap: 7px; padding: 10px; border-radius: 12px; }
+                .service-icon { width: 36px; height: 36px; border-radius: 10px; font-size: 18px; }
+                .service-title { font-size: 11px; line-height: 1.4; overflow-wrap: normal; word-break: normal; }
+                .service-description { font-size: 9.5px; line-height: 1.45; }
+                .service-entry { margin-top: auto; padding: 8px 5px; border-radius: 8px; font-size: 10px; line-height: 1.25; }
                 .academic-choice-select { padding-inline: 2px; font-size: 8.5px; }
                 .files-list-item,
                 .files-list-item.has-price,
@@ -473,15 +491,18 @@
             }
         </style>
     </head>
-    <body>
+    <body class="customer-app-page">
         <header class="page-header">
             <div class="header-inner">
-                <div>
+                <div class="header-brand">
                     <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                     <div class="brand">الورّاق</div>
                     <p class="brand-subtitle">خدمات الطباعة والتجليد</p>
                 </div>
-                <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
+                <div class="header-identity">
+                    <strong>{{ auth()->user()->name }}</strong>
+                    <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
+                </div>
                 <div class="header-actions">
                     @php
                         $hasCustomerOrderNotice = \App\Models\Order::query()
@@ -490,7 +511,7 @@
                             ->whereHas('deliveredFiles', fn ($query) => $query->whereNull('customer_downloaded_at'))
                             ->exists();
                     @endphp
-                    <span class="header-user">👤 {{ auth()->user()->name }}</span>
+                    <a class="header-link" href="{{ route('home') }}">🏠 الرئيسية</a>
                     <a class="header-link" href="{{ route('orders.index') }}">
                         🧾 طلباتي
                         @if ($hasCustomerOrderNotice)
@@ -498,9 +519,9 @@
                         @endif
                     </a>
                     <a class="header-link" href="{{ route('cart.index') }}">🛒 السلة</a>
-                    <a class="header-link settings-link" href="{{ route('account.settings') }}">⚙️ إعداداتي</a>
+                    <a class="header-link settings-link" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
                     @if (auth()->user()->role === 'admin')
-                        <a class="header-link" href="{{ route('admin.orders') }}">لوحة المدير</a>
+                        <a class="header-link admin-header-link" href="{{ route('admin.orders') }}">لوحة المدير</a>
                     @endif
                     <form class="header-form" method="post" action="{{ route('logout') }}">
                         @csrf
@@ -565,6 +586,13 @@
                     <h3 class="service-title">إنشاء بحث</h3>
                     <p class="service-description">اكتب اسم البحث وعدد الصفحات المطلوبة، ويتم احتساب سعر الخدمة تلقائيًا.</p>
                     <button class="service-entry" type="button" onclick="selectService('research')">الدخول للخدمة</button>
+                </article>
+
+                <article class="service-card">
+                    <div class="service-icon">✏️</div>
+                    <h3 class="service-title">القرطاسية</h3>
+                    <p class="service-description">تصفح منتجات القرطاسية وابحث عنها وأضف ما تحتاجه إلى السلة.</p>
+                    <button class="service-entry" type="button" onclick="window.location.href='{{ route('stationery.index') }}'">الدخول للمتجر</button>
                 </article>
             </div>
 
@@ -940,20 +968,39 @@
                     <h3>تفاصيل البحث</h3>
                     <div class="research-form-grid">
                         <div class="research-field">
-                            <label for="researchTitle">اسم البحث المطلوب</label>
+                            <label for="researchTitle">عنوان البحث المطلوب</label>
                             <input class="research-input" id="researchTitle" type="text" maxlength="255" placeholder="مثال: أثر التقنية في التعليم" oninput="updateResearchPricingSummary()" />
                         </div>
                         <div class="research-field">
-                            <label for="researchPages">عدد الصفحات</label>
-                            <input class="research-input" id="researchPages" type="text" inputmode="numeric" placeholder="اكتب عدد الصفحات" oninput="updateResearchPricingSummary()" />
+                            <label for="researchStudentName">اسم الطالب</label>
+                            <input class="research-input" id="researchStudentName" type="text" maxlength="255" autocomplete="off" placeholder="اكتب اسم الطالب" oninput="updateResearchPricingSummary()" />
+                        </div>
+                        <div class="research-field">
+                            <label for="researchInstructorName">اسم الدكتور أو الأستاذ</label>
+                            <input class="research-input" id="researchInstructorName" type="text" maxlength="255" autocomplete="off" placeholder="اكتب اسم الدكتور أو الأستاذ" oninput="updateResearchPricingSummary()" />
+                        </div>
+                        <div class="research-field">
+                            <label for="researchInstitutionName">اسم الجامعة أو المدرسة أو المعهد</label>
+                            <input class="research-input" id="researchInstitutionName" type="text" maxlength="255" autocomplete="off" placeholder="اكتب اسم الجهة التعليمية" oninput="updateResearchPricingSummary()" />
+                        </div>
+                        <div class="research-pages-save-row">
+                            <div class="research-field">
+                                <label for="researchPages">عدد صفحات البحث المطلوبة</label>
+                                <div class="copies-stepper research-pages-stepper">
+                                    <button class="copies-stepper-button" type="button" onclick="changeResearchPages(-1)">-</button>
+                                    <input class="copies-input" id="researchPages" type="number" min="1" max="9999" step="1" value="1" readonly aria-label="عدد صفحات البحث المطلوبة" />
+                                    <button class="copies-stepper-button" type="button" onclick="changeResearchPages(1)">+</button>
+                                </div>
+                            </div>
+                            <button class="upload-button" id="researchSaveButton" type="button" onclick="saveResearchRequest()">حفظ الطلب</button>
                         </div>
                     </div>
-                    <button class="upload-button" id="researchSaveButton" type="button" onclick="saveResearchRequest()">حفظ الطلب</button>
                     <div id="researchError" class="error-msg" style="display: none;"></div>
                 </div>
 
                 <div class="binding-section">
                     <h3>إجمالي إنشاء البحث</h3>
+                    <div class="research-delivery-notice">سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي خلال ٢٤ ساعة إلى ٤٨ ساعة إن شاء الله.</div>
                     <div id="researchPricingSummary" class="pricing-summary empty">اكتب اسم البحث وعدد الصفحات لعرض الإجمالي.</div>
                 </div>
             </div>
@@ -962,21 +1009,6 @@
         <datalist id="saudiUniversitiesList"></datalist>
 
         <script>
-            function toggleMobileHeader(button, event) {
-                event?.stopPropagation();
-                const header = button.closest('.page-header');
-                const isOpen = header.classList.toggle('menu-open');
-                button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-            }
-
-            document.addEventListener('click', (event) => {
-                const header = document.querySelector('.page-header.menu-open');
-                if (!header || header.contains(event.target)) return;
-
-                header.classList.remove('menu-open');
-                header.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
-            });
-
             // Store uploaded files for each service
             const uploadedFiles = {
                 notes: { word: [], pdf: [] },
@@ -998,6 +1030,9 @@
             };
             const savedResearchRequest = {
                 title: '',
+                studentName: '',
+                instructorName: '',
+                institutionName: '',
                 pages: 0
             };
 
@@ -1239,7 +1274,7 @@
             }
 
             function bindEnglishNumberWarnings(root = document) {
-                const selector = '#researchPages, .copies-input';
+                const selector = '#researchPages, .copies-input, .cd-copies-input';
                 root.querySelectorAll(selector).forEach((input) => {
                     if (input.dataset.englishNumberBound === 'true') return;
 
@@ -1371,14 +1406,17 @@
                 return writingColor !== 'black' || blackWritingAllowedCovers.includes(coverColor);
             }
 
-            function calculateAcademicFilePrice(service, pages, copies, writingColor = '') {
+            function calculateAcademicFilePrice(service, pages, copies, writingColor = '', cdType = 'none', cdCopies = 0) {
                 const copyCount = Math.max(1, numericValue(copies) || 1);
                 const printPrice = getPrintPrice(pages) * copyCount;
+                const cdCount = cdType === 'none' ? 0 : Math.max(1, numericValue(cdCopies) || 1);
+                const cdPrice = cdType === 'printed' ? cdCount * 10 : (cdType === 'plain' ? cdCount * 5 : 0);
                 if (!writingColor) {
                     return {
                         printPrice,
                         bindingPrice: 0,
-                        total: printPrice
+                        cdPrice,
+                        total: printPrice + cdPrice
                     };
                 }
 
@@ -1389,7 +1427,8 @@
                 return {
                     printPrice,
                     bindingPrice,
-                    total: printPrice + bindingPrice
+                    cdPrice,
+                    total: printPrice + bindingPrice + cdPrice
                 };
             }
 
@@ -1457,6 +1496,9 @@
                 const productBindingLabel = service === 'books'
                     ? 'سعر التجليد'
                     : (['notes', 'color_printing'].includes(service) ? 'سعر التغليف' : (noPrintServiceLabels[service] || 'سعر التجليد'));
+                const cdMetric = ['thesis', 'phd'].includes(service)
+                    ? `<span class="checkout-summary-metric">سعر CD: ${formatMoney(totals.cd || 0)} ريال</span>`
+                    : '';
 
                 const totalsHtml = noPrintServiceLabels[service]
                     ? `
@@ -1466,11 +1508,11 @@
                     : `
                         <span class="checkout-summary-metric">سعر الطباعة: ${formatMoney(totals.print)} ريال</span>
                         <span class="checkout-summary-metric">${productBindingLabel}: ${formatMoney(totals.binding)} ريال</span>
+                        ${cdMetric}
                         <span class="checkout-summary-metric">الإجمالي: ${formatMoney(totals.total)} ريال</span>
                     `;
                 const deliveryNoticeMessages = {
-                    formatting: 'سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي فور الانتهاء من التنسيق إن شاء الله.',
-                    research: 'سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي خلال ٢٤ ساعة إلى ٤٨ ساعة إن شاء الله.'
+                    formatting: 'سيتم إرسال الملف بعد الانتهاء داخل التطبيق في صفحة طلباتي فور الانتهاء من التنسيق إن شاء الله.'
                 };
                 const deliveryNotice = deliveryNoticeMessages[service]
                     ? `<div class="delivery-notice">${deliveryNoticeMessages[service]}</div>`
@@ -1558,12 +1600,13 @@
                 }
 
                 const totals = files.reduce((sum, fileData) => {
-                    const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                    const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
                     sum.print += price.printPrice;
                     sum.binding += price.bindingPrice;
+                    sum.cd += price.cdPrice;
                     sum.total += price.total;
                     return sum;
-                }, { print: 0, binding: 0, total: 0 });
+                }, { print: 0, binding: 0, cd: 0, total: 0 });
 
                 renderCheckoutSummary(summary, service, '', totals, true);
             }
@@ -1595,7 +1638,10 @@
                 if (!summary) return;
 
                 const title = document.getElementById('researchTitle')?.value.trim() || '';
-                const pagesValue = document.getElementById('researchPages')?.value.trim() || '';
+                const studentName = document.getElementById('researchStudentName')?.value.trim() || '';
+                const instructorName = document.getElementById('researchInstructorName')?.value.trim() || '';
+                const institutionName = document.getElementById('researchInstitutionName')?.value.trim() || '';
+                const pagesValue = String(document.getElementById('researchPages')?.value || '').trim();
                 const pages = /^[0-9]+$/.test(pagesValue) ? Math.max(1, numericValue(pagesValue) || 0) : 0;
 
                 if (!title) {
@@ -1608,6 +1654,11 @@
                     return;
                 }
 
+                if (!studentName || !instructorName || !institutionName) {
+                    renderCheckoutSummary(summary, 'research', 'أكمل اسم الطالب واسم الدكتور أو الأستاذ واسم الجهة التعليمية.');
+                    return;
+                }
+
                 const price = calculateResearchPrice(pages);
                 const totals = {
                     print: price.printPrice,
@@ -1617,6 +1668,9 @@
 
                 const hasSavedCurrentRequest = currentOrders.research
                     && savedResearchRequest.title === title
+                    && savedResearchRequest.studentName === studentName
+                    && savedResearchRequest.instructorName === instructorName
+                    && savedResearchRequest.institutionName === institutionName
                     && savedResearchRequest.pages === pages;
 
                 if (!hasSavedCurrentRequest) {
@@ -1633,18 +1687,33 @@
                 renderCheckoutSummary(summary, 'research', '', totals, true);
             }
 
+            function changeResearchPages(delta) {
+                const pagesInput = document.getElementById('researchPages');
+                if (!pagesInput) return;
+
+                const currentPages = Math.max(1, Math.min(9999, numericValue(pagesInput.value) || 1));
+                pagesInput.value = Math.max(1, Math.min(9999, currentPages + delta));
+                updateResearchPricingSummary();
+            }
+
             async function saveResearchRequest() {
                 const titleInput = document.getElementById('researchTitle');
+                const studentNameInput = document.getElementById('researchStudentName');
+                const instructorNameInput = document.getElementById('researchInstructorName');
+                const institutionNameInput = document.getElementById('researchInstitutionName');
                 const pagesInput = document.getElementById('researchPages');
                 const button = document.getElementById('researchSaveButton');
                 const errorDiv = document.getElementById('researchError');
                 const title = titleInput.value.trim();
-                const pagesValue = pagesInput.value.trim();
+                const studentName = studentNameInput.value.trim();
+                const instructorName = instructorNameInput.value.trim();
+                const institutionName = institutionNameInput.value.trim();
+                const pagesValue = String(pagesInput.value || '').trim();
                 const pages = /^[0-9]+$/.test(pagesValue) ? Math.max(1, numericValue(pagesValue) || 0) : 0;
 
-                if (!title || !pages) {
+                if (!title || !studentName || !instructorName || !institutionName || !pages) {
                     errorDiv.style.display = 'block';
-                    errorDiv.textContent = 'اكتب اسم البحث وحدد عدد الصفحات بالأرقام الإنجليزية فقط.';
+                    errorDiv.textContent = 'أكمل اسم البحث والطالب والدكتور أو الأستاذ والجهة التعليمية وعدد الصفحات.';
                     updateResearchPricingSummary();
                     return;
                 }
@@ -1663,6 +1732,9 @@
                         },
                         body: JSON.stringify({
                             research_title: title,
+                            research_student_name: studentName,
+                            research_instructor_name: instructorName,
+                            university_name: institutionName,
                             pages
                         })
                     });
@@ -1674,6 +1746,9 @@
 
                     currentOrders.research = result.order_id;
                     savedResearchRequest.title = title;
+                    savedResearchRequest.studentName = studentName;
+                    savedResearchRequest.instructorName = instructorName;
+                    savedResearchRequest.institutionName = institutionName;
                     savedResearchRequest.pages = pages;
                     updateResearchPricingSummary();
                 } catch (error) {
@@ -1825,8 +1900,8 @@
                         : '';
                     const printSidesHtml = showPrintSides
                         ? `
-                            <div data-label="نوع الطباعة">
-                                <select class="binding-select" onchange="setFilePrintSides('${config.service}', '${config.type}', ${index}, this.value)">
+                            <div class="${showAcademicPrice ? 'academic-choice-cell' : ''}" data-label="نوع الطباعة">
+                                <select class="binding-select ${showAcademicPrice ? 'academic-choice-select' : ''}" onchange="setFilePrintSides('${config.service}', '${config.type}', ${index}, this.value)">
                                     <option value="one_side" ${(fileData.printSides || (showColorPrintingPrice ? 'one_side' : 'two_sides')) === 'one_side' ? 'selected' : ''}>وجه واحد</option>
                                     <option value="two_sides" ${(fileData.printSides || 'two_sides') === 'two_sides' ? 'selected' : ''}>وجهين</option>
                                 </select>
@@ -1846,16 +1921,36 @@
                         `
                         : '';
                     const hasAcademicColors = showAcademicPrice && fileData.coverColor && fileData.writingColor && canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor);
-                    const academicPrice = showAcademicPrice ? calculateAcademicFilePrice(config.service, fileData.pages, fileData.copies, fileData.writingColor) : null;
+                    const academicPrice = showAcademicPrice ? calculateAcademicFilePrice(config.service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies) : null;
                     const formattingPrice = showFormattingPrice ? calculateFormattingFilePrice(fileData.pages) : null;
                     const copiesKey = `${config.service}-${config.type}-${index}`;
                     const showPrintProductCopies = showPrice && ['notes', 'books', 'color_printing'].includes(config.service);
                     const copiesHtml = showAcademicPrice || showPrintProductCopies
-                        ? `<div data-label="عدد النسخ">
+                        ? `<div class="${showAcademicPrice ? 'academic-choice-cell academic-copies-cell' : ''}" data-label="عدد النسخ">
                             <div class="copies-stepper">
                                 <button class="copies-stepper-button" type="button" onclick="${showPrintProductCopies ? 'changePrintProductFileCopies' : 'changeAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, -1)">-</button>
                                 <input class="copies-input" data-copies-input="${copiesKey}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${fileData.copies || 1}" oninput="${showPrintProductCopies ? 'setPrintProductFileCopies' : 'setAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="${showPrintProductCopies ? 'setPrintProductFileCopies' : 'setAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, this.value, true)" />
                                 <button class="copies-stepper-button" type="button" onclick="${showPrintProductCopies ? 'changePrintProductFileCopies' : 'changeAcademicFileCopies'}('${config.service}', '${config.type}', ${index}, 1)">+</button>
+                            </div>
+                        </div>`
+                        : '';
+                    const cdTypeHtml = showAcademicPrice
+                        ? `<div class="academic-choice-cell" data-label="خيار CD">
+                            <select class="binding-select academic-choice-select" onchange="setAcademicCdType('${config.service}', '${config.type}', ${index}, this.value)">
+                                <option value="none" ${(fileData.cdType || 'none') === 'none' ? 'selected' : ''}>بدون CD</option>
+                                <option value="plain" ${fileData.cdType === 'plain' ? 'selected' : ''}>CD عادي (٥ ريال)</option>
+                                <option value="printed" ${fileData.cdType === 'printed' ? 'selected' : ''}>CD مطبوع (١٠ ريال)</option>
+                            </select>
+                        </div>`
+                        : '';
+                    const cdCopiesKey = `cd-${config.service}-${config.type}-${index}`;
+                    const cdCopiesDisabled = !fileData.cdType || fileData.cdType === 'none';
+                    const cdCopiesHtml = showAcademicPrice
+                        ? `<div class="academic-choice-cell academic-copies-cell" data-label="عدد CD">
+                            <div class="copies-stepper">
+                                <button class="copies-stepper-button" type="button" ${cdCopiesDisabled ? 'disabled' : ''} onclick="changeAcademicCdCopies('${config.service}', '${config.type}', ${index}, -1)">-</button>
+                                <input class="copies-input cd-copies-input" data-cd-copies-input="${cdCopiesKey}" type="number" inputmode="numeric" min="1" max="999" step="1" value="${cdCopiesDisabled ? 0 : (fileData.cdCopies || 1)}" ${cdCopiesDisabled ? 'disabled' : ''} oninput="setAcademicCdCopies('${config.service}', '${config.type}', ${index}, this.value, false)" onchange="setAcademicCdCopies('${config.service}', '${config.type}', ${index}, this.value, true)" />
+                                <button class="copies-stepper-button" type="button" ${cdCopiesDisabled ? 'disabled' : ''} onclick="changeAcademicCdCopies('${config.service}', '${config.type}', ${index}, 1)">+</button>
                             </div>
                         </div>`
                         : '';
@@ -1904,6 +1999,9 @@
                     const academicBindingPriceHtml = showAcademicPrice
                         ? `<div class="file-price" data-label="سعر التجليد" data-academic-price="${config.service}-${config.type}-${index}" data-price-kind="binding">${hasAcademicColors ? `${academicPrice.bindingPrice} ريال` : 'اختر الألوان'}</div>`
                         : '';
+                    const academicCdPriceHtml = showAcademicPrice
+                        ? `<div class="file-price" data-label="سعر CD" data-academic-price="${config.service}-${config.type}-${index}" data-price-kind="cd">${academicPrice.cdPrice} ريال</div>`
+                        : '';
                     const academicTotalPriceHtml = showAcademicPrice
                         ? `<div class="file-price" data-label="الإجمالي" data-academic-price="${config.service}-${config.type}-${index}" data-price-kind="total">${hasAcademicColors ? `${academicPrice.total} ريال` : 'اختر الألوان'}</div>`
                         : '';
@@ -1927,12 +2025,15 @@
                             ${notesBindingPriceHtml}
                             ${notesTotalPriceHtml}
                             ${copiesHtml}
+                            ${cdTypeHtml}
+                            ${cdCopiesHtml}
                             ${thesisProjectHtml}
                             ${universityHtml}
                             ${coverColorHtml}
                             ${writingColorHtml}
                             ${academicPrintPriceHtml}
                             ${academicBindingPriceHtml}
+                            ${academicCdPriceHtml}
                             ${academicTotalPriceHtml}
                             ${formattingPriceHtml}
                             ${formattingTotalPriceHtml}
@@ -2125,10 +2226,11 @@
             function refreshAcademicFilePriceDisplay(service, type, index) {
                 const fileData = uploadedFiles[service][type][index];
                 const key = `${service}-${type}-${index}`;
-                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
                 const hasAcademicColors = fileData.coverColor && fileData.writingColor && canUseAcademicWritingColor(fileData.coverColor, fileData.writingColor);
                 const printCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="print"]`);
                 const bindingCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="binding"]`);
+                const cdCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="cd"]`);
                 const totalCell = document.querySelector(`[data-academic-price="${key}"][data-price-kind="total"]`);
 
                 if (printCell) {
@@ -2137,6 +2239,10 @@
 
                 if (bindingCell) {
                     bindingCell.textContent = hasAcademicColors ? `${price.bindingPrice} ريال` : 'اختر الألوان';
+                }
+
+                if (cdCell) {
+                    cdCell.textContent = `${price.cdPrice} ريال`;
                 }
 
                 if (totalCell) {
@@ -2156,7 +2262,7 @@
                 }
 
                 fileData.copies = Math.max(1, numericValue(copiesValue) || 1);
-                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
                 updateStoredFile(fileData, {
                     copies: fileData.copies,
                     print_price: price.printPrice,
@@ -2183,11 +2289,79 @@
                     input.value = nextCopies;
                 }
 
-                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
                 updateStoredFile(fileData, {
                     copies: fileData.copies,
                     print_price: price.printPrice,
                     binding_price: price.bindingPrice,
+                    total_price: price.total
+                });
+                refreshAcademicFilePriceDisplay(service, type, index);
+                updateAcademicPricingSummary(service);
+            }
+
+            function setAcademicCdType(service, type, index, cdType) {
+                const fileData = uploadedFiles[service][type][index];
+                fileData.cdType = ['plain', 'printed'].includes(cdType) ? cdType : 'none';
+                fileData.cdCopies = fileData.cdType === 'none' ? 0 : Math.max(1, numericValue(fileData.cdCopies) || 1);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
+
+                updateStoredFile(fileData, {
+                    cd_type: fileData.cdType,
+                    cd_copies: fileData.cdCopies,
+                    cd_price: price.cdPrice,
+                    total_price: price.total
+                });
+                updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                updateAcademicPricingSummary(service);
+            }
+
+            function setAcademicCdCopies(service, type, index, copies, rerender = true) {
+                const fileData = uploadedFiles[service][type][index];
+                if (!fileData.cdType || fileData.cdType === 'none') return;
+
+                const copiesValue = String(copies ?? '').trim();
+                if (!/^[0-9]+$/.test(copiesValue)) {
+                    if (rerender) {
+                        updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                    }
+                    return;
+                }
+
+                fileData.cdCopies = Math.min(999, Math.max(1, numericValue(copiesValue) || 1));
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
+                updateStoredFile(fileData, {
+                    cd_type: fileData.cdType,
+                    cd_copies: fileData.cdCopies,
+                    cd_price: price.cdPrice,
+                    total_price: price.total
+                });
+
+                if (rerender) {
+                    updateFilesList(`${service}${type.charAt(0).toUpperCase() + type.slice(1)}`);
+                } else {
+                    refreshAcademicFilePriceDisplay(service, type, index);
+                }
+                updateAcademicPricingSummary(service);
+            }
+
+            function changeAcademicCdCopies(service, type, index, delta) {
+                const fileData = uploadedFiles[service][type][index];
+                if (!fileData.cdType || fileData.cdType === 'none') return;
+
+                const currentCopies = Math.max(1, numericValue(fileData.cdCopies) || 1);
+                const nextCopies = Math.min(999, Math.max(1, currentCopies + delta));
+                const key = `cd-${service}-${type}-${index}`;
+                const input = document.querySelector(`[data-cd-copies-input="${key}"]`);
+
+                fileData.cdCopies = nextCopies;
+                if (input) input.value = nextCopies;
+
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
+                updateStoredFile(fileData, {
+                    cd_type: fileData.cdType,
+                    cd_copies: fileData.cdCopies,
+                    cd_price: price.cdPrice,
                     total_price: price.total
                 });
                 refreshAcademicFilePriceDisplay(service, type, index);
@@ -2251,7 +2425,7 @@
                     fileData.writingColor = '';
                 }
 
-                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
                 updateStoredFile(fileData, {
                     cover_color: fileData.coverColor || null,
                     writing_color: fileData.writingColor || null,
@@ -2273,7 +2447,7 @@
                 }
 
                 fileData.writingColor = writingColor;
-                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor);
+                const price = calculateAcademicFilePrice(service, fileData.pages, fileData.copies, fileData.writingColor, fileData.cdType, fileData.cdCopies);
                 updateStoredFile(fileData, {
                     cover_color: fileData.coverColor || null,
                     writing_color: fileData.writingColor || null,
@@ -2465,7 +2639,10 @@
                                     universityName: response.university_name || '',
                                     customUniversity: '',
                                     coverColor: response.cover_color || '',
-                                    writingColor: response.writing_color || ''
+                                    writingColor: response.writing_color || '',
+                                    cdType: response.cd_type || 'none',
+                                    cdCopies: Number(response.cd_copies || 0),
+                                    cdPrice: Number(response.cd_price || 0)
                                 });
                                 updateFilesList(configKey);
                                 if (config.service === 'notes' || config.service === 'books' || config.service === 'color_printing') {
@@ -2505,9 +2682,15 @@
                 if (service === 'research') {
                     const researchFile = (payload.files || [])[0] || {};
                     savedResearchRequest.title = researchFile.research_title || researchFile.filename || '';
+                    savedResearchRequest.studentName = researchFile.research_student_name || '';
+                    savedResearchRequest.instructorName = researchFile.research_instructor_name || '';
+                    savedResearchRequest.institutionName = researchFile.university_name || '';
                     savedResearchRequest.pages = Number(researchFile.pages || 0);
                     document.getElementById('researchTitle').value = savedResearchRequest.title;
-                    document.getElementById('researchPages').value = savedResearchRequest.pages || '';
+                    document.getElementById('researchStudentName').value = savedResearchRequest.studentName;
+                    document.getElementById('researchInstructorName').value = savedResearchRequest.instructorName;
+                    document.getElementById('researchInstitutionName').value = savedResearchRequest.institutionName;
+                    document.getElementById('researchPages').value = savedResearchRequest.pages || 1;
                     updateResearchPricingSummary();
                     return;
                 }
@@ -2537,6 +2720,9 @@
                         customUniversity: '',
                         coverColor: file.cover_color || '',
                         writingColor: file.writing_color || '',
+                        cdType: file.cd_type || 'none',
+                        cdCopies: Number(file.cd_copies || 0),
+                        cdPrice: Number(file.cd_price || 0),
                     });
                 });
 

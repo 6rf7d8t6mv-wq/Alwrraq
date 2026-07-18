@@ -23,10 +23,15 @@ class OrderFile extends Model
         'university_name',
         'cover_color',
         'writing_color',
+        'cd_type',
+        'cd_copies',
         'research_title',
+        'research_student_name',
+        'research_instructor_name',
         'binding_type',
         'print_price',
         'binding_price',
+        'cd_price',
         'total_price',
     ];
 
@@ -35,6 +40,7 @@ class OrderFile extends Model
         return [
             'print_price' => 'decimal:2',
             'binding_price' => 'decimal:2',
+            'cd_price' => 'decimal:2',
             'total_price' => 'decimal:2',
         ];
     }

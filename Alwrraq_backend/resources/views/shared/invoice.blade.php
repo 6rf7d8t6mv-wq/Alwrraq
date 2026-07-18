@@ -7,6 +7,7 @@
         'phd' => 'دكتوراه',
         'formatting' => 'تنسيق الرسائل الجامعية',
         'research' => 'إنشاء بحث',
+        'stationery' => 'القرطاسية',
     ];
     $serviceFullNames = [
         'notes' => 'طباعة المذكرات وملفات ال PDF',
@@ -16,6 +17,7 @@
         'phd' => 'طباعة وتجليد رسالة دكتوراه',
         'formatting' => 'تنسيق الرسائل الجامعية',
         'research' => 'إنشاء بحث',
+        'stationery' => 'القرطاسية',
     ];
     $projectNames = [
         'thesis' => 'رسالة ماجستير',
@@ -57,7 +59,7 @@
         'white' => 'أبيض',
         'yellow' => 'أصفر',
     ];
-    $noPrintServices = ['formatting', 'research'];
+    $noPrintServices = ['formatting', 'research', 'stationery'];
     $bindingLabel = match ($order->service_type) {
         'books' => 'التجليد',
         'color_printing' => 'التغليف',
@@ -72,6 +74,7 @@
         'notes' => 'سعر التغليف',
         'formatting' => 'سعر التنسيق',
         'research' => 'سعر إنشاء البحث',
+        'stationery' => 'إجمالي المنتجات',
         default => 'سعر التجليد',
     };
     $paymentMethod = [
@@ -88,6 +91,9 @@
         'madinah_delivery' => 'توصيل داخل المدينة المنورة',
         'redbox_delivery' => 'خارج المدينة المنورة عبر RedBox',
     ];
+    $taxNumber = '٣١٤٤١٧١٦٩٦٠٠٠٠٣';
+    $vatRate = 15;
+    $vatAmount = round(((float) $order->grand_total * $vatRate) / (100 + $vatRate), 2);
 @endphp
 
 <div class="invoice-toolbar">
@@ -99,12 +105,12 @@
         <div class="invoice-brand">
             <div class="invoice-logo"><img src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق"></div>
             <div>
-                <h2>الورّاق</h2>
-                <p>خدمات الطباعة والتجليد</p>
+                <h2>شركة مسير المدينة</h2>
+                <p>فاتورة ضريبية مبسطة</p>
             </div>
         </div>
         <div class="invoice-number">
-            <span>فاتورة</span>
+            <span>فاتورة ضريبية مبسطة</span>
             <strong>#{{ $order->id }}</strong>
             <small>{{ $order->payment_status === 'paid' ? 'مدفوعة' : 'غير مدفوعة' }}</small>
         </div>
@@ -118,7 +124,8 @@
         <div><span>تاريخ الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $order->created_at->format('Y-m-d H:i') }}</strong></div>
         <div><span>حالة الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
         <div><span>طريقة الدفع</span><strong>{{ $paymentMethod }}</strong></div>
-        @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
+        <div><span>الرقم الضريبي</span><strong>{{ $taxNumber }}</strong></div>
+        @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))
             <div class="full"><span>الاستلام والتوصيل</span><strong>
                 {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
                 @if ($order->delivery_method === 'islamic_university_delivery')
@@ -138,10 +145,32 @@
 
     <div class="invoice-section-title">تفاصيل البنود</div>
     <div class="invoice-table-wrap">
+        @if ($order->service_type === 'stationery')
+            <table>
+                <thead><tr><th>المنتج</th><th>الشركة</th><th>النوع</th><th>سعر الوحدة</th><th>الكمية</th><th>الإجمالي</th></tr></thead>
+                <tbody>
+                    @foreach ($order->productItems as $item)
+                        <tr>
+                            <td data-label="المنتج">{{ $item->product_name }}</td>
+                            <td data-label="الشركة">{{ $item->company_name }}</td>
+                            <td data-label="النوع">{{ $item->product_type }}</td>
+                            <td data-label="سعر الوحدة">{{ $item->unit_price }} ريال</td>
+                            <td data-label="الكمية">{{ $item->quantity }}</td>
+                            <td data-label="الإجمالي">{{ $item->total_price }} ريال</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @else
         <table>
             <thead>
                 <tr>
                     <th>البند</th>
+                    @if ($order->service_type === 'research')
+                        <th>اسم الطالب</th>
+                        <th>الدكتور أو الأستاذ</th>
+                        <th>الجهة التعليمية</th>
+                    @endif
                     <th>الصفحات</th>
                     @if ($order->service_type !== 'research')
                         <th>النسخ</th>
@@ -160,6 +189,9 @@
                     @endif
                     @if (in_array($order->service_type, ['thesis', 'phd'], true))
                         <th>الجامعة/المعهد</th>
+                        <th>خيار CD</th>
+                        <th>عدد CD</th>
+                        <th>سعر CD</th>
                     @endif
                     @if (! in_array($order->service_type, $noPrintServices, true))
                         <th>{{ $bindingLabel }}</th>
@@ -174,6 +206,11 @@
                     @php($isAcademicWord = in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word')
                     <tr>
                         <td data-label="البند">{{ $file->original_name }}</td>
+                        @if ($order->service_type === 'research')
+                            <td data-label="اسم الطالب">{{ $file->research_student_name ?: '-' }}</td>
+                            <td data-label="الدكتور أو الأستاذ">{{ $file->research_instructor_name ?: '-' }}</td>
+                            <td data-label="الجهة التعليمية">{{ $file->university_name ?: '-' }}</td>
+                        @endif
                         @if ($isAcademicWord)
                             <td colspan="20" data-label="الاستخدام">ملف Word للعرض فقط، وغير محتسب ضمن الطباعة أو التجليد أو الإجمالي.</td>
                         @else
@@ -195,6 +232,9 @@
                         @endif
                         @if (in_array($order->service_type, ['thesis', 'phd'], true))
                             <td data-label="الجامعة/المعهد">{{ $file->university_name ?: '-' }}</td>
+                            <td data-label="خيار CD">{{ ['none' => 'بدون CD', 'plain' => 'CD بدون طباعة', 'printed' => 'CD مع طباعة'][$file->cd_type ?: 'none'] ?? 'بدون CD' }}</td>
+                            <td data-label="عدد CD">{{ $file->cd_type === 'none' ? 0 : $file->cd_copies }}</td>
+                            <td data-label="سعر CD">{{ $file->cd_price }} ريال</td>
                         @endif
                         @if (! in_array($order->service_type, $noPrintServices, true))
                             <td data-label="{{ $bindingLabel }}">{{ $bindingNames[$file->binding_type] ?? '-' }}</td>
@@ -207,6 +247,7 @@
                 @endforeach
             </tbody>
         </table>
+        @endif
     </div>
 
     <div class="invoice-summary">
@@ -219,15 +260,19 @@
                 <div><span>سعر الطباعة</span><strong>{{ $order->print_total }} ريال</strong></div>
             @endif
             <div><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+            @if (in_array($order->service_type, ['thesis', 'phd'], true))
+                <div><span>سعر CD</span><strong>{{ $order->files->sum('cd_price') }} ريال</strong></div>
+            @endif
             @if ($order->discount_amount > 0)
                 <div><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
             @endif
-            @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
+            @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))
                 <div><span>رسوم التوصيل</span><strong>{{ $order->delivery_fee }} ريال</strong></div>
             @endif
+            <div><span>الضريبة (١٥٪ شاملة)</span><strong>{{ number_format($vatAmount, 2, '.', '') }} ريال</strong></div>
             <div class="grand"><span>الإجمالي المستحق</span><strong>{{ $order->grand_total }} ريال</strong></div>
         </div>
     </div>
 
-    <p class="invoice-note">هذه الفاتورة صادرة إلكترونيًا من منصة الورّاق.</p>
+    <p class="invoice-note">الأسعار والإجمالي تشمل ضريبة القيمة المضافة بنسبة ١٥٪، ولا تضاف الضريبة مرة أخرى على المبلغ المستحق.</p>
 </section>

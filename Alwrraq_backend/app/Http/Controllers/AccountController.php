@@ -26,12 +26,16 @@ class AccountController extends Controller
             'second_name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', 'regex:/^05[0-9]{8}$/', Rule::unique('users', 'phone')->ignore($user->id)],
             'email' => ['nullable', 'email:rfc', 'max:255', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', Rule::unique('users', 'email')->ignore($user->id)],
+            'institution_name' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user->update([
             'name' => trim($data['first_name'] . ' ' . $data['second_name']),
             'phone' => $data['phone'],
             'email' => $data['email'] ?? null,
+            'institution_name' => filled($data['institution_name'] ?? null)
+                ? trim($data['institution_name'])
+                : null,
         ]);
 
         return redirect()->route('account.settings')->with('status', 'تم تحديث بياناتك بنجاح.');

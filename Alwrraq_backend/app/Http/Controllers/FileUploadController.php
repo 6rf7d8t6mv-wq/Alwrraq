@@ -13,10 +13,10 @@ class FileUploadController extends Controller
     {
         try {
             // Validate file exists
-            if (!$request->hasFile('file')) {
+            if (! $request->hasFile('file')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'لم يتم تحديد ملف'
+                    'message' => 'لم يتم تحديد ملف',
                 ], 400);
             }
 
@@ -24,25 +24,25 @@ class FileUploadController extends Controller
             $type = $request->input('type', 'unknown');
             $service = $request->input('service', 'notes');
 
-            if (!in_array($service, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research'], true)) {
+            if (! in_array($service, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research'], true)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'نوع الخدمة غير معروف'
+                    'message' => 'نوع الخدمة غير معروف',
                 ], 400);
             }
 
             if (in_array($service, ['notes', 'books', 'color_printing'], true) && $type !== 'pdf') {
                 return response()->json([
                     'success' => false,
-                    'message' => 'هذه الخدمة تقبل ملفات PDF فقط'
+                    'message' => 'هذه الخدمة تقبل ملفات PDF فقط',
                 ], 400);
             }
 
             // Validate file is not corrupted
-            if (!$file->isValid()) {
+            if (! $file->isValid()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'الملف غير صحيح أو تالف'
+                    'message' => 'الملف غير صحيح أو تالف',
                 ], 400);
             }
 
@@ -56,39 +56,39 @@ class FileUploadController extends Controller
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'نوع الملف غير معروف'
+                    'message' => 'نوع الملف غير معروف',
                 ], 400);
             }
 
             // Check MIME type
-            if (!in_array($file->getMimeType(), $allowedMimes)) {
+            if (! in_array($file->getMimeType(), $allowedMimes)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'صيغة الملف غير مدعومة'
+                    'message' => 'صيغة الملف غير مدعومة',
                 ], 400);
             }
 
             // Check file extension
             $extension = strtolower($file->getClientOriginalExtension());
-            if (!in_array($extension, $allowedExtensions)) {
+            if (! in_array($extension, $allowedExtensions)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'صيغة الملف غير صحيحة'
+                    'message' => 'صيغة الملف غير صحيحة',
                 ], 400);
             }
 
             // Create storage path if it doesn't exist
-            $storagePath = 'uploads/' . $type . 's';
-            $fullPath = storage_path('app/' . $storagePath);
-            
-            if (!is_dir($fullPath)) {
+            $storagePath = 'uploads/'.$type.'s';
+            $fullPath = storage_path('app/'.$storagePath);
+
+            if (! is_dir($fullPath)) {
                 mkdir($fullPath, 0777, true);
             }
 
             // Generate unique filename
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $timestamp = now()->timestamp;
-            $filename = $originalName . '_' . $timestamp . '.' . $extension;
+            $filename = $originalName.'_'.$timestamp.'.'.$extension;
             $fileSize = filesize($file->getRealPath()) ?: 0;
 
             // Count pages
@@ -104,10 +104,10 @@ class FileUploadController extends Controller
             }
 
             // Store file in storage/app/uploads/
-            $fullStoragePath = storage_path('app/' . $storagePath);
+            $fullStoragePath = storage_path('app/'.$storagePath);
             $file->move($fullStoragePath, $filename);
-            
-            $path = $storagePath . '/' . $filename;
+
+            $path = $storagePath.'/'.$filename;
 
             $order = Order::query()->firstOrCreate([
                 'user_id' => Auth::id(),
@@ -139,9 +139,12 @@ class FileUploadController extends Controller
                 'university_name' => null,
                 'cover_color' => null,
                 'writing_color' => null,
+                'cd_type' => 'none',
+                'cd_copies' => 0,
                 'binding_type' => $service === 'books' ? 'normal' : null,
                 'print_price' => 0,
                 'binding_price' => 0,
+                'cd_price' => 0,
                 'total_price' => 0,
             ];
 
@@ -160,7 +163,9 @@ class FileUploadController extends Controller
                 $orderFile->file_type,
                 $orderFile->paper_color,
                 $orderFile->page_size,
-                $orderFile->print_sides
+                $orderFile->print_sides,
+                $orderFile->cd_type,
+                $orderFile->cd_copies
             );
 
             $orderFile->fill($prices)->save();
@@ -184,22 +189,26 @@ class FileUploadController extends Controller
                     'university_name' => $orderFile->university_name,
                     'cover_color' => $orderFile->cover_color,
                     'writing_color' => $orderFile->writing_color,
+                    'cd_type' => $orderFile->cd_type,
+                    'cd_copies' => $orderFile->cd_copies,
                     'print_price' => $orderFile->print_price,
                     'binding_price' => $orderFile->binding_price,
+                    'cd_price' => $orderFile->cd_price,
                     'total_price' => $orderFile->total_price,
                 ]);
             } else {
                 return response()->json([
                     'success' => false,
-                    'message' => 'فشل حفظ الملف'
+                    'message' => 'فشل حفظ الملف',
                 ], 500);
             }
 
         } catch (\Exception $e) {
-            \Log::error('Upload error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            \Log::error('Upload error: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json([
                 'success' => false,
-                'message' => 'حدث خطأ: ' . $e->getMessage()
+                'message' => 'حدث خطأ: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -218,6 +227,8 @@ class FileUploadController extends Controller
             'university_name' => ['nullable', 'string', 'max:255'],
             'cover_color' => ['nullable', 'in:black,light_blue,navy,dark_green,light_green,burgundy,beige,white'],
             'writing_color' => ['nullable', 'in:gold,black'],
+            'cd_type' => ['nullable', 'in:none,plain,printed'],
+            'cd_copies' => ['nullable', 'integer', 'min:0', 'max:999'],
         ]);
 
         if (array_key_exists('binding_type', $data)) {
@@ -257,10 +268,29 @@ class FileUploadController extends Controller
             $file->writing_color = $data['writing_color'];
         }
 
+        if (in_array($file->order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'pdf') {
+            if (array_key_exists('cd_type', $data)) {
+                $file->cd_type = $data['cd_type'] ?: 'none';
+            }
+
+            if (array_key_exists('cd_copies', $data)) {
+                $file->cd_copies = (int) $data['cd_copies'];
+            }
+
+            if ($file->cd_type === 'none') {
+                $file->cd_copies = 0;
+            } else {
+                $file->cd_copies = max(1, (int) $file->cd_copies);
+            }
+        } else {
+            $file->cd_type = 'none';
+            $file->cd_copies = 0;
+        }
+
         if (
             in_array($file->order->service_type, ['thesis', 'phd'], true)
             && $file->writing_color === 'black'
-            && !in_array($file->cover_color, ['beige', 'light_blue', 'light_green', 'white'], true)
+            && ! in_array($file->cover_color, ['beige', 'light_blue', 'light_green', 'white'], true)
         ) {
             return response()->json([
                 'success' => false,
@@ -277,7 +307,9 @@ class FileUploadController extends Controller
             $file->file_type,
             $file->paper_color,
             $file->page_size,
-            $file->print_sides
+            $file->print_sides,
+            $file->cd_type,
+            $file->cd_copies
         );
 
         $file->fill($prices)->save();
@@ -295,6 +327,9 @@ class FileUploadController extends Controller
             'paper_color' => $file->paper_color,
             'cover_color' => $file->cover_color,
             'writing_color' => $file->writing_color,
+            'cd_type' => $file->cd_type,
+            'cd_copies' => $file->cd_copies,
+            'cd_price' => $file->cd_price,
             'order_totals' => $this->orderTotalsPayload($file->order->fresh()),
         ]);
     }
@@ -303,6 +338,9 @@ class FileUploadController extends Controller
     {
         $data = $request->validate([
             'research_title' => ['required', 'string', 'max:255'],
+            'research_student_name' => ['required', 'string', 'max:255'],
+            'research_instructor_name' => ['required', 'string', 'max:255'],
+            'university_name' => ['required', 'string', 'max:255'],
             'pages' => ['required', 'integer', 'min:1', 'max:9999'],
         ]);
 
@@ -329,15 +367,17 @@ class FileUploadController extends Controller
         $payload = [
             'file_type' => 'research',
             'original_name' => $researchTitle,
-            'stored_name' => 'research-request-' . $order->id,
+            'stored_name' => 'research-request-'.$order->id,
             'path' => 'research-request',
             'size' => 0,
             'pages' => $pages,
             'copies' => 1,
             'print_sides' => 'two_sides',
             'thesis_project_type' => null,
-            'university_name' => null,
+            'university_name' => trim($data['university_name']),
             'research_title' => $researchTitle,
+            'research_student_name' => trim($data['research_student_name']),
+            'research_instructor_name' => trim($data['research_instructor_name']),
             'binding_type' => null,
             ...$prices,
         ];
@@ -356,6 +396,9 @@ class FileUploadController extends Controller
             'file_id' => $orderFile->id,
             'order_id' => $order->id,
             'research_title' => $orderFile->research_title,
+            'research_student_name' => $orderFile->research_student_name,
+            'research_instructor_name' => $orderFile->research_instructor_name,
+            'university_name' => $orderFile->university_name,
             'pages' => $orderFile->pages,
             'print_price' => $orderFile->print_price,
             'binding_price' => $orderFile->binding_price,
@@ -383,7 +426,7 @@ class FileUploadController extends Controller
             ]);
         }
 
-        $absolutePath = storage_path('app/' . $file->path);
+        $absolutePath = storage_path('app/'.$file->path);
 
         $file->delete();
 
@@ -399,7 +442,7 @@ class FileUploadController extends Controller
             $this->refreshOrderTotals($order);
         }
 
-        if (!request()->expectsJson()) {
+        if (! request()->expectsJson()) {
             return back()->with(
                 'status',
                 $orderDeleted
@@ -436,7 +479,7 @@ class FileUploadController extends Controller
     {
         try {
             // DOCX is a ZIP file
-            $zip = new \ZipArchive();
+            $zip = new \ZipArchive;
             if ($zip->open($filePath) !== true) {
                 return 1;
             }
@@ -452,19 +495,29 @@ class FileUploadController extends Controller
             // Count paragraphs as approximation
             $paragraphs = substr_count($docXml, '<w:p>');
             $pageCount = max(1, ceil($paragraphs / 30));
-            
+
             return $pageCount;
         } catch (\Exception $e) {
             return 1;
         }
     }
 
-    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null, ?string $printSides = null): array
+    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null, ?string $printSides = null, ?string $cdType = 'none', int $cdCopies = 0): array
     {
+        $cdCount = $cdType === 'none' ? 0 : max(1, $cdCopies);
+        $cdPrice = in_array($service, ['thesis', 'phd'], true) && $fileType === 'pdf'
+            ? match ($cdType) {
+                'plain' => 5 * $cdCount,
+                'printed' => 10 * $cdCount,
+                default => 0,
+            }
+        : 0;
+
         if (in_array($service, ['thesis', 'phd'], true) && $fileType === 'word') {
             return [
                 'print_price' => 0,
                 'binding_price' => 0,
+                'cd_price' => 0,
                 'total_price' => 0,
             ];
         }
@@ -475,6 +528,7 @@ class FileUploadController extends Controller
             return [
                 'print_price' => 0,
                 'binding_price' => $servicePrice,
+                'cd_price' => 0,
                 'total_price' => $servicePrice,
             ];
         }
@@ -493,6 +547,7 @@ class FileUploadController extends Controller
             return [
                 'print_price' => $printPrice,
                 'binding_price' => $bindingPrice,
+                'cd_price' => 0,
                 'total_price' => $printPrice + $bindingPrice,
             ];
         }
@@ -510,6 +565,7 @@ class FileUploadController extends Controller
                 return [
                     'print_price' => $printPrice,
                     'binding_price' => $bindingPrice,
+                    'cd_price' => 0,
                     'total_price' => $printPrice + $bindingPrice,
                 ];
             }
@@ -522,17 +578,19 @@ class FileUploadController extends Controller
             return [
                 'print_price' => $printPrice,
                 'binding_price' => $bindingPrice,
+                'cd_price' => 0,
                 'total_price' => $printPrice + $bindingPrice,
             ];
         }
 
         $copyCount = max(1, $copies);
         $printPrice = $this->printPrice($pages, $copyCount);
-        if (!in_array($writingColor, ['gold', 'black'], true)) {
+        if (! in_array($writingColor, ['gold', 'black'], true)) {
             return [
                 'print_price' => $printPrice,
                 'binding_price' => 0,
-                'total_price' => $printPrice,
+                'cd_price' => $cdPrice,
+                'total_price' => $printPrice + $cdPrice,
             ];
         }
 
@@ -543,7 +601,8 @@ class FileUploadController extends Controller
         return [
             'print_price' => $printPrice,
             'binding_price' => $bindingPrice,
-            'total_price' => $printPrice + $bindingPrice,
+            'cd_price' => $cdPrice,
+            'total_price' => $printPrice + $bindingPrice + $cdPrice,
         ];
     }
 
@@ -602,7 +661,7 @@ class FileUploadController extends Controller
     {
         $order->load('files');
         $printTotal = 0;
-        if (!in_array($order->service_type, ['formatting', 'research'], true)) {
+        if (! in_array($order->service_type, ['formatting', 'research'], true)) {
             if (in_array($order->service_type, ['notes', 'books'], true)) {
                 $printTotal = $this->printProductPrintTotal($order);
             } elseif ($order->service_type === 'color_printing') {
@@ -619,7 +678,8 @@ class FileUploadController extends Controller
             ? $order->files->where('file_type', 'pdf')
             : $order->files;
         $bindingTotal = (float) $filesForBinding->sum('binding_price');
-        $baseTotal = $printTotal + $bindingTotal;
+        $cdTotal = (float) $order->files->sum('cd_price');
+        $baseTotal = $printTotal + $bindingTotal + $cdTotal;
         $discountAmount = min((float) $order->discount_amount, $baseTotal);
         $subtotal = max(0, $baseTotal - $discountAmount);
         $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
@@ -669,6 +729,7 @@ class FileUploadController extends Controller
         return [
             'print_total' => $order->print_total,
             'binding_total' => $order->binding_total,
+            'cd_total' => (float) $order->files()->sum('cd_price'),
             'delivery_fee' => $order->delivery_fee,
             'grand_total' => $order->grand_total,
         ];

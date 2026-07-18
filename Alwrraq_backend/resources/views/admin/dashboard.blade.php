@@ -12,6 +12,7 @@
             'phd' => 'دكتوراه',
             'formatting' => 'تنسيق الرسائل الجامعية',
             'research' => 'إنشاء بحث',
+            'stationery' => 'القرطاسية',
         ];
         $latestOrders = $orders->take(6);
         $paidPercent = $stats['orders'] > 0 ? round(($stats['paid_orders'] / $stats['orders']) * 100) : 0;
@@ -19,7 +20,7 @@
     @endphp
 
     <style>
-        .dashboard-hero { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(260px, 0.7fr); gap: 16px; margin-bottom: 18px; }
+        .dashboard-hero { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; margin-bottom: 18px; }
         .dashboard-welcome { position: relative; overflow: hidden; min-height: 170px; padding: clamp(18px, 3vw, 26px); border-radius: 12px; background: #0f172a; color: #ffffff; box-shadow: 0 20px 42px rgba(15, 23, 42, 0.18); }
         .dashboard-welcome h1 { color: #ffffff; margin-bottom: 8px; }
         .dashboard-welcome p { max-width: 680px; color: #cbd5e1; line-height: 1.8; margin: 0; }
@@ -75,19 +76,55 @@
             .dashboard-table-wrap td:last-child { border-bottom: 0; }
             .dashboard-table-wrap td::before { content: attr(data-label); color: #64748b; font-size: 12px; font-weight: 900; }
         }
-        @media (max-width: 560px) {
-            .dashboard-stat-grid { grid-template-columns: 1fr; }
+        @media (max-width: 980px) {
+            .dashboard-hero { gap: 7px; margin-bottom: 10px; }
+            .dashboard-welcome { min-height: 0; padding: 10px; border-radius: 10px; }
+            .dashboard-welcome h1 { margin: 0; font-size: 18px; }
+            .dashboard-meta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; margin-top: 8px; }
+            .dashboard-pill { min-width: 0; justify-content: center; padding: 5px 4px; border-radius: 7px; font-size: 8px; line-height: 1.2; white-space: nowrap; overflow: hidden; }
+            .dashboard-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+            .dashboard-action { min-width: 0; min-height: 42px; padding: 6px; border-radius: 8px; align-items: center; justify-content: center; gap: 2px; flex-direction: column; text-align: center; }
+            .dashboard-action strong { font-size: 10px; line-height: 1.2; }
+            .dashboard-action span { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; font-size: 7.5px; line-height: 1.2; }
+            .dashboard-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+            .dashboard-stat { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-width: 0; min-height: 42px; padding: 6px 7px; border-radius: 8px; }
+            .dashboard-stat span { min-width: 0; margin: 0; font-size: 9px; line-height: 1.25; }
+            .dashboard-stat strong { flex: 0 0 auto; font-size: 12px; line-height: 1.2; text-align: left; }
+            .dashboard-stat small { display: none; }
+            .discount-panel { margin: 0 0 10px; padding: 8px; border-radius: 9px; }
+            .discount-panel h2 { margin: 0 0 6px; font-size: 13px; }
+            .discount-form { grid-template-columns: minmax(0, 1fr) 68px auto; gap: 5px; align-items: end; }
+            .discount-form label { margin-bottom: 3px; font-size: 8px; }
+            .discount-form input { min-width: 0; padding: 5px 6px; border-radius: 6px; font-size: 16px; line-height: 1.1; }
+            .discount-submit { min-height: 29px; padding: 5px 8px; border-radius: 6px; font-size: 9px; white-space: nowrap; }
+            .discount-codes-list { gap: 4px; margin-top: 6px; }
+            .discount-chip { gap: 4px; padding: 4px 5px; font-size: 8px; }
+            .discount-delete { width: 18px; height: 18px; font-size: 10px; }
+            .dashboard-grid { gap: 9px; }
+            .dashboard-grid .panel { padding: 10px; }
+            .dashboard-grid .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+            .dashboard-grid .stat { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-width: 0; padding: 7px; border-radius: 8px; }
+            .dashboard-grid .stat span { min-width: 0; margin: 0; font-size: 8.5px; line-height: 1.25; }
+            .dashboard-grid .stat strong { flex: 0 0 auto; font-size: 11px; text-align: left; }
+            .dashboard-table-wrap tbody { gap: 6px; }
+            .dashboard-table-wrap tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; padding: 6px; border-radius: 9px; box-shadow: 0 6px 14px rgba(15, 23, 42, 0.05); }
+            .dashboard-table-wrap td,
+            .dashboard-table-wrap td:last-child { display: flex; align-items: center; justify-content: space-between; gap: 3px; min-width: 0; min-height: 36px; padding: 5px 6px; border: 1px solid #edf2f7; border-radius: 7px; background: #f8fafc; font-size: 8px; line-height: 1.2; overflow: hidden; }
+            .dashboard-table-wrap td::before { flex: 0 1 43%; min-width: 0; font-size: 7.5px; line-height: 1.2; white-space: nowrap; word-break: normal; }
+            .dashboard-order-value { display: -webkit-box; flex: 0 1 57%; min-width: 0; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; text-align: left; word-break: normal; overflow-wrap: normal; }
+            .dashboard-order-value .muted { font-size: 7px; line-height: 1.15; }
+            .dashboard-order-value .badge { padding: 2px 4px; font-size: 7px; white-space: nowrap; }
+            .dashboard-order-value .order-id { padding: 2px 4px; border-radius: 5px; font-size: 8px; }
             .status-row { grid-template-columns: 78px minmax(0, 1fr) 38px; }
-            .dashboard-action { align-items: flex-start; flex-direction: column; }
-            .dashboard-section-title { align-items: stretch; flex-direction: column; }
-            .dashboard-link { width: 100%; }
+            .dashboard-section-title { align-items: center; flex-direction: row; margin-bottom: 6px; }
+            .dashboard-section-title h2 { font-size: 13px; }
+            .dashboard-link { width: auto; padding: 5px 7px; border-radius: 6px; font-size: 8px; }
         }
     </style>
 
     <div class="dashboard-hero">
         <section class="dashboard-welcome">
             <h1>الرئيسية</h1>
-            <p>لوحة متابعة مختصرة لنشاط النظام، الطلبات الجديدة، المدفوعات، والإيرادات. نفس الصفحة تظهر للمدير والمستخدمين بنفس الهوية والترتيب.</p>
             <div class="dashboard-meta">
                 <span class="dashboard-pill">👤 {{ auth()->user()->name }}</span>
                 <span class="dashboard-pill">🧾 {{ $stats['orders'] }} طلب</span>
@@ -95,26 +132,6 @@
             </div>
         </section>
 
-        <section class="dashboard-actions">
-            @if (auth()->user()->hasAdminPermission('orders_view'))
-                <a class="dashboard-action" href="{{ route('admin.orders') }}">
-                    <strong>الطلبات</strong>
-                    <span>متابعة الطلبات والملفات</span>
-                </a>
-            @endif
-            @if (auth()->user()->hasAnyAdminPermission(['users_view', 'users_create', 'users_update', 'users_delete', 'users_permissions_manage']))
-                <a class="dashboard-action" href="{{ route('admin.users') }}">
-                    <strong>المستخدمين</strong>
-                    <span>إدارة الموظفين والصلاحيات</span>
-                </a>
-            @endif
-            @if (auth()->user()->hasAnyAdminPermission(['customers_view', 'customers_create', 'customers_update', 'customers_delete']))
-                <a class="dashboard-action" href="{{ route('admin.customers') }}">
-                    <strong>العملاء</strong>
-                    <span>إدارة حسابات العملاء</span>
-                </a>
-            @endif
-        </section>
     </div>
 
     @if (auth()->user()->hasAdminPermission('discounts_apply'))
@@ -193,12 +210,12 @@
                                         : (in_array($order->status, ['completed', 'finished'], true) ? 'بانتظار الدفع' : $order->status);
                                 @endphp
                                 <tr>
-                                    <td data-label="رقم الطلب"><span class="order-id">#{{ $order->id }}</span></td>
-                                    <td data-label="العميل">{{ $order->user->name }}<br><span class="muted">{{ $order->user->phone }}</span></td>
-                                    <td data-label="الخدمة">{{ $serviceNames[$order->service_type] ?? $order->service_type }}</td>
-                                    <td data-label="الحالة"><span class="badge">{{ $displayStatus }}</span></td>
-                                    <td data-label="الدفع"><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span></td>
-                                    <td data-label="الإجمالي"><strong>{{ $order->grand_total }} ريال</strong></td>
+                                    <td data-label="رقم الطلب"><span class="dashboard-order-value"><span class="order-id">#{{ $order->id }}</span></span></td>
+                                    <td data-label="العميل"><span class="dashboard-order-value">{{ $order->user->name }}<br><span class="muted">{{ $order->user->phone }}</span></span></td>
+                                    <td data-label="الخدمة"><span class="dashboard-order-value">{{ $serviceNames[$order->service_type] ?? $order->service_type }}</span></td>
+                                    <td data-label="الحالة"><span class="dashboard-order-value"><span class="badge">{{ $displayStatus }}</span></span></td>
+                                    <td data-label="الدفع"><span class="dashboard-order-value"><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span></span></td>
+                                    <td data-label="الإجمالي"><span class="dashboard-order-value"><strong>{{ $order->grand_total }} ريال</strong></span></td>
                                 </tr>
                             @endforeach
                         </tbody>
@@ -225,7 +242,9 @@
             </div>
             <div class="stats" style="margin-top: 16px;">
                 <div class="stat"><span>إجمالي الطباعة</span><strong>{{ $stats['print_total'] }} ريال</strong></div>
-                <div class="stat"><span>إجمالي التجليد/التغليف/التنسيق</span><strong>{{ $stats['binding_total'] }} ريال</strong></div>
+                @foreach ($serviceNames as $serviceType => $serviceName)
+                    <div class="stat"><span>{{ $serviceName }}</span><strong>{{ $stats['service_totals'][$serviceType] ?? 0 }} ريال</strong></div>
+                @endforeach
                 <div class="stat"><span>غير مدفوع</span><strong>{{ $stats['unpaid_orders'] }}</strong></div>
             </div>
         </section>

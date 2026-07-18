@@ -3,17 +3,16 @@
 @section('title', 'المستخدمين - لوحة المدير')
 
 @section('content')
-    <div class="page-title">
+    <div class="page-title compact-page-title">
         <div>
             <h1>المستخدمين</h1>
-            <p class="subtitle">إدارة المستخدمين الذين يعملون على الطلبات داخل لوحة النظام.</p>
         </div>
         @if (auth()->user()->hasAdminPermission('users_create'))
             <button class="save" type="button" onclick="openAdminModal('إضافة مستخدم', 'create-admin-template')">إضافة مستخدم</button>
         @endif
     </div>
 
-    <div class="panel">
+    <div class="panel compact-management-panel">
         <form class="search-form auto-search-form" method="get" action="{{ route('admin.users') }}" style="margin-bottom: 14px;">
             <div style="flex: 1;">
                 <label>بحث باسم المستخدم أو رقم الجوال</label>
@@ -50,13 +49,15 @@
                             <td data-label="البريد">{{ $user->email ?: '-' }}</td>
                             <td data-label="الطلبات">{{ $user->orders_count }}</td>
                             <td data-label="الحالة">
-                                <span class="badge">{{ $user->is_active ? 'نشط' : 'موقوف' }}</span>
-                                @if ($user->login_blocked)
-                                    <span class="badge">ممنوع الدخول</span>
-                                @endif
-                                @if ($user->account_verified_at)
-                                    <span class="badge">موثق</span>
-                                @endif
+                                <div class="compact-badges">
+                                    <span class="badge">{{ $user->is_active ? 'نشط' : 'موقوف' }}</span>
+                                    @if ($user->login_blocked)
+                                        <span class="badge">ممنوع الدخول</span>
+                                    @endif
+                                    @if ($user->account_verified_at)
+                                        <span class="badge">موثق</span>
+                                    @endif
+                                </div>
                             </td>
                             <td data-label="الصلاحية"><span class="badge">مستخدم إداري</span></td>
                             <td data-label="الإجراءات">

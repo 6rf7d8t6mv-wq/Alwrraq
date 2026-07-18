@@ -11,9 +11,12 @@
         body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
         .layout { min-height: 100vh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
         aside { background: #0f172a; color: #f8fafc; padding: clamp(16px, 2vw, 24px) clamp(12px, 1.6vw, 18px); position: sticky; top: 0; height: 100vh; overflow-y: auto; box-shadow: -10px 0 30px rgba(15, 23, 42, 0.15); }
+        .admin-header-brand { display: block; }
         .brand { font-size: clamp(18px, 2vw, 24px); font-weight: 700; letter-spacing: 0.02em; overflow-wrap: anywhere; margin-bottom: 4px; }
         .brand-logo { width: 46px; height: 46px; border-radius: 14px; object-fit: cover; background: #ffffff; border: 1px solid rgba(255,255,255,0.18); box-shadow: 0 12px 26px rgba(0,0,0,0.18); margin-bottom: 10px; display: block; }
         .admin-name { color: #cbd5e1; font-size: clamp(12px, 1.15vw, 14px); margin: 0 0 24px; line-height: 1.6; }
+        .admin-name strong, .admin-name small { display: block; }
+        .admin-name small { color: #94a3b8; font-size: 10px; font-weight: 800; }
         nav { display: flex; flex-direction: column; align-items: stretch; gap: clamp(8px, 1.2vw, 12px); }
         nav a, .logout { display: flex; align-items: center; gap: 8px; width: 100%; color: #f8fafc; text-decoration: none; border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 10px; padding: 9px 10px; background: rgba(255, 255, 255, 0.055); text-align: right; font: inherit; font-size: clamp(12px, 1.15vw, 14px); font-weight: 800; line-height: 1.45; cursor: pointer; box-sizing: border-box; white-space: normal; transition: background 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease; }
         nav a { position: relative; }
@@ -163,7 +166,7 @@
         .invoice-totals .grand span { color: #cbd5e1; }
         .invoice-totals .grand strong { font-size: 22px; }
         .invoice-note { margin-top: 16px; color: #64748b; font-size: 12px; text-align: center; }
-        .modal-backdrop { position: fixed; inset: 0; display: none; place-items: center; padding: clamp(10px, 3vw, 20px); background: rgba(15, 23, 42, 0.55); z-index: 40; overflow-y: auto; }
+        .modal-backdrop { position: fixed; inset: 0; display: none; place-items: center; padding: clamp(10px, 3vw, 20px); background: rgba(15, 23, 42, 0.55); z-index: 200; overflow-y: auto; }
         .modal-backdrop.active { display: grid; }
         .modal { width: min(1120px, 100%); max-height: calc(100vh - 20px); background: #ffffff; border-radius: 12px; box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28); overflow: hidden; display: flex; flex-direction: column; }
         .modal-head { padding: 18px 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
@@ -171,18 +174,45 @@
         .modal-body { padding: clamp(14px, 3vw, 20px); overflow-y: auto; }
         .modal-close { border: 0; background: #f1f5f9; border-radius: 8px; padding: 7px 10px; cursor: pointer; font-weight: 800; }
         .full { grid-column: 1 / -1; }
+        .compact-page-title { align-items: center; margin-bottom: 9px; }
+        .compact-page-title h1 { font-size: 22px; }
+        .compact-page-title > .save { width: auto; min-height: 31px; margin: 0; padding: 6px 9px; font-size: 10px; }
+        .compact-management-panel, .compact-settings-panel { padding: 11px; margin-bottom: 9px; }
+        .compact-management-panel .search-form { margin-bottom: 8px !important; gap: 6px; }
+        .compact-management-panel .search-form label { margin-bottom: 3px; font-size: 9px; }
+        .compact-management-panel .search-form input { padding: 7px 8px; }
+        .compact-management-panel .search-form .save,
+        .compact-management-panel .search-form .ghost { width: auto; min-height: 31px; margin: 0; padding: 6px 9px; font-size: 9px; }
+        .compact-management-panel .management-table th,
+        .compact-management-panel .management-table td { padding: 7px; font-size: 10px; }
+        .management-product-image { width: 44px; height: 44px; object-fit: cover; border-radius: 7px; border: 1px solid #e2e8f0; }
+        .compact-settings-panel .form-section { margin-top: 8px; padding-top: 8px; }
+        .compact-settings-panel .form-section-title { margin-bottom: 6px; font-size: 13px; }
+        .compact-settings-panel .form-note { margin-bottom: 6px; font-size: 9px; line-height: 1.4; }
+        .compact-settings-panel .form-grid { gap: 6px; }
+        .compact-settings-panel label { margin-bottom: 3px; font-size: 9px; }
+        .compact-settings-panel input { padding: 7px; }
+        .compact-settings-panel .save,
+        .compact-settings-panel .danger,
+        .compact-settings-panel .ghost { width: auto; min-height: 30px; margin-top: 6px; padding: 6px 9px; font-size: 9px; }
         @media (max-width: 980px) {
             :root { --sidebar-width: 0px; --page-gap: 10px; }
-            .layout { grid-template-columns: minmax(0, 1fr); }
-            aside { position: sticky; top: 0; height: auto; max-height: none; padding: 8px 10px; z-index: 30; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16); display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
-            .brand-logo { width: 34px; height: 34px; border-radius: 10px; margin: 0; }
-            .brand { margin: 0; font-size: 17px; line-height: 1.2; white-space: nowrap; }
-            .admin-name { grid-column: 1 / -1; display: none; margin: 0 0 2px; }
-            .mobile-menu-toggle { display: inline-flex; min-width: 96px; padding: 7px 14px; border-radius: 8px; font-size: 12px; line-height: 1.2; white-space: nowrap; background: #22c55e; border-color: #86efac; color: #052e16; }
-            .mobile-menu-toggle:hover { background: #4ade80; }
-            nav { grid-column: 1 / -1; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            aside.menu-open .admin-name { display: block; }
-            aside.menu-open nav { display: grid; }
+            .layout { display: block; padding-top: 88px; }
+            aside { position: fixed; top: 0; right: 0; left: 0; width: 100%; height: auto; max-height: none; overflow: visible; padding: 6px 8px; z-index: 100; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: center; gap: 5px; direction: rtl; }
+            .admin-header-brand { grid-column: 1; display: flex; align-items: center; justify-self: start; gap: 6px; }
+            .brand-logo { width: 30px; height: 30px; border-radius: 8px; margin: 0; }
+            .brand { margin: 0; font-size: 15px; line-height: 1.1; white-space: nowrap; }
+            .admin-name { grid-column: 2; display: grid; justify-self: end; gap: 0; margin: 0; text-align: left; }
+            .admin-name strong { max-width: 150px; overflow: hidden; font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
+            .admin-name small { font-size: 8px; line-height: 1.2; }
+            .mobile-menu-toggle { display: none; }
+            nav { grid-column: 1 / -1; width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; align-items: stretch; }
+            nav > a, nav > form, nav > .language-switcher-form { width: 100%; min-width: 0; margin: 0; }
+            nav a, .logout, nav .language-switcher-button { width: 100%; min-width: 0; min-height: 27px; margin: 0; padding: 3px 1px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 6.5px; line-height: 1.05; text-align: center; white-space: nowrap; overflow: hidden; }
+            nav .nav-icon { flex: 0 0 auto; width: auto; height: auto; border-radius: 0; background: transparent; font-size: 10px; line-height: 1; }
+            nav .nav-text { width: 100%; min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            nav .nav-notice-dot { top: 2px; left: 3px; width: 5px; height: 5px; }
+            nav a:hover, nav a.active, .logout:hover { transform: none; box-shadow: none; }
             main { padding: 14px 10px 24px; }
             .stats, .forms-grid, .form-grid, .permissions-grid { grid-template-columns: 1fr; }
             .toolbar, .search-form { align-items: stretch; flex-direction: column; }
@@ -228,7 +258,6 @@
         @media (max-width: 560px) {
             .page-title { align-items: stretch; flex-direction: column; }
             .panel { padding: 14px; }
-            nav { grid-template-columns: 1fr; }
             .order-filter-bar { gap: 7px; }
             .order-filter-button { min-height: 50px; font-size: 11px; padding: 8px 5px; }
             .management-table td { grid-template-columns: minmax(82px, 34%) minmax(0, 1fr); }
@@ -236,6 +265,80 @@
             .modal { max-height: calc(100vh - 16px); border-radius: 10px; }
             .modal-head { padding: 12px 14px; }
             .modal-body { padding: 12px; }
+        }
+        @media (max-width: 560px) {
+            .layout { padding-top: 82px; }
+            aside { padding: 5px 6px; gap: 4px; }
+            .admin-header-brand { gap: 5px; }
+            .brand-logo { width: 27px; height: 27px; border-radius: 7px; }
+            .brand { font-size: 13px; }
+            .admin-name strong { max-width: 130px; font-size: 9px; }
+            .admin-name small { font-size: 7px; }
+            nav { gap: 2px; }
+            nav a, .logout, nav .language-switcher-button { min-height: 24px; padding: 2px 1px; border-radius: 5px; font-size: 6px; }
+            nav .nav-icon { font-size: 9px; }
+            main { padding: 10px 6px 18px; }
+            .page-title { margin-bottom: 9px; }
+            h1 { font-size: 18px; }
+            .panel { padding: 8px; }
+            .management-table tbody { gap: 7px; }
+            .management-table tr { gap: 5px; padding: 7px; border-radius: 8px; }
+            .management-table td { grid-template-columns: minmax(72px, 33%) minmax(0, 1fr); gap: 5px; font-size: 9px; }
+            .management-table td::before { font-size: 8px; }
+            .modal-backdrop { padding: 4px; }
+            .modal { width: 100%; max-height: calc(100dvh - 8px); border-radius: 8px; }
+            .modal-head { padding: 8px 9px; }
+            .modal-head h2 { font-size: 13px; }
+            .modal-close { padding: 5px 7px; font-size: 9px; }
+            .modal-body { padding: 5px; }
+        }
+        @media (max-width: 980px) {
+            .compact-page-title { align-items: center; flex-direction: row; gap: 6px; margin-bottom: 6px; }
+            .compact-page-title h1 { font-size: 18px; }
+            .compact-page-title > .save { flex: 0 0 auto; min-height: 27px; padding: 5px 7px; font-size: 8px; }
+            .compact-management-panel, .compact-settings-panel { padding: 6px; margin-bottom: 6px; }
+            .compact-management-panel .search-form { flex-direction: row; align-items: end; gap: 4px; margin-bottom: 5px !important; }
+            .compact-management-panel .search-form label { font-size: 7px; }
+            .compact-management-panel .search-form input { min-width: 0; padding: 6px; font-size: 16px; }
+            .compact-management-panel .search-form .save,
+            .compact-management-panel .search-form .ghost { width: auto; min-width: 42px; min-height: 28px; padding: 5px 6px; font-size: 8px; }
+            .compact-management-panel .management-table tbody { gap: 5px; }
+            .compact-management-panel .management-table tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 5px; border-radius: 8px; }
+            .compact-management-panel .management-table td,
+            .compact-management-panel .management-table td:last-child { display: flex; grid-template-columns: none; align-items: center; justify-content: space-between; gap: 3px; min-width: 0; min-height: 34px; width: auto; padding: 4px 5px; border: 1px solid #edf2f7; border-radius: 6px; background: #f8fafc; font-size: 7.5px; line-height: 1.2; overflow: hidden; word-break: normal; overflow-wrap: normal; }
+            .compact-management-panel .management-table td::before { flex: 0 0 auto; font-size: 6.5px; line-height: 1.15; white-space: nowrap; word-break: normal; }
+            .compact-management-panel .management-table td:last-child { grid-column: 1 / -1; min-height: 31px; }
+            .compact-management-panel .identity { min-width: 0; gap: 3px; overflow: hidden; }
+            .compact-management-panel .identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .compact-management-panel .id-badge { flex: 0 0 auto; margin: 0; padding: 2px 3px; font-size: 6px; }
+            .compact-management-panel .badge { padding: 2px 4px; font-size: 6.5px; white-space: nowrap; }
+            .compact-management-panel .compact-badges { display: flex; align-items: center; justify-content: flex-end; gap: 2px; min-width: 0; flex-wrap: wrap; }
+            .compact-management-panel .actions { width: auto; gap: 3px; flex-wrap: nowrap; }
+            .compact-management-panel .actions form { margin: 0; }
+            .compact-management-panel .actions .ghost,
+            .compact-management-panel .actions .danger { width: auto; min-width: 38px; min-height: 24px; margin: 0; padding: 4px 5px; font-size: 7px; white-space: nowrap; }
+            .management-product-image { width: 31px; height: 31px; border-radius: 6px; }
+            .compact-settings-panel .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+            .compact-settings-panel .form-section { margin-top: 6px; padding-top: 6px; }
+            .compact-settings-panel .form-section-title { margin-bottom: 5px; font-size: 11px; }
+            .compact-settings-panel .form-note { font-size: 7.5px; }
+            .compact-settings-panel label { font-size: 7.5px; }
+            .compact-settings-panel input { min-width: 0; padding: 6px; font-size: 16px; }
+            .compact-settings-panel .save,
+            .compact-settings-panel .danger,
+            .compact-settings-panel .ghost { width: auto; min-height: 27px; padding: 5px 7px; font-size: 8px; }
+            #adminModalBody .form-grid,
+            #adminModalBody .permissions-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
+            #adminModalBody .form-section { margin-top: 6px; padding-top: 6px; }
+            #adminModalBody .form-section-title { margin-bottom: 5px; font-size: 11px; }
+            #adminModalBody .form-note { margin-bottom: 5px; font-size: 7.5px; line-height: 1.4; }
+            #adminModalBody label { margin-bottom: 3px; font-size: 7.5px; }
+            #adminModalBody input,
+            #adminModalBody select { min-width: 0; padding: 6px; font-size: 16px; }
+            #adminModalBody .permission-option { min-width: 0; gap: 4px; padding: 5px; font-size: 7.5px; }
+            #adminModalBody .permission-option input { flex: 0 0 auto; width: auto; }
+            #adminModalBody .save,
+            #adminModalBody .ghost { width: auto; min-height: 27px; margin-top: 5px; padding: 5px 7px; font-size: 8px; }
         }
     </style>
 </head>
@@ -249,14 +352,15 @@
                     ->where('status', '!=', 'completed')
                     ->exists();
             @endphp
-            <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
-            <div class="brand">الورّاق</div>
-            <button class="mobile-menu-toggle" type="button" onclick="toggleAdminHeader(this, event)" aria-expanded="false">☰ القائمة</button>
-            <div class="admin-name">👤 {{ auth()->user()->name }}</div>
+            <div class="admin-header-brand">
+                <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
+                <div class="brand">الورّاق</div>
+            </div>
+            <div class="admin-name"><strong>👤 {{ auth()->user()->name }}</strong><small>المدير</small></div>
             <nav>
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>
                 @if ($hasOrdersAccess)
-                    <a class="{{ request()->routeIs('admin.orders') ? 'active' : '' }}" href="{{ route('admin.orders') }}">
+                    <a class="{{ request()->routeIs('admin.orders') ? 'active' : '' }}" href="{{ route('admin.orders') }}" data-admin-orders-link>
                         <span class="nav-icon" aria-hidden="true">🧾</span>
                         <span class="nav-text">الطلبات</span>
                         @if ($hasUnopenedOrdersForAdmin)
@@ -270,6 +374,7 @@
                 @if (auth()->user()->hasAnyAdminPermission(['customers_view', 'customers_create', 'customers_update', 'customers_delete']))
                     <a class="{{ request()->routeIs('admin.customers') ? 'active' : '' }}" href="{{ route('admin.customers') }}"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-text">العملاء</span></a>
                 @endif
+                <a class="{{ request()->routeIs('admin.stationery-products.*') ? 'active' : '' }}" href="{{ route('admin.stationery-products.index') }}"><span class="nav-icon" aria-hidden="true">✏️</span><span class="nav-text">القرطاسية</span></a>
                 <a class="settings-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-text">الإعدادات</span></a>
                 <form method="post" action="{{ route('logout') }}">
                     @csrf
@@ -398,7 +503,7 @@
                 <html lang="ar" dir="rtl">
                 <head>
                     <meta charset="utf-8">
-                    <title>فاتورة</title>
+                    <title>فاتورة ضريبية مبسطة</title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 24px; color: #111827; direction: rtl; }
                         table { width: 100%; border-collapse: collapse; }
@@ -563,6 +668,9 @@
             });
         });
     </script>
+    @include('shared.admin-live-updates', [
+        'adminLiveRefreshMain' => request()->routeIs('admin.dashboard', 'admin.orders'),
+    ])
     @include('shared.chat-widget')
     @include('shared.language-tools')
 </body>

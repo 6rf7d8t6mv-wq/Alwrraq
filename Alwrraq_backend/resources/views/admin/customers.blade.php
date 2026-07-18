@@ -3,17 +3,16 @@
 @section('title', 'العملاء - لوحة المدير')
 
 @section('content')
-    <div class="page-title">
+    <div class="page-title compact-page-title">
         <div>
             <h1>العملاء</h1>
-            <p class="subtitle">قائمة العملاء مع تعديل من نافذة مستقلة.</p>
         </div>
         @if (auth()->user()->hasAdminPermission('customers_create'))
             <button class="save" type="button" onclick="openAdminModal('إضافة عميل', 'create-customer-template')">إضافة عميل</button>
         @endif
     </div>
 
-    <div class="panel">
+    <div class="panel compact-management-panel">
         <form class="search-form auto-search-form" method="get" action="{{ route('admin.customers') }}" style="margin-bottom: 14px;">
             <div style="flex: 1;">
                 <label>بحث باسم العميل أو رقم الجوال</label>
@@ -50,13 +49,15 @@
                             <td data-label="البريد">{{ $customer->email ?: '-' }}</td>
                             <td data-label="الطلبات">{{ $customer->orders_count }}</td>
                             <td data-label="الحالة">
-                                <span class="badge">{{ $customer->is_active ? 'نشط' : 'موقوف' }}</span>
-                                @if ($customer->login_blocked)
-                                    <span class="badge">ممنوع الدخول</span>
-                                @endif
-                                @if ($customer->account_verified_at)
-                                    <span class="badge">موثق</span>
-                                @endif
+                                <div class="compact-badges">
+                                    <span class="badge">{{ $customer->is_active ? 'نشط' : 'موقوف' }}</span>
+                                    @if ($customer->login_blocked)
+                                        <span class="badge">ممنوع الدخول</span>
+                                    @endif
+                                    @if ($customer->account_verified_at)
+                                        <span class="badge">موثق</span>
+                                    @endif
+                                </div>
                             </td>
                             <td data-label="الصلاحية"><span class="badge">عميل</span></td>
                             <td data-label="الإجراءات">

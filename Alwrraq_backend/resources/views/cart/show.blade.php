@@ -23,7 +23,6 @@
         .header-form { margin: 0; }
         .logout-button { width: 100%; color: #ffffff; background: #b91c1c; border: 1px solid rgba(248, 113, 113, 0.5); font-weight: 800; padding: 10px 12px; border-radius: 10px; text-align: center; line-height: 1.5; cursor: pointer; }
         .logout-button:hover { background: #dc2626; border-color: #f87171; }
-        .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
         main { width: min(1180px, 100%); margin: clamp(16px, 4vw, 28px) auto; padding: 0 clamp(12px, 4vw, 20px); }
         .notice, .errors { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; font-weight: 800; }
         .notice { background: #ecfdf5; color: #047857; }
@@ -91,6 +90,8 @@
         .delivery-options { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; align-items: stretch; }
         .delivery-option { display: flex; align-items: flex-start; gap: 8px; min-width: 0; padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; font-size: 13px; font-weight: 800; line-height: 1.45; overflow-wrap: anywhere; }
         .delivery-option input { flex: 0 0 auto; width: auto; margin: 4px 0 0; }
+        .delivery-option-content { display: flex; flex: 1 1 auto; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
+        .delivery-option-content strong { min-width: 0; color: #334155; font-size: inherit; line-height: inherit; overflow-wrap: normal; word-break: normal; }
         .delivery-option small { display: block; color: #64748b; font-size: 11px; font-weight: 700; margin-top: 2px; overflow-wrap: anywhere; }
         .delivery-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
         .delivery-fields.address-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -146,7 +147,16 @@
         .delete-file-button { width: auto; min-width: 86px; margin: 0; padding: 7px 10px; border: 0; border-radius: 8px; background: #b91c1c; color: #ffffff; font-size: 12px; font-weight: 900; cursor: pointer; }
         .delete-file-button:hover { background: #991b1b; }
         .file-name-cell { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; }
+        .stationery-product-line { display: flex; align-items: center; gap: 7px; min-width: 0; width: 100%; }
+        .stationery-product-line img { flex: 0 0 38px; width: 38px; height: 38px; object-fit: cover; border-radius: 7px; }
+        .stationery-product-name { flex: 1 1 auto; min-width: 0; overflow: hidden; font-size: 11px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
+        .stationery-product-actions { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 4px; }
+        .stationery-product-actions form { margin: 0; }
+        .stationery-product-actions .edit-file-button,
+        .stationery-product-actions .delete-file-button { width: auto; min-width: 45px; margin: 0; padding: 5px 6px; border-radius: 6px; font-size: 9px; line-height: 1.2; white-space: nowrap; }
         .file-name-text { min-width: 0; overflow-wrap: anywhere; }
+        .file-name-primary { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
+        .detail-value { min-width: 0; }
         .file-service-type { display: block; margin-top: 4px; color: #64748b; font-size: 12px; font-weight: 900; line-height: 1.5; }
         .file-format-badge { display: inline-flex; align-items: center; justify-content: center; margin-inline-start: 6px; padding: 3px 7px; border-radius: 999px; background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 900; vertical-align: middle; }
         .file-actions-inline { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; }
@@ -154,7 +164,7 @@
         .edit-file-button:hover { background: #1d4ed8; }
         .view-file-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: auto; min-width: 74px; padding: 6px 9px; border-radius: 8px; background: #38bdf8; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; }
         .view-file-button:hover { background: #0ea5e9; }
-        @media (max-width: 1100px) {
+        @media (min-width: 0px) {
             .detail-table-wrap { border: 0; background: transparent; overflow: visible; }
             .detail-table-wrap table { min-width: 0; display: block; }
             .detail-table-wrap thead { display: none; }
@@ -173,10 +183,7 @@
             .header-inner { height: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
             .brand-logo { width: 34px; height: 34px; border-radius: 10px; margin: 0; }
             .brand { margin: 0; font-size: 17px; line-height: 1.2; }
-            .mobile-menu-toggle { display: inline-flex; min-width: 96px; padding: 7px 14px; border-radius: 8px; font-size: 12px; line-height: 1.2; white-space: nowrap; background: #22c55e; border-color: #86efac; color: #052e16; }
-            .mobile-menu-toggle:hover { background: #4ade80; }
             .header-actions { grid-column: 1 / -1; margin-top: 0; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            .header.menu-open .header-actions { display: grid; }
             .header-user { grid-column: 1 / -1; margin: 0; }
             main { width: calc(100% - 20px); margin: 8px auto 24px; padding: 0; }
             .payment-options { grid-template-columns: 1fr; align-items: stretch; }
@@ -204,20 +211,38 @@
             .cart-section-box h3 { font-size: 14px; margin-bottom: 8px; }
             .cart-order-title { font-size: 16px; }
             .cart-order-meta { font-size: 12px; }
-            .cart-order-heading { grid-template-columns: minmax(0, 0.8fr) auto minmax(0, 1.2fr); gap: 6px; }
-            .cart-order-label { font-size: 12px; }
-            .cart-order-heading .cart-order-title { font-size: 13px; white-space: normal; line-height: 1.4; }
-            .cart-order-heading .cart-order-meta { font-size: 10.5px; }
+            .cart-order-heading { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+            .cart-order-heading > * { min-width: 0; max-width: 100%; }
+            .cart-order-label { font-size: 10.5px; line-height: 1.3; }
+            .cart-order-heading .cart-order-title { display: block; overflow: visible; font-size: 9px; white-space: normal; line-height: 1.25; overflow-wrap: normal; word-break: normal; }
+            .cart-order-heading .cart-order-meta { font-size: 9px; line-height: 1.3; overflow-wrap: normal; word-break: normal; }
+            .cart-order-heading .cart-order-meta span { display: block; max-width: 100%; white-space: normal; }
             .detail-table-wrap tbody { gap: 8px; }
             .detail-table-wrap tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px; padding: 9px; border-radius: 11px; }
-            .detail-table-wrap td { display: flex; align-items: center; justify-content: space-between; gap: 5px; min-width: 0; padding: 8px 9px; border-radius: 9px; font-size: 12px; line-height: 1.45; background: #ffffff; }
-            .detail-table-wrap td:first-child { grid-column: 1 / -1; padding: 8px; }
-            .detail-table-wrap td::before { flex: 0 0 auto; display: inline; margin: 0; font-size: 10.5px; line-height: 1.35; }
+            .detail-table-wrap td { display: grid; grid-template-columns: minmax(0, 48%) minmax(0, 52%); align-items: center; gap: 4px; min-width: 0; min-height: 42px; padding: 7px 8px; border-radius: 8px; font-size: 10.5px; line-height: 1.25; background: #f8fafc; overflow-wrap: normal; word-break: normal; }
+            .detail-table-wrap td:first-child { grid-column: 1 / -1; grid-template-columns: minmax(0, 1fr); padding: 8px; }
+            .detail-table-wrap td:first-child > .file-name-cell { grid-column: 1 / -1; width: 100%; }
+            .detail-table-wrap td::before { display: block; min-width: 0; margin: 0; font-size: 9px; line-height: 1.25; overflow-wrap: normal; word-break: normal; }
+            .detail-table-wrap td[data-mobile-label]::before { content: attr(data-mobile-label); }
             .detail-table-wrap td:first-child::before { display: none; }
             .detail-table-wrap td:not(:first-child) { text-align: left; }
-            .file-name-cell { align-items: flex-start; gap: 6px; }
-            .file-actions-inline { flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
-            .view-file-button, .delete-file-button { min-width: 64px; padding: 6px 8px; font-size: 11px; }
+            .detail-table-wrap .price-cell { white-space: normal; }
+            .detail-value { display: block; min-width: 0; max-width: 100%; overflow-wrap: normal; word-break: normal; }
+            .detail-value[data-mobile-value] { font-size: 0; }
+            .detail-value[data-mobile-value]::after { content: attr(data-mobile-value); font-size: 10.5px; line-height: 1.25; }
+            .file-name-cell { display: grid; grid-template-columns: minmax(0, 1fr); align-items: stretch; gap: 6px; }
+            .file-name-text { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 5px; font-size: 10.5px; line-height: 1.35; }
+            .file-name-primary { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
+            .file-service-type { grid-column: 1 / -1; margin-top: 0; overflow: visible; font-size: 8.5px; line-height: 1.25; white-space: normal; }
+            .file-actions-inline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 5px; }
+            .file-actions-inline form { min-width: 0; }
+            .edit-file-button, .view-file-button, .delete-file-button { width: 100%; min-width: 0; padding: 5px 4px; font-size: 10px; white-space: nowrap; }
+            .stationery-product-line { gap: 5px; }
+            .stationery-product-line img { flex-basis: 32px; width: 32px; height: 32px; }
+            .stationery-product-name { font-size: 9px; }
+            .stationery-product-actions { gap: 3px; }
+            .stationery-product-actions .edit-file-button,
+            .stationery-product-actions .delete-file-button { width: auto; min-width: 38px; padding: 4px 5px; font-size: 8px; }
             .file-format-badge { padding: 2px 6px; font-size: 10px; }
             .payment-summary,
             .cart-page-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
@@ -227,9 +252,14 @@
             .summary-item.total-after strong { font-size: 12px; }
             .cart-page-actions .close-to-orders,
             .cart-page-actions .cart-pay-link { min-height: 32px; padding: 7px 8px; font-size: 11px; }
-            .delivery-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
-            .delivery-option { padding: 8px 9px; gap: 7px; font-size: 12px; border-radius: 9px; }
-            .delivery-option small { font-size: 10.5px; line-height: 1.35; }
+            .delivery-options { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+            .delivery-option { align-items: center; min-height: 58px; padding: 6px 7px; gap: 5px; font-size: 10px; line-height: 1.35; border-radius: 8px; overflow-wrap: normal; word-break: normal; }
+            .delivery-option input { width: 18px; height: 18px; margin: 0; }
+            .delivery-option-content { flex-direction: column; align-items: flex-start; justify-content: center; gap: 2px; }
+            .delivery-option-content strong { width: 100%; font-size: 9.5px; line-height: 1.25; }
+            .delivery-option small { flex: 0 1 auto; margin: 0; font-size: 8.5px; line-height: 1.3; overflow-wrap: normal; word-break: normal; }
+            .mobile-compact-value[data-mobile-value] { font-size: 0; }
+            .mobile-compact-value[data-mobile-value]::after { content: attr(data-mobile-value); font-size: 9px; line-height: 1.25; }
             .delivery-fields,
             .delivery-fields.address-fields,
             .cart-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
@@ -241,31 +271,43 @@
             .discount-form input { padding: 8px 9px; font-size: 12px; }
             .discount-button { padding: 8px 10px; font-size: 12px; }
         }
-        @media (min-width: 641px) and (max-width: 1100px) {
+        @media (min-width: 641px) {
             .detail-table-wrap tr { grid-template-columns: repeat(4, minmax(0, 1fr)); }
         }
         @media (max-width: 420px) {
-            .detail-table-wrap tr { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .detail-table-wrap tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; padding: 7px; }
+            .detail-table-wrap td { min-height: 40px; padding: 6px; gap: 3px; font-size: 9.5px; }
+            .detail-table-wrap td::before { font-size: 8.5px; }
             .payment-summary,
             .cart-page-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-            .delivery-options { grid-template-columns: 1fr; }
+            .delivery-options { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+            .delivery-option { min-height: 56px; padding: 5px; gap: 4px; }
+            .delivery-option input { width: 16px; height: 16px; }
+            .delivery-option-content { gap: 2px; }
+            .delivery-option-content strong { font-size: 9px; }
+            .delivery-option small { font-size: 8px; }
             .delivery-fields,
             .delivery-fields.address-fields,
             .cart-form-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
-<body class="{{ ($paymentPage ?? false) ? 'cart-payment' : 'cart-index' }}">
+<body class="customer-app-page {{ ($paymentPage ?? false) ? 'cart-payment' : 'cart-index' }}">
     <header class="header">
         <div class="header-inner">
-            <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
-            <div class="brand">الورّاق</div>
-            <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
+            <div class="header-brand">
+                <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
+                <div class="brand">الورّاق</div>
+            </div>
+            <div class="header-identity">
+                <strong>{{ auth()->user()->name }}</strong>
+                <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
+            </div>
             <div class="header-actions">
-                <span class="header-user">👤 {{ auth()->user()->name }}</span>
-                <a class="home-button" href="{{ route('home') }}">🏠 الصفحة الرئيسية</a>
+                <a class="home-button" href="{{ route('home') }}">🏠 الرئيسية</a>
                 <a class="home-button" href="{{ route('orders.index') }}">🧾 طلباتي</a>
-                <a class="settings-button" href="{{ route('account.settings') }}">⚙️ إعداداتي</a>
+                <a class="home-button" href="{{ route('cart.index') }}">🛒 السلة</a>
+                <a class="settings-button" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
                 <form class="header-form" method="post" action="{{ route('logout') }}">
                     @csrf
                     <button class="logout-button" type="submit">🚪 خروج</button>
@@ -298,8 +340,9 @@
                     'phd' => 'طباعة وتجليد رسالة دكتوراه',
                     'formatting' => 'تنسيق الرسائل الجامعية',
                     'research' => 'إنشاء بحث',
+                    'stationery' => 'القرطاسية',
                 ];
-                $noPrintServices = ['formatting', 'research'];
+                $noPrintServices = ['formatting', 'research', 'stationery'];
                 $projectNames = [
                     'thesis' => 'رسالة ماجستير',
                     'supplementary' => 'بحث تكميلي',
@@ -318,6 +361,11 @@
                 $writingColorNames = [
                     'gold' => 'كتابة باللون الذهبي',
                     'black' => 'كتابة باللون الأسود',
+                ];
+                $cdTypeNames = [
+                    'none' => 'بدون CD',
+                    'plain' => 'CD بدون طباعة',
+                    'printed' => 'CD مع طباعة',
                 ];
                 $printSideNames = [
                     'one_side' => 'وجه واحد',
@@ -352,14 +400,17 @@
                 $cartSummary = $cartSummary ?? [
                     'orders_count' => 0,
                     'files_count' => 0,
+                    'products_count' => 0,
                     'print_total' => 0,
                     'binding_total' => 0,
+                    'cd_total' => 0,
                     'discount_amount' => 0,
                     'delivery_fee' => 0,
                     'grand_total' => 0,
                 ];
+                $hasAcademicService = $cartOrders->contains(fn ($cartOrder) => in_array($cartOrder->service_type, ['thesis', 'phd'], true));
                 $paymentPage = $paymentPage ?? false;
-                $deliveryServiceTypes = ['notes', 'books', 'color_printing', 'thesis', 'phd'];
+                $deliveryServiceTypes = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'];
                 $deliveryOrders = $cartOrders->filter(fn ($order) => in_array($order->service_type, $deliveryServiceTypes, true));
                 $cartDeliveryOrder = $deliveryOrders->first(fn ($order) => filled($order->delivery_method)) ?? $deliveryOrders->first();
                 $cartDiscountOrder = $cartOrders->first(fn ($order) => filled($order->discount_code)) ?? $cartOrders->first();
@@ -386,7 +437,7 @@
                     $missingRequirements->push('اختيار طريقة الاستلام أو التوصيل للسلة.');
                 }
                 $missingRequirements = $missingRequirements->unique()->values();
-                $totalBeforeDiscount = (float) $cartSummary['print_total'] + (float) $cartSummary['binding_total'] + (float) $cartSummary['delivery_fee'];
+                $totalBeforeDiscount = (float) $cartSummary['print_total'] + (float) $cartSummary['binding_total'] + (float) $cartSummary['cd_total'] + (float) $cartSummary['delivery_fee'];
                 $totalAfterDiscount = (float) $cartSummary['grand_total'];
             @endphp
 
@@ -444,6 +495,7 @@
                                     'notes' => 'سعر التغليف',
                                     'formatting' => 'سعر التنسيق',
                                     'research' => 'سعر إنشاء البحث',
+                                    'stationery' => 'إجمالي المنتجات',
                                     default => 'سعر التجليد',
                                 };
                                 $cartProjectTypes = $cartOrder->service_type === 'thesis'
@@ -467,12 +519,48 @@
                                 </div>
 
                                 <div class="cart-section-box">
-                                    <h3>الملفات والتفاصيل والأسعار</h3>
+                                    <h3>{{ $cartOrder->service_type === 'stationery' ? 'المنتجات والتفاصيل والأسعار' : 'الملفات والتفاصيل والأسعار' }}</h3>
+                                    @if ($cartOrder->service_type === 'stationery')
+                                        <div class="detail-table-wrap">
+                                            <table>
+                                                <thead><tr><th>المنتج</th><th>الشركة</th><th>النوع</th><th>السعر</th><th>الكمية</th><th>الإجمالي</th></tr></thead>
+                                                <tbody>
+                                                    @foreach ($cartOrder->productItems as $item)
+                                                        <tr>
+                                                            <td data-label="المنتج">
+                                                                <div class="stationery-product-line">
+                                                                    @if ($item->image_path)<img src="{{ asset('storage/'.$item->image_path) }}" alt="{{ $item->product_name }}">@endif
+                                                                    <strong class="stationery-product-name">{{ $item->product_name }}</strong>
+                                                                    <div class="stationery-product-actions">
+                                                                        <a class="edit-file-button" href="{{ route('stationery.index') }}" target="_top">تعديل</a>
+                                                                        <form method="post" action="{{ route('stationery.items.destroy', $item) }}">
+                                                                            @csrf @method('delete')
+                                                                            <button class="delete-file-button" type="submit">إزالة</button>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td data-label="الشركة"><span class="detail-value">{{ $item->company_name }}</span></td>
+                                                            <td data-label="النوع"><span class="detail-value">{{ $item->product_type }}</span></td>
+                                                            <td data-label="السعر"><span class="detail-value">{{ $item->unit_price }} ريال</span></td>
+                                                            <td data-label="الكمية"><span class="detail-value">{{ $item->quantity }}</span></td>
+                                                            <td data-label="الإجمالي"><span class="detail-value">{{ $item->total_price }} ريال</span></td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
                                     <div class="detail-table-wrap">
                                         <table>
                                             <thead>
                                                 <tr>
                                                     <th>الملف</th>
+                                                    @if ($cartOrder->service_type === 'research')
+                                                        <th>اسم الطالب</th>
+                                                        <th>الدكتور أو الأستاذ</th>
+                                                        <th>الجامعة أو المدرسة أو المعهد</th>
+                                                    @endif
                                                     @if ($cartOrder->service_type === 'thesis')
                                                         <th>مشروع الرسالة</th>
                                                     @endif
@@ -480,6 +568,9 @@
                                                         <th>الجامعة/المعهد</th>
                                                         <th>لون الرسالة</th>
                                                         <th>لون الكتابة</th>
+                                                        <th>خيار CD</th>
+                                                        <th>عدد CD</th>
+                                                        <th>سعر CD</th>
                                                     @endif
                                                     <th>الصفحات</th>
                                                     @if ($cartOrder->service_type !== 'research')
@@ -509,7 +600,7 @@
                                                         <td data-label="الملف">
                                                             <div class="file-name-cell">
                                                                 <span class="file-name-text">
-                                                                    {{ $file->original_name }} <span class="file-format-badge">{{ strtoupper($file->file_type) }}</span>
+                                                                    <span class="file-name-primary">{{ $file->original_name }}</span><span class="file-format-badge">{{ strtoupper($file->file_type) }}</span>
                                                                     <span class="file-service-type">{{ $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type }}</span>
                                                                 </span>
                                                                 <div class="file-actions-inline">
@@ -525,42 +616,51 @@
                                                                 </div>
                                                             </div>
                                                         </td>
+                                                        @if ($cartOrder->service_type === 'research')
+                                                            <td data-label="اسم الطالب"><span class="detail-value">{{ $file->research_student_name ?: '-' }}</span></td>
+                                                            <td data-label="الدكتور أو الأستاذ"><span class="detail-value">{{ $file->research_instructor_name ?: '-' }}</span></td>
+                                                            <td data-label="الجهة التعليمية"><span class="detail-value">{{ $file->university_name ?: '-' }}</span></td>
+                                                        @endif
                                                         @if ($isAcademicWord)
                                                             <td class="academic-word-usage" colspan="20" data-label="الاستخدام">ملف Word للعرض فقط، ولا يدخل ضمن الطباعة أو التجليد أو التسعير.</td>
                                                         @else
                                                         @if ($cartOrder->service_type === 'thesis')
-                                                            <td data-label="مشروع الرسالة">{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
+                                                            <td data-label="مشروع الرسالة" data-mobile-label="المشروع"><span class="detail-value">{{ $projectNames[$file->thesis_project_type] ?? '-' }}</span></td>
                                                         @endif
                                                         @if (in_array($cartOrder->service_type, ['thesis', 'phd'], true))
-                                                            <td data-label="الجامعة/المعهد">{{ $file->university_name ?: '-' }}</td>
-                                                            <td data-label="لون الرسالة">{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
-                                                            <td data-label="لون الكتابة">{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
+                                                            <td data-label="الجامعة/المعهد" data-mobile-label="الجامعة"><span class="detail-value">{{ $file->university_name ?: '-' }}</span></td>
+                                                            <td data-label="لون الرسالة" data-mobile-label="الغلاف"><span class="detail-value">{{ $coverColorNames[$file->cover_color] ?? '-' }}</span></td>
+                                                            <td data-label="لون الكتابة" data-mobile-label="الكتابة"><span class="detail-value" data-mobile-value="{{ ['gold' => 'ذهبي', 'black' => 'أسود'][$file->writing_color] ?? '-' }}">{{ $writingColorNames[$file->writing_color] ?? '-' }}</span></td>
+                                                            <td data-label="خيار CD" data-mobile-label="CD"><span class="detail-value" data-mobile-value="{{ ['none' => 'بدون CD', 'plain' => 'CD عادي', 'printed' => 'CD مطبوع'][$file->cd_type ?: 'none'] ?? 'بدون CD' }}">{{ $cdTypeNames[$file->cd_type ?: 'none'] ?? 'بدون CD' }}</span></td>
+                                                            <td data-label="عدد CD" data-mobile-label="العدد"><span class="detail-value">{{ $file->cd_type === 'none' ? 0 : $file->cd_copies }}</span></td>
+                                                            <td class="price-cell" data-label="سعر CD" data-mobile-label="السعر"><span class="detail-value">{{ $file->cd_price }} ريال</span></td>
                                                         @endif
-                                                        <td data-label="الصفحات">{{ $file->pages }}</td>
+                                                        <td data-label="الصفحات"><span class="detail-value">{{ $file->pages }}</span></td>
                                                         @if ($cartOrder->service_type !== 'research')
-                                                            <td data-label="النسخ">{{ $file->copies }}</td>
+                                                            <td data-label="النسخ"><span class="detail-value">{{ $file->copies }}</span></td>
                                                         @endif
                                                         @if (in_array($cartOrder->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
-                                                            <td data-label="نوع الطباعة">{{ in_array($cartOrder->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : ($printSideNames[$file->print_sides] ?? 'وجهين') }}</td>
+                                                            <td data-label="نوع الطباعة" data-mobile-label="الطباعة"><span class="detail-value">{{ in_array($cartOrder->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : ($printSideNames[$file->print_sides] ?? 'وجهين') }}</span></td>
                                                         @endif
                                                         @if (in_array($cartOrder->service_type, ['notes', 'books', 'color_printing'], true))
-                                                            <td data-label="حجم الصفحة">{{ $pageSizeNames[$file->page_size] ?? 'A4' }}</td>
+                                                            <td data-label="حجم الصفحة" data-mobile-label="الحجم"><span class="detail-value">{{ $pageSizeNames[$file->page_size] ?? 'A4' }}</span></td>
                                                         @endif
                                                         @if (in_array($cartOrder->service_type, ['notes', 'books'], true))
-                                                            <td data-label="لون الورق">{{ $paperColorNames[$file->paper_color] ?? 'أبيض' }}</td>
+                                                            <td data-label="لون الورق" data-mobile-label="الورق"><span class="detail-value">{{ $paperColorNames[$file->paper_color] ?? 'أبيض' }}</span></td>
                                                         @endif
                                                         @if (! in_array($cartOrder->service_type, $noPrintServices, true))
-                                                            <td data-label="{{ $cartBindingLabel }}">{{ $cartBindingNames[$file->binding_type] ?? '-' }}</td>
-                                                            <td class="price-cell" data-label="سعر الطباعة">{{ $file->print_price }} ريال</td>
+                                                            <td data-label="{{ $cartBindingLabel }}" data-mobile-label="{{ $cartBindingLabel }}"><span class="detail-value">{{ $cartBindingNames[$file->binding_type] ?? '-' }}</span></td>
+                                                            <td class="price-cell" data-label="سعر الطباعة" data-mobile-label="الطباعة"><span class="detail-value">{{ $file->print_price }} ريال</span></td>
                                                         @endif
-                                                        <td class="price-cell" data-label="{{ $cartBindingPriceLabel }}">{{ $file->binding_price }} ريال</td>
-                                                        <td class="price-cell" data-label="إجمالي الملف">{{ $file->total_price }} ريال</td>
+                                                        <td class="price-cell" data-label="{{ $cartBindingPriceLabel }}" data-mobile-label="السعر"><span class="detail-value">{{ $file->binding_price }} ريال</span></td>
+                                                        <td class="price-cell" data-label="إجمالي الملف" data-mobile-label="الإجمالي"><span class="detail-value">{{ $file->total_price }} ريال</span></td>
                                                         @endif
                                                     </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
                                     </div>
+                                    @endif
                                 </div>
 
                             </div>
@@ -574,10 +674,10 @@
                                         @csrf
                                         @method('patch')
                                         <div class="delivery-options">
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="branch_pickup" @checked($cartDeliveryOrder->delivery_method === 'branch_pickup')> استلام من الفرع <small>مجاني</small></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="islamic_university_delivery" @checked($cartDeliveryOrder->delivery_method === 'islamic_university_delivery')> داخل الجامعة الإسلامية <small>٥ ريال، ومجاني إذا الطلب فوق ٣٥ ريال</small></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="madinah_delivery" @checked($cartDeliveryOrder->delivery_method === 'madinah_delivery')> داخل المدينة المنورة <small>٢٠ ريال</small></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="redbox_delivery" @checked($cartDeliveryOrder->delivery_method === 'redbox_delivery')> خارج المدينة المنورة <small>٣٠ ريال عبر RedBox</small></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="branch_pickup" @checked($cartDeliveryOrder->delivery_method === 'branch_pickup')><span class="delivery-option-content"><strong>استلام من الفرع</strong><small>مجاني</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="islamic_university_delivery" @checked($cartDeliveryOrder->delivery_method === 'islamic_university_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="الجامعة الإسلامية">داخل الجامعة الإسلامية</strong><small class="mobile-compact-value" data-mobile-value="٥ ريال / مجانًا فوق ٣٥">٥ ريال، ومجاني إذا الطلب فوق ٣٥ ريال</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="madinah_delivery" @checked($cartDeliveryOrder->delivery_method === 'madinah_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="داخل المدينة">داخل المدينة المنورة</strong><small>٢٠ ريال</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="redbox_delivery" @checked($cartDeliveryOrder->delivery_method === 'redbox_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="خارج المدينة">خارج المدينة المنورة</strong><small>٣٠ ريال عبر RedBox</small></span></label>
                                         </div>
                                         <div class="cart-form-grid" data-delivery-fields="islamic_university_delivery">
                                             <div><label>رقم الوحدة</label><input name="delivery_unit" value="{{ $cartDeliveryOrder->delivery_unit }}"></div>
@@ -622,9 +722,15 @@
                 <div class="payment-summary">
                     <div class="summary-item"><span>عدد الخدمات في الطلب</span><strong>{{ $cartSummary['orders_count'] }} خدمة</strong></div>
                     <div class="summary-item"><span>عدد الملفات</span><strong>{{ $cartSummary['files_count'] }} ملف</strong></div>
+                    @if (($cartSummary['products_count'] ?? 0) > 0)
+                        <div class="summary-item"><span>عدد المنتجات</span><strong>{{ $cartSummary['products_count'] }} منتج</strong></div>
+                    @endif
                     <div class="summary-item total-before"><span>المبلغ الإجمالي قبل الخصم</span><strong>{{ $totalBeforeDiscount }} ريال</strong></div>
                     <div class="summary-item"><span>الخصم</span><strong>{{ $cartSummary['discount_amount'] }} ريال</strong></div>
                     <div class="summary-item"><span>رسوم التوصيل</span><strong>{{ $cartSummary['delivery_fee'] }} ريال</strong></div>
+                    @if ($hasAcademicService)
+                        <div class="summary-item"><span>سعر CD</span><strong>{{ $cartSummary['cd_total'] }} ريال</strong></div>
+                    @endif
                     <div class="summary-item total-after"><span>المبلغ الإجمالي بعد الخصم</span><strong>{{ $totalAfterDiscount }} ريال</strong></div>
                 </div>
 
@@ -719,28 +825,14 @@
             }
         });
 
-        function toggleMobileHeader(button, event) {
-            event?.stopPropagation();
-            const header = button.closest('.header');
-            const isOpen = header.classList.toggle('menu-open');
-            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        document.addEventListener('click', (event) => {
-            const header = document.querySelector('.header.menu-open');
-            if (!header || header.contains(event.target)) return;
-
-            header.classList.remove('menu-open');
-            header.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
-        });
-
         document.querySelectorAll('[data-local-datetime]').forEach((element) => {
             const date = new Date(element.dataset.localDatetime);
             if (Number.isNaN(date.getTime())) return;
 
+            const compactMobileDate = window.matchMedia('(max-width: 640px)').matches;
             element.textContent = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
-                weekday: 'long',
-                year: 'numeric',
+                weekday: compactMobileDate ? undefined : 'long',
+                year: compactMobileDate ? '2-digit' : 'numeric',
                 month: '2-digit',
                 day: '2-digit',
                 hour: '2-digit',

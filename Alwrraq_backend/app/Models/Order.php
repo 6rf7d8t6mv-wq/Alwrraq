@@ -72,6 +72,11 @@ class Order extends Model
         return $this->hasMany(OrderFile::class);
     }
 
+    public function productItems(): HasMany
+    {
+        return $this->hasMany(OrderProductItem::class);
+    }
+
     public function deliveredFiles(): HasMany
     {
         return $this->hasMany(OrderDeliveredFile::class)->latest();
@@ -89,7 +94,14 @@ class Order extends Model
 
     public function baseTotal(): float
     {
-        return (float) $this->print_total + (float) $this->binding_total;
+        return (float) $this->print_total + (float) $this->binding_total + $this->cdTotal();
+    }
+
+    public function cdTotal(): float
+    {
+        return (float) ($this->relationLoaded('files')
+            ? $this->files->sum('cd_price')
+            : $this->files()->sum('cd_price'));
     }
 
     public function subtotalAfterDiscount(): float

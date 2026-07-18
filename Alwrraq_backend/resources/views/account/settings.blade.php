@@ -22,7 +22,6 @@
         .header-form { margin: 0; }
         .logout-button { width: 100%; color: #ffffff; background: #b91c1c; border: 1px solid rgba(248, 113, 113, 0.5); font-weight: 800; padding: 10px 12px; border-radius: 10px; text-align: center; line-height: 1.5; cursor: pointer; margin-top: 0; }
         .logout-button:hover { background: #dc2626; border-color: #f87171; }
-        .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
         main { width: min(900px, 100%); margin: clamp(16px, 4vw, 28px) auto; padding: 0 clamp(12px, 4vw, 20px); }
         .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: clamp(16px, 4vw, 24px); box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
         h1 { margin: 0 0 8px; font-size: clamp(24px, 6vw, 28px); }
@@ -47,6 +46,14 @@
         input[readonly] { background: #e2e8f0; color: #475569; }
         .english-number-warning { display: none; margin-top: 5px; color: #b91c1c; font-size: 12px; font-weight: 800; }
         .english-number-warning.active { display: block; }
+        .institution-field { position: relative; }
+        .institution-results { display: none; position: absolute; z-index: 30; top: calc(100% + 5px); right: 0; left: 0; max-height: 220px; overflow-y: auto; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9px; box-shadow: 0 14px 30px rgba(15, 23, 42, 0.14); }
+        .institution-results.active { display: block; }
+        .institution-result { display: block; width: 100%; margin: 0; padding: 10px 12px; border: 0; border-bottom: 1px solid #e2e8f0; border-radius: 0; background: #ffffff; color: #0f172a; text-align: right; }
+        .institution-result:last-child { border-bottom: 0; }
+        .institution-result:hover { background: #f1f5f9; }
+        .institution-meta { display: block; margin-top: 3px; color: #64748b; font-size: 11px; font-weight: 600; }
+        .institution-empty { padding: 11px 12px; color: #64748b; font-size: 12px; line-height: 1.6; }
         .full { grid-column: 1 / -1; }
         button { margin-top: 18px; padding: 12px 16px; border: 0; border-radius: 9px; background: #0f172a; color: #ffffff; font-weight: 800; cursor: pointer; }
         .section-actions button { margin-top: 0; padding: 10px 14px; }
@@ -62,29 +69,52 @@
             .header-inner { height: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
             .brand-logo { width: 34px; height: 34px; border-radius: 10px; margin: 0; }
             .brand { margin: 0; font-size: 17px; line-height: 1.2; }
-            .mobile-menu-toggle { display: inline-flex; min-width: 96px; padding: 7px 14px; border-radius: 8px; font-size: 12px; line-height: 1.2; white-space: nowrap; background: #22c55e; border-color: #86efac; color: #052e16; }
-            .mobile-menu-toggle:hover { background: #4ade80; }
             .header-actions { grid-column: 1 / -1; margin-top: 0; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            .header.menu-open .header-actions { display: grid; }
             .header-user { grid-column: 1 / -1; margin: 0; }
             main { width: calc(100% - 20px); margin: 14px auto 24px; padding: 0; }
-            .form-grid, .details-grid { grid-template-columns: 1fr; }
-            .section-actions { justify-content: stretch; }
-            .home-button, .settings-button, .logout-button, button { width: 100%; text-align: center; }
+            .panel { padding: 12px; border-radius: 11px; }
+            h1 { margin-bottom: 4px; font-size: 20px; }
+            .panel > p { margin-bottom: 10px; font-size: 11px; line-height: 1.45; }
+            .section { margin-top: 12px; padding-top: 12px; }
+            .section-header { margin-bottom: 7px; }
+            .section-title { font-size: 14px; }
+            .details-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+            .detail,
+            .detail.full { grid-column: auto; display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; min-height: 42px; padding: 6px 7px; border-radius: 8px; }
+            .detail-label { flex: 0 1 42%; min-width: 0; margin: 0; font-size: 8.5px; line-height: 1.25; }
+            .detail-value { display: -webkit-box; flex: 0 1 58%; min-width: 0; min-height: 0; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; font-size: 9.5px; line-height: 1.3; text-align: left; overflow-wrap: anywhere; word-break: normal; }
+            .section-actions { margin-top: 7px; justify-content: flex-end; }
+            .section-actions button { width: auto; min-height: 30px; padding: 6px 9px; border-radius: 7px; font-size: 10px; text-align: center; }
+            .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 7px; }
+            .form-grid .full { grid-column: 1 / -1; }
+            .edit-panel { margin-top: 8px; padding: 9px; border-radius: 8px; }
+            .edit-panel label { margin-bottom: 4px; font-size: 10px; }
+            .edit-panel input { padding: 6px 8px; border-radius: 7px; font-size: 16px; line-height: 1.2; }
+            .institution-result { padding: 8px; font-size: 11px; }
+            .institution-meta, .institution-empty { font-size: 9px; }
+            .edit-panel button { width: 100%; margin-top: 9px; padding: 8px 10px; font-size: 11px; text-align: center; }
+            .header-actions .home-button,
+            .header-actions .settings-button,
+            .header-actions .logout-button { width: 100%; text-align: center; }
         }
     </style>
 </head>
-<body>
+<body class="customer-app-page">
     <header class="header">
         <div class="header-inner">
-            <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
-            <div class="brand">الورّاق</div>
-            <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
+            <div class="header-brand">
+                <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
+                <div class="brand">الورّاق</div>
+            </div>
+            <div class="header-identity">
+                <strong>{{ auth()->user()->name }}</strong>
+                <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
+            </div>
             <div class="header-actions">
-                <span class="header-user">👤 {{ auth()->user()->name }}</span>
-                <a class="home-button" href="{{ route('home') }}">🏠 الصفحة الرئيسية</a>
+                <a class="home-button" href="{{ route('home') }}">🏠 الرئيسية</a>
                 <a class="home-button" href="{{ route('orders.index') }}">🧾 طلباتي</a>
                 <a class="home-button" href="{{ route('cart.index') }}">🛒 السلة</a>
+                <a class="settings-button" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
                 <form class="header-form" method="post" action="{{ route('logout') }}">
                     @csrf
                     <button class="logout-button" type="submit">🚪 خروج</button>
@@ -137,12 +167,16 @@
                         <div class="detail-label">البريد الإلكتروني</div>
                         <div class="detail-value {{ $user->email ? '' : 'empty' }}">{{ $user->email ?: 'لم تتم الإضافة بعد' }}</div>
                     </div>
+                    <div class="detail full">
+                        <div class="detail-label">اسم الجامعة أو المعهد أو المدرسة</div>
+                        <div class="detail-value {{ $user->institution_name ? '' : 'empty' }}">{{ $user->institution_name ?: 'لم تتم الإضافة بعد' }}</div>
+                    </div>
                 </div>
                 <div class="section-actions">
                     <button class="secondary" type="button" onclick="togglePanel('profilePanel')">تعديل بياناتي</button>
                 </div>
 
-                <div id="profilePanel" class="edit-panel {{ $errors->has('first_name') || $errors->has('second_name') || $errors->has('phone') || $errors->has('email') ? 'active' : '' }}">
+                <div id="profilePanel" class="edit-panel {{ $errors->has('first_name') || $errors->has('second_name') || $errors->has('phone') || $errors->has('email') || $errors->has('institution_name') ? 'active' : '' }}">
                     <form method="post" action="{{ route('account.profile.update') }}">
                         @csrf
                         @method('patch')
@@ -162,6 +196,11 @@
                             <div>
                                 <label>البريد الإلكتروني</label>
                                 <input name="email" type="email" inputmode="email" value="{{ old('email', $user->email) }}" placeholder="اختياري">
+                            </div>
+                            <div class="full institution-field" id="accountInstitutionField">
+                                <label for="accountInstitutionName">اسم الجامعة أو المعهد أو المدرسة</label>
+                                <input id="accountInstitutionName" name="institution_name" value="{{ old('institution_name', $user->institution_name) }}" maxlength="255" autocomplete="off" placeholder="ابحث أو اكتب اسم الجهة التعليمية">
+                                <div id="accountInstitutionResults" class="institution-results"></div>
                             </div>
                         </div>
                         <button type="submit">حفظ بياناتي</button>
@@ -298,21 +337,6 @@
     </main>
 
     <script>
-        function toggleMobileHeader(button, event) {
-            event?.stopPropagation();
-            const header = button.closest('.header');
-            const isOpen = header.classList.toggle('menu-open');
-            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        document.addEventListener('click', (event) => {
-            const header = document.querySelector('.header.menu-open');
-            if (!header || header.contains(event.target)) return;
-
-            header.classList.remove('menu-open');
-            header.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
-        });
-
         function togglePanel(id) {
             document.getElementById(id).classList.toggle('active');
         }
@@ -351,6 +375,78 @@
         document.querySelectorAll('input[name="password"], input[name="password_confirmation"]').forEach((input) => {
             bindInputRule(input, /^[A-Za-z0-9]+$/, 'تنبيه: كلمة المرور تقبل حروف وأرقام إنجليزية فقط.');
         });
+
+        const accountInstitutionField = document.getElementById('accountInstitutionField');
+        const accountInstitutionInput = document.getElementById('accountInstitutionName');
+        const accountInstitutionResults = document.getElementById('accountInstitutionResults');
+        const accountInstitutionSearchUrl = @json(route('educational-institutions.index'));
+        let accountInstitutionTimer = null;
+        let accountInstitutionController = null;
+
+        function loadAccountInstitutions() {
+            if (!accountInstitutionInput || !accountInstitutionResults) return;
+
+            if (accountInstitutionController) accountInstitutionController.abort();
+            accountInstitutionController = new AbortController();
+
+            const url = new URL(accountInstitutionSearchUrl, window.location.origin);
+            url.searchParams.set('q', accountInstitutionInput.value.trim());
+            url.searchParams.set('per_page', '50');
+
+            fetch(url, {
+                headers: { 'Accept': 'application/json' },
+                signal: accountInstitutionController.signal,
+            })
+                .then((response) => response.ok ? response.json() : Promise.reject())
+                .then((payload) => {
+                    accountInstitutionResults.innerHTML = '';
+
+                    if (!payload.data.length) {
+                        const empty = document.createElement('div');
+                        empty.className = 'institution-empty';
+                        empty.textContent = 'لا توجد نتيجة مطابقة، ويمكنك حفظ الاسم المكتوب يدويًا.';
+                        accountInstitutionResults.appendChild(empty);
+                    } else {
+                        payload.data.forEach((institution) => {
+                            const result = document.createElement('button');
+                            result.type = 'button';
+                            result.className = 'institution-result';
+                            result.textContent = institution.name_ar;
+
+                            const meta = document.createElement('span');
+                            meta.className = 'institution-meta';
+                            meta.textContent = [institution.city, institution.region].filter(Boolean).join(' - ');
+                            result.appendChild(meta);
+
+                            result.addEventListener('click', () => {
+                                accountInstitutionInput.value = institution.name_ar;
+                                accountInstitutionResults.classList.remove('active');
+                            });
+
+                            accountInstitutionResults.appendChild(result);
+                        });
+                    }
+
+                    accountInstitutionResults.classList.add('active');
+                })
+                .catch((error) => {
+                    if (error.name !== 'AbortError') accountInstitutionResults.classList.remove('active');
+                });
+        }
+
+        if (accountInstitutionInput) {
+            accountInstitutionInput.addEventListener('focus', loadAccountInstitutions);
+            accountInstitutionInput.addEventListener('input', () => {
+                clearTimeout(accountInstitutionTimer);
+                accountInstitutionTimer = setTimeout(loadAccountInstitutions, 250);
+            });
+
+            document.addEventListener('click', (event) => {
+                if (!accountInstitutionField.contains(event.target)) {
+                    accountInstitutionResults.classList.remove('active');
+                }
+            });
+        }
     </script>
     @include('shared.chat-widget')
     @include('shared.language-tools')

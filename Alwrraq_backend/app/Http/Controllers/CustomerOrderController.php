@@ -17,8 +17,8 @@ class CustomerOrderController extends Controller
         $orders = Order::query()
             ->where('user_id', Auth::id())
             ->where('payment_status', 'paid')
-            ->with(['files', 'deliveredFiles'])
-            ->withCount('files')
+            ->with(['files', 'productItems', 'deliveredFiles'])
+            ->withCount(['files', 'productItems'])
             ->latest()
             ->get();
 
@@ -38,7 +38,7 @@ class CustomerOrderController extends Controller
         $order->load(['files', 'deliveredFiles']);
 
         foreach ($order->files as $file) {
-            $absolutePath = storage_path('app/' . $file->path);
+            $absolutePath = storage_path('app/'.$file->path);
 
             if (File::isFile($absolutePath)) {
                 File::delete($absolutePath);
@@ -46,7 +46,7 @@ class CustomerOrderController extends Controller
         }
 
         foreach ($order->deliveredFiles as $deliveredFile) {
-            $deliveredPath = storage_path('app/' . $deliveredFile->path);
+            $deliveredPath = storage_path('app/'.$deliveredFile->path);
             if (File::isFile($deliveredPath)) {
                 File::delete($deliveredPath);
             }
@@ -64,7 +64,7 @@ class CustomerOrderController extends Controller
         abort_unless($order->user_id === Auth::id(), 403);
         abort_unless($file->order_id === $order->id, 404);
 
-        $absolutePath = storage_path('app/' . $file->path);
+        $absolutePath = storage_path('app/'.$file->path);
 
         if (! File::isFile($absolutePath)) {
             $message = $order->service_type === 'research'
@@ -83,7 +83,7 @@ class CustomerOrderController extends Controller
         if (request()->boolean('raw')) {
             return response()->file($absolutePath, [
                 'Content-Type' => File::mimeType($absolutePath) ?: 'application/octet-stream',
-                'Content-Disposition' => 'inline; filename="' . addslashes($file->original_name) . '"',
+                'Content-Disposition' => 'inline; filename="'.addslashes($file->original_name).'"',
             ]);
         }
 
@@ -106,14 +106,14 @@ class CustomerOrderController extends Controller
         abort_unless(in_array($order->service_type, ['formatting', 'research'], true), 404);
         abort_unless($deliveredFile->order_id === $order->id, 404);
 
-        $absolutePath = storage_path('app/' . $deliveredFile->path);
+        $absolutePath = storage_path('app/'.$deliveredFile->path);
 
         abort_unless(File::isFile($absolutePath), 404);
 
         if (request()->boolean('view')) {
             return response()->file($absolutePath, [
                 'Content-Type' => $deliveredFile->mime ?: 'application/octet-stream',
-                'Content-Disposition' => 'inline; filename="' . addslashes($deliveredFile->original_name) . '"',
+                'Content-Disposition' => 'inline; filename="'.addslashes($deliveredFile->original_name).'"',
             ]);
         }
 

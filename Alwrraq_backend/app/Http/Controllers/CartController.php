@@ -61,7 +61,7 @@ class CartController extends Controller
         foreach ($cartOrders as $order) {
             if ($message = $this->orderPaymentBlockMessage($order, true)) {
                 return redirect()->route('orders.index')->withErrors([
-                    'order' => 'خدمة ' . $order->service_type . ': ' . $message,
+                    'order' => 'خدمة '.$order->service_type.': '.$message,
                 ]);
             }
         }
@@ -117,7 +117,7 @@ class CartController extends Controller
     public function updateDelivery(Request $request, Order $order, CartPricingService $cartPricing)
     {
         $this->authorizeOrder($order);
-        abort_unless(in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true), 404);
+        abort_unless(in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true), 404);
 
         $data = $request->validate([
             'delivery_method' => ['required', Rule::in([
@@ -143,7 +143,7 @@ class CartController extends Controller
 
         $cartOrders = $this->cartOrders();
         $deliveryOrders = $cartOrders->filter(
-            fn (Order $cartOrder) => in_array($cartOrder->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+            fn (Order $cartOrder) => in_array($cartOrder->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)
         );
         $needsAddress = in_array($data['delivery_method'], ['madinah_delivery', 'redbox_delivery'], true);
         $deliveryOrders->each(function (Order $cartOrder) use ($data, $needsAddress) {
@@ -181,10 +181,11 @@ class CartController extends Controller
 
         (clone $cartQuery)
             ->whereDoesntHave('files')
+            ->whereDoesntHave('productItems')
             ->delete();
 
         return $cartQuery
-            ->with(['files', 'deliveredFiles'])
+            ->with(['files', 'productItems.product', 'deliveredFiles'])
             ->withCount('files')
             ->latest()
             ->get();
@@ -306,11 +307,11 @@ class CartController extends Controller
             return 'تم دفع هذا الطلب مسبقًا.';
         }
 
-        if ($order->files->isEmpty()) {
-            return 'لا يمكن إتمام طلب بدون ملفات.';
+        if ($order->files->isEmpty() && $order->productItems->isEmpty()) {
+            return 'لا يمكن إتمام طلب فارغ.';
         }
 
-        if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true) && blank($order->delivery_method)) {
+        if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true) && blank($order->delivery_method)) {
             return 'اختر طريقة الاستلام أو التوصيل قبل الدفع.';
         }
 
@@ -331,7 +332,7 @@ class CartController extends Controller
                 return 'اختر لون الرسالة ولون الكتابة لكل ملف PDF قبل الدفع.';
             }
 
-            if ($pdfFiles->contains(fn ($file) => $file->writing_color === 'black' && !in_array($file->cover_color, ['beige', 'light_blue', 'light_green', 'white'], true))) {
+            if ($pdfFiles->contains(fn ($file) => $file->writing_color === 'black' && ! in_array($file->cover_color, ['beige', 'light_blue', 'light_green', 'white'], true))) {
                 return 'الكتابة باللون الأسود متاحة فقط مع البيج أو الأزرق الفاتح أو الأخضر الفاتح أو الأبيض.';
             }
         }
@@ -354,7 +355,7 @@ class CartController extends Controller
         $order->load('files');
 
         $printTotal = 0;
-        if (!in_array($order->service_type, ['formatting', 'research'], true)) {
+        if (! in_array($order->service_type, ['formatting', 'research'], true)) {
             if (in_array($order->service_type, ['notes', 'books'], true)) {
                 $printTotal = $this->printProductPrintTotal($order);
             } elseif ($order->service_type === 'color_printing') {
@@ -372,9 +373,10 @@ class CartController extends Controller
             ? $order->files->where('file_type', 'pdf')
             : $order->files;
         $bindingTotal = (float) $filesForBinding->sum('binding_price');
-        $baseTotal = $printTotal + $bindingTotal;
+        $cdTotal = (float) $order->files->sum('cd_price');
+        $baseTotal = $printTotal + $bindingTotal + $cdTotal;
         $discountAmount = min((float) $order->discount_amount, $baseTotal);
-        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)
             ? $this->deliveryFee($order->delivery_method, $order, $baseTotal)
             : 0;
 

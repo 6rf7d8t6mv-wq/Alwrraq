@@ -23,7 +23,6 @@
         .header-form { margin: 0; }
         .logout-button { width: 100%; color: #ffffff; background: #b91c1c; border: 1px solid rgba(248, 113, 113, 0.5); font-weight: 800; padding: 10px 12px; border-radius: 10px; text-align: center; line-height: 1.5; cursor: pointer; }
         .logout-button:hover { background: #dc2626; border-color: #f87171; }
-        .mobile-menu-toggle { display: none; align-items: center; justify-content: center; gap: 7px; border: 1px solid rgba(148, 163, 184, 0.28); border-radius: 10px; background: rgba(255, 255, 255, 0.08); color: #ffffff; padding: 9px 11px; font-weight: 900; font-family: inherit; cursor: pointer; }
         main { width: min(1040px, 100%); margin: clamp(16px, 4vw, 28px) auto; padding: 0 clamp(12px, 4vw, 20px); }
         .panel { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 12px; padding: clamp(16px, 4vw, 22px); box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
         .page-title { display: flex; justify-content: space-between; align-items: center; gap: 14px; margin-bottom: 18px; }
@@ -175,10 +174,7 @@
             .header-inner { height: auto; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; }
             .brand-logo { width: 34px; height: 34px; border-radius: 10px; margin: 0; }
             .brand { margin: 0; font-size: 17px; line-height: 1.2; }
-            .mobile-menu-toggle { display: inline-flex; min-width: 96px; padding: 7px 14px; border-radius: 8px; font-size: 12px; line-height: 1.2; white-space: nowrap; background: #22c55e; border-color: #86efac; color: #052e16; }
-            .mobile-menu-toggle:hover { background: #4ade80; }
             .header-actions { grid-column: 1 / -1; margin-top: 0; display: none; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-            .header.menu-open .header-actions { display: grid; }
             .header-user { grid-column: 1 / -1; margin: 0; }
             main { width: calc(100% - 20px); margin: 14px auto 24px; padding: 0; }
             .page-title { align-items: flex-start; flex-direction: column; }
@@ -208,7 +204,9 @@
             .panel { padding: 12px; }
             .orders-table tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 8px; }
             .orders-table td { min-height: 46px; padding: 7px; gap: 4px; font-size: 11px; }
-            .orders-table td::before { font-size: 10px; }
+            .orders-table td::before { flex: 0 0 auto; font-size: 9px; white-space: nowrap; overflow-wrap: normal; word-break: normal; }
+            .orders-table td[data-mobile-label]::before { content: attr(data-mobile-label); }
+            .orders-table td .badge { flex: 0 0 auto; max-width: 100%; padding: 4px 5px; font-size: 9px; line-height: 1.2; white-space: nowrap; }
             .orders-table .order-date-cell { grid-column: span 2; min-height: 46px; }
             .order-main-line { gap: 12px; }
             .order-main-item { padding: 0; gap: 4px; }
@@ -221,7 +219,7 @@
             .detail-card,
             .detail-card.full { min-height: 44px; padding: 7px 8px; gap: 5px; }
             .detail-card span { font-size: 10px; }
-            .detail-card strong { font-size: 11px; }
+            .detail-card strong { font-size: 10px; line-height: 1.35; overflow-wrap: normal; word-break: normal; }
             .totals-grid { gap: 4px; }
             .total-card { min-height: 38px; gap: 3px; padding: 5px; border-radius: 7px; }
             .total-card span { font-size: 8px; }
@@ -253,17 +251,22 @@
         }
     </style>
 </head>
-<body>
+<body class="customer-app-page">
     <header class="header">
         <div class="header-inner">
-            <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
-            <div class="brand">الورّاق</div>
-            <button class="mobile-menu-toggle" type="button" onclick="toggleMobileHeader(this, event)" aria-expanded="false">☰ القائمة</button>
+            <div class="header-brand">
+                <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
+                <div class="brand">الورّاق</div>
+            </div>
+            <div class="header-identity">
+                <strong>{{ auth()->user()->name }}</strong>
+                <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
+            </div>
             <div class="header-actions">
-                <span class="header-user">👤 {{ auth()->user()->name }}</span>
-                <a class="home-button" href="{{ route('home') }}">🏠 الصفحة الرئيسية</a>
+                <a class="home-button" href="{{ route('home') }}">🏠 الرئيسية</a>
+                <a class="home-button" href="{{ route('orders.index') }}">🧾 طلباتي</a>
                 <a class="home-button" href="{{ route('cart.index') }}">🛒 السلة</a>
-                <a class="settings-button" href="{{ route('account.settings') }}">⚙️ إعداداتي</a>
+                <a class="settings-button" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
                 <form class="header-form" method="post" action="{{ route('logout') }}">
                     @csrf
                     <button class="logout-button" type="submit">🚪 خروج</button>
@@ -295,7 +298,7 @@
                     <thead>
                         <tr>
                             <th>الطلب والخدمة</th>
-                            <th>الملفات</th>
+                            <th>الملفات/المنتجات</th>
                             <th>حالة الدفع</th>
                             <th>حالة الطلب</th>
                             <th>الإجمالي</th>
@@ -314,6 +317,7 @@
                                     'phd' => 'دكتوراه',
                                     'formatting' => 'تنسيق الرسائل الجامعية',
                                     'research' => 'إنشاء بحث',
+                                    'stationery' => 'القرطاسية',
                                 ];
                                 $projectNames = [
                                     'thesis' => 'رسالة ماجستير',
@@ -382,13 +386,13 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td data-label="الملفات">{{ $order->files_count }}</td>
-                                <td data-label="حالة الدفع">
+                                <td data-label="الملفات/المنتجات">{{ $order->service_type === 'stationery' ? $order->productItems->sum('quantity') : $order->files_count }}</td>
+                                <td data-label="حالة الدفع" data-mobile-label="الدفع">
                                     <span class="badge {{ $isPaid ? 'paid' : 'unpaid' }}">
                                         {{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}
                                     </span>
                                 </td>
-                                <td data-label="حالة الطلب">
+                                <td data-label="حالة الطلب" data-mobile-label="الطلب">
                                     <span class="badge {{ $isCompleted ? 'done' : ($isCancelled ? 'cancelled' : 'open') }}">
                                         {{ $displayStatus }}
                                     </span>
@@ -455,6 +459,7 @@
                             'phd' => 'دكتوراه',
                             'formatting' => 'تنسيق الرسائل الجامعية',
                             'research' => 'إنشاء بحث',
+                            'stationery' => 'القرطاسية',
                         ];
                         $serviceFullNames = [
                             'notes' => 'طباعة المذكرات وملفات ال PDF',
@@ -464,8 +469,9 @@
                             'phd' => 'طباعة وتجليد رسالة دكتوراه',
                             'formatting' => 'تنسيق الرسائل الجامعية',
                             'research' => 'إنشاء بحث',
+                            'stationery' => 'القرطاسية',
                         ];
-                        $noPrintServices = ['formatting', 'research'];
+                        $noPrintServices = ['formatting', 'research', 'stationery'];
                         $hasDeliveredFile = in_array($order->service_type, $noPrintServices, true) && $order->deliveredFiles->isNotEmpty();
                         $projectNames = [
                             'thesis' => 'رسالة ماجستير',
@@ -521,6 +527,7 @@
                             'notes' => 'سعر التغليف',
                             'formatting' => 'سعر التنسيق',
                             'research' => 'سعر إنشاء البحث',
+                            'stationery' => 'إجمالي المنتجات',
                             default => 'سعر التجليد',
                         };
                         $deliveryMethodNames = [
@@ -573,7 +580,7 @@
                                     <div class="detail-card"><span>حالة الطلب</span><strong>{{ $displayStatus }}</strong></div>
                                     <div class="detail-card"><span>الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
                                     <div class="detail-card"><span>تاريخ إنشاء الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</strong></div>
-                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
+                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))
                                         <div class="detail-card full"><span>الاستلام والتوصيل</span><strong>
                                             {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
                                             @if ($order->delivery_method === 'islamic_university_delivery')
@@ -599,12 +606,36 @@
                                 @endif
 
                                 <div class="files-panel">
-                                    <h2 class="files-title">الملفات والتفاصيل والأسعار</h2>
+                                    <h2 class="files-title">{{ $order->service_type === 'stationery' ? 'المنتجات والتفاصيل والأسعار' : 'الملفات والتفاصيل والأسعار' }}</h2>
+                                    @if ($order->service_type === 'stationery')
+                                        <div class="detail-table-wrap">
+                                            <table>
+                                                <thead><tr><th>المنتج</th><th>الشركة</th><th>النوع</th><th>سعر الوحدة</th><th>الكمية</th><th>الإجمالي</th></tr></thead>
+                                                <tbody>
+                                                    @foreach ($order->productItems as $item)
+                                                        <tr>
+                                                            <td data-label="المنتج">{{ $item->product_name }}</td>
+                                                            <td data-label="الشركة">{{ $item->company_name }}</td>
+                                                            <td data-label="النوع">{{ $item->product_type }}</td>
+                                                            <td data-label="سعر الوحدة">{{ $item->unit_price }} ريال</td>
+                                                            <td data-label="الكمية">{{ $item->quantity }}</td>
+                                                            <td data-label="الإجمالي">{{ $item->total_price }} ريال</td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    @else
                                     <div class="detail-table-wrap">
                                         <table>
                                             <thead>
                                                 <tr>
                                                     <th>الملف</th>
+                                                    @if ($order->service_type === 'research')
+                                                        <th>اسم الطالب</th>
+                                                        <th>الدكتور أو الأستاذ</th>
+                                                        <th>الجامعة أو المدرسة أو المعهد</th>
+                                                    @endif
                                                     @if ($order->service_type !== 'research')
                                                         <th>النوع</th>
                                                     @endif
@@ -615,6 +646,9 @@
                                 <th>الجامعة/المعهد</th>
                                 <th>لون الرسالة</th>
                                 <th>لون الكتابة</th>
+                                <th>خيار CD</th>
+                                <th>عدد CD</th>
+                                <th>سعر CD</th>
                             @endif
                                                     <th>الصفحات</th>
                                                     @if ($order->service_type !== 'research')
@@ -654,6 +688,11 @@
                                                                 @endif
                                                             </div>
                                                         </td>
+                                                        @if ($order->service_type === 'research')
+                                                            <td data-label="اسم الطالب">{{ $file->research_student_name ?: '-' }}</td>
+                                                            <td data-label="الدكتور أو الأستاذ">{{ $file->research_instructor_name ?: '-' }}</td>
+                                                            <td data-label="الجهة التعليمية">{{ $file->university_name ?: '-' }}</td>
+                                                        @endif
                                                         @if ($isAcademicWord)
                                                             <td colspan="20" data-label="الاستخدام">
                                                                 ملف Word للعرض فقط، ولا يدخل ضمن الطباعة أو التجليد أو التسعير.
@@ -676,6 +715,9 @@
                                 <td data-label="الجامعة/المعهد">{{ $file->university_name ?: '-' }}</td>
                                 <td data-label="لون الرسالة">{{ $coverColorNames[$file->cover_color] ?? '-' }}</td>
                                 <td data-label="لون الكتابة">{{ $writingColorNames[$file->writing_color] ?? '-' }}</td>
+                                <td data-label="خيار CD">{{ ['none' => 'بدون CD', 'plain' => 'CD بدون طباعة', 'printed' => 'CD مع طباعة'][$file->cd_type ?: 'none'] ?? 'بدون CD' }}</td>
+                                <td data-label="عدد CD">{{ $file->cd_type === 'none' ? 0 : $file->cd_copies }}</td>
+                                <td class="price-cell" data-label="سعر CD">{{ $file->cd_price }} ريال</td>
                             @endif
                                                         <td data-label="الصفحات">{{ $file->pages }}</td>
                                                         @if ($order->service_type !== 'research')
@@ -713,6 +755,7 @@
                                             </tbody>
                                         </table>
                                     </div>
+                                    @endif
                                 </div>
 
                                 <div class="totals-grid">
@@ -720,10 +763,13 @@
                                         <div class="total-card"><span>سعر الطباعة</span><strong>{{ $order->print_total }} ريال</strong></div>
                                     @endif
                                     <div class="total-card"><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+                                    @if (in_array($order->service_type, ['thesis', 'phd'], true))
+                                        <div class="total-card"><span>سعر CD</span><strong>{{ $order->files->sum('cd_price') }} ريال</strong></div>
+                                    @endif
                                     @if ($order->discount_amount > 0)
                                         <div class="total-card"><span>الخصم {{ $order->discount_code }}</span><strong>- {{ $order->discount_amount }} ريال</strong></div>
                                     @endif
-                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
+                                    @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))
                                         <div class="total-card"><span>رسوم التوصيل</span><strong>{{ $order->delivery_fee }} ريال</strong></div>
                                     @endif
                                     <div class="total-card"><span>الإجمالي</span><strong>{{ $order->grand_total }} ريال</strong></div>
@@ -752,7 +798,7 @@
                         <div class="modal-backdrop" id="invoiceModal{{ $order->id }}" tabindex="-1" onclick="closeOrderModal(event, 'invoiceModal{{ $order->id }}')">
                             <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
                                 <div class="modal-head">
-                                    <div class="modal-title">فاتورة الطلب #{{ $order->id }}</div>
+                                    <div class="modal-title">فاتورة ضريبية مبسطة #{{ $order->id }}</div>
                                     <button class="modal-close" type="button" onclick="closeOrderModal(null, 'invoiceModal{{ $order->id }}')">إغلاق</button>
                                 </div>
                                 <div class="modal-body">
@@ -802,21 +848,6 @@
         </section>
     </main>
     <script>
-        function toggleMobileHeader(button, event) {
-            event?.stopPropagation();
-            const header = button.closest('.header');
-            const isOpen = header.classList.toggle('menu-open');
-            button.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-        }
-
-        document.addEventListener('click', (event) => {
-            const header = document.querySelector('.header.menu-open');
-            if (!header || header.contains(event.target)) return;
-
-            header.classList.remove('menu-open');
-            header.querySelector('.mobile-menu-toggle')?.setAttribute('aria-expanded', 'false');
-        });
-
         function localizeDateTimes(root = document) {
             const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
                 weekday: 'long',
@@ -867,7 +898,7 @@
                 <html lang="ar" dir="rtl">
                 <head>
                     <meta charset="utf-8">
-                    <title>فاتورة</title>
+                    <title>فاتورة ضريبية مبسطة</title>
                     <style>
                         body { font-family: Arial, sans-serif; margin: 24px; color: #111827; direction: rtl; }
                         table { width: 100%; border-collapse: collapse; }
