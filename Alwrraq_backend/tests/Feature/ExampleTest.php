@@ -48,4 +48,17 @@ class ExampleTest extends TestCase
 
         $this->get('/stationery-images/missing-product.png')->assertNotFound();
     }
+
+    public function test_public_showcase_images_have_a_reliable_laravel_url(): void
+    {
+        $this->get('/showcase-images/mobile')
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'image/png');
+
+        $this->get('/showcase-images/desktop')
+            ->assertStatus(200)
+            ->assertHeader('Content-Type', 'image/png');
+
+        $this->get('/showcase-images/unknown')->assertNotFound();
+    }
 }

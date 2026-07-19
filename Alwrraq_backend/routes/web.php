@@ -9,6 +9,7 @@ use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\EducationalInstitutionController;
 use App\Http\Controllers\FileUploadController;
+use App\Http\Controllers\PublicAssetController;
 use App\Http\Controllers\StationeryController;
 use App\Models\Order;
 use Illuminate\Http\Request;
@@ -55,6 +56,10 @@ Route::get('/sitemap.xml', function () {
 Route::get('/stationery-images/{filename}', [StationeryController::class, 'image'])
     ->where('filename', '[A-Za-z0-9._-]+')
     ->name('stationery.image');
+
+Route::get('/showcase-images/{device}', [PublicAssetController::class, 'showcase'])
+    ->where('device', 'desktop|mobile')
+    ->name('public.showcase-image');
 
 Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
     Route::get('/conversations', [ChatController::class, 'conversations'])->name('conversations');

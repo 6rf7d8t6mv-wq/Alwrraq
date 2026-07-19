@@ -9,7 +9,7 @@
         ? 'Print and bind theses, books, and notes, upload PDF and Word files, and shop stationery with delivery across Saudi Arabia. Alwrraq branch is in Madinah.'
         : 'طباعة وتجليد رسائل الماجستير والدكتوراه والكتب والمذكرات، ورفع ملفات PDF وWord وشراء القرطاسية مع التوصيل لجميع مناطق السعودية. فرعنا في المدينة المنورة.';
     $logoUrl = $siteUrl . '/images/alwrraq-logo.jpeg';
-    $socialImageUrl = $siteUrl . '/images/alwrraq-desktop-preview.png';
+    $socialImageUrl = $siteUrl . route('public.showcase-image', ['device' => 'desktop'], false);
     $structuredData = [
         '@context' => 'https://schema.org',
         '@graph' => [
@@ -523,10 +523,10 @@
                     </div>
                     <div class="devices">
                         <figure class="device device-desktop">
-                            <img class="showcase-preview" src="{{ asset('images/alwrraq-desktop-preview.png') }}" alt="واجهة منصة الورّاق لطلبات الطباعة والقرطاسية على الكمبيوتر" width="2879" height="1625" loading="lazy" decoding="async">
+                            <img class="showcase-preview" src="{{ route('public.showcase-image', ['device' => 'desktop'], false) }}" alt="واجهة منصة الورّاق لطلبات الطباعة والقرطاسية على الكمبيوتر" width="2879" height="1625" loading="lazy" decoding="async">
                         </figure>
                         <figure class="device device-phone">
-                            <img class="showcase-preview" src="{{ asset('images/alwrraq-mobile-preview.png') }}" alt="واجهة منصة الورّاق لخدمات الطباعة والتجليد على الجوال" width="702" height="1462" loading="lazy" decoding="async">
+                            <img class="showcase-preview" src="{{ route('public.showcase-image', ['device' => 'mobile'], false) }}" alt="واجهة منصة الورّاق لخدمات الطباعة والتجليد على الجوال" width="702" height="1462" loading="lazy" decoding="async">
                         </figure>
                     </div>
                 </div>
