@@ -3,7 +3,11 @@
 namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Models\User;
+use App\Services\LivePageUpdateService;
+use App\Services\ServicePricingService;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\ViewErrorBag;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -65,6 +69,46 @@ class ExampleTest extends TestCase
     public function test_live_status_is_private(): void
     {
         $this->get('/live-status')->assertRedirect('/login');
+    }
+
+    public function test_cart_view_renders_with_service_pricing(): void
+    {
+        $this->actingAs(User::factory()->make());
+        $this->app->instance(LivePageUpdateService::class, new class extends LivePageUpdateService
+        {
+            public function snapshot(User $user): array
+            {
+                return [
+                    'revision' => 'test-revision',
+                    'orders_count' => 0,
+                    'unseen_count' => 0,
+                    'role' => 'customer',
+                    'pricing_revision' => 'test-pricing-revision',
+                ];
+            }
+        });
+
+        $servicePricing = collect(ServicePricingService::DEFINITIONS)
+            ->mapWithKeys(fn (array $definition, string $key) => [$key => (float) $definition['default']])
+            ->all();
+
+        $this->view('cart.show', [
+            'cartOrders' => collect(),
+            'cartSummary' => [
+                'orders_count' => 0,
+                'files_count' => 0,
+                'products_count' => 0,
+                'print_total' => 0,
+                'binding_total' => 0,
+                'cd_total' => 0,
+                'discount_amount' => 0,
+                'delivery_fee' => 0,
+                'grand_total' => 0,
+            ],
+            'errors' => new ViewErrorBag,
+            'servicePricing' => $servicePricing,
+            'paymentPage' => false,
+        ])->assertSee('السلة فارغة');
     }
 
     public function test_paid_and_unpaid_admin_order_pages_are_private(): void

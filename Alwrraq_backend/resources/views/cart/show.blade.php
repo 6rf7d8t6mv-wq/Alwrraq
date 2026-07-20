@@ -516,8 +516,6 @@
                     <div class="cart-orders-list">
                         @foreach ($cartOrders as $cartOrder)
                             @php
-                                $dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-                                $noPrintServices = ['formatting', 'research', 'stationery'];
                                 $createdAtText = $dayNames[$cartOrder->created_at->dayOfWeek] . ' - ' . $cartOrder->created_at->format('Y-m-d H:i');
                                 $cartBindingNames = $cartOrder->service_type === 'books'
                                     ? [
