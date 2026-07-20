@@ -1,4 +1,3 @@
-@php($servicePricing = app(\App\Services\ServicePricingService::class)->all())
 <!DOCTYPE html>
 <html lang="{{ session('ui_locale', 'ar') === 'en' ? 'en' : 'ar' }}" dir="{{ session('ui_locale', 'ar') === 'en' ? 'ltr' : 'rtl' }}">
 <head>

@@ -6,6 +6,7 @@ use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Services\CartPricingService;
 use App\Services\Payments\PaymentGatewayService;
+use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -13,20 +14,21 @@ use Illuminate\Validation\ValidationException;
 
 class CartController extends Controller
 {
-    public function showAll(CartPricingService $cartPricing)
+    public function showAll(CartPricingService $cartPricing, ServicePricingService $servicePricingService)
     {
         $cartOrders = $this->cartOrders();
         $cartSummary = $cartPricing->refreshCartTotals($cartOrders);
+        $servicePricing = $servicePricingService->all();
         $paymentPage = false;
 
         return response()
-            ->view('cart.show', compact('cartOrders', 'cartSummary', 'paymentPage'))
+            ->view('cart.show', compact('cartOrders', 'cartSummary', 'servicePricing', 'paymentPage'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
     }
 
-    public function payment(Request $request, CartPricingService $cartPricing)
+    public function payment(Request $request, CartPricingService $cartPricing, ServicePricingService $servicePricingService)
     {
         $allCartOrders = $this->cartOrders();
         $selectedOrderIds = $this->selectedOrderIds($request);
@@ -51,10 +53,11 @@ class CartController extends Controller
         }
 
         $cartSummary = $cartPricing->refreshCartTotals($cartOrders);
+        $servicePricing = $servicePricingService->all();
         $paymentPage = true;
 
         return response()
-            ->view('cart.show', compact('cartOrders', 'cartSummary', 'paymentPage', 'selectedOrderIds'))
+            ->view('cart.show', compact('cartOrders', 'cartSummary', 'servicePricing', 'paymentPage', 'selectedOrderIds'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
