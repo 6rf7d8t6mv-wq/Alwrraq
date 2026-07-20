@@ -4,11 +4,19 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderFile;
+use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class FileUploadController extends Controller
 {
+    private readonly ServicePricingService $pricing;
+
+    public function __construct(?ServicePricingService $pricing = null)
+    {
+        $this->pricing = $pricing ?? new ServicePricingService();
+    }
+
     public function upload(Request $request)
     {
         try {
@@ -511,30 +519,33 @@ class FileUploadController extends Controller
         $cdCount = $cdType === 'none' ? 0 : max(1, $cdCopies);
         $cdPrice = in_array($service, ['thesis', 'phd'], true) && $fileType === 'pdf'
             ? match ($cdType) {
-                'plain' => 5 * $cdCount,
-                'printed' => 10 * $cdCount,
+                'plain' => $this->pricing->value('academic_cd_plain') * $cdCount,
+                'printed' => $this->pricing->value('academic_cd_printed') * $cdCount,
                 default => 0,
             }
         : 0;
 
         if (in_array($service, ['thesis', 'phd'], true) && $fileType === 'word') {
-            return [
+            return $this->normalizePrices([
                 'print_price' => 0,
                 'binding_price' => 0,
                 'cd_price' => 0,
                 'total_price' => 0,
-            ];
+            ]);
         }
 
         if (in_array($service, ['formatting', 'research'], true)) {
-            $servicePrice = $pages * 10;
+            $pagePrice = $service === 'formatting'
+                ? $this->pricing->value('formatting_page_price')
+                : $this->pricing->value('research_page_price');
+            $servicePrice = $pages * $pagePrice;
 
-            return [
+            return $this->normalizePrices([
                 'print_price' => 0,
                 'binding_price' => $servicePrice,
                 'cd_price' => 0,
                 'total_price' => $servicePrice,
-            ];
+            ]);
         }
 
         if ($service === 'color_printing') {
@@ -545,15 +556,15 @@ class FileUploadController extends Controller
                 ? (int) ceil($sheetCount / 2)
                 : $sheetCount;
             $bindingPrice = $binding === 'thermal'
-                ? $thermalBindingUnits * ($pageSize === 'A3' ? 10 : 5)
+                ? $thermalBindingUnits * $this->pricing->value($pageSize === 'A3' ? 'thermal_a3_sheet' : 'thermal_a4_sheet')
                 : $this->notesBindingPrice($pages, $binding);
 
-            return [
+            return $this->normalizePrices([
                 'print_price' => $printPrice,
                 'binding_price' => $bindingPrice,
                 'cd_price' => 0,
                 'total_price' => $printPrice + $bindingPrice,
-            ];
+            ]);
         }
 
         if (in_array($service, ['notes', 'books'], true)) {
@@ -562,100 +573,109 @@ class FileUploadController extends Controller
 
             if ($service === 'books') {
                 $printPrice = $paperColor === 'yellow'
-                    ? (int) ceil($printPages / 10)
-                    : (int) ceil($printPages / 15);
-                $bindingPrice = ($pageSize === 'A4' ? 55 : 45) * $copyCount;
+                    ? ceil($printPages / $this->pricing->value('books_yellow_pages')) * $this->pricing->value('books_yellow_group_price')
+                    : ceil($printPages / $this->pricing->value('books_white_pages')) * $this->pricing->value('books_white_group_price');
+                $bindingPrice = $this->pricing->value($pageSize === 'A4' ? 'books_binding_a4' : 'books_binding_small') * $copyCount;
 
-                return [
+                return $this->normalizePrices([
                     'print_price' => $printPrice,
                     'binding_price' => $bindingPrice,
                     'cd_price' => 0,
                     'total_price' => $printPrice + $bindingPrice,
-                ];
+                ]);
             }
 
             $printPrice = $paperColor === 'yellow'
-                ? (int) ceil($printPages / 6)
-                : (int) ceil($printPages / 12);
+                ? ceil($printPages / $this->pricing->value('notes_yellow_pages')) * $this->pricing->value('notes_yellow_group_price')
+                : ceil($printPages / $this->pricing->value('notes_white_pages')) * $this->pricing->value('notes_white_group_price');
             $bindingPrice = $this->notesBindingPrice($pages, $binding) * $copyCount;
 
-            return [
+            return $this->normalizePrices([
                 'print_price' => $printPrice,
                 'binding_price' => $bindingPrice,
                 'cd_price' => 0,
                 'total_price' => $printPrice + $bindingPrice,
-            ];
+            ]);
         }
 
         $copyCount = max(1, $copies);
         $printPrice = $this->printPrice($pages, $copyCount);
         if (! in_array($writingColor, ['gold', 'black'], true)) {
-            return [
+            return $this->normalizePrices([
                 'print_price' => $printPrice,
                 'binding_price' => 0,
                 'cd_price' => $cdPrice,
                 'total_price' => $printPrice + $cdPrice,
-            ];
+            ]);
         }
 
-        $singleBinding = $writingColor === 'gold' ? 90 : 60;
-        $multiBinding = $writingColor === 'gold' ? 75 : 45;
+        $singleBinding = $this->pricing->value($writingColor === 'gold' ? 'academic_gold_single' : 'academic_black_single');
+        $multiBinding = $this->pricing->value($writingColor === 'gold' ? 'academic_gold_multiple' : 'academic_black_multiple');
         $bindingPrice = $copyCount === 1 ? $singleBinding : $multiBinding * $copyCount;
 
-        return [
+        return $this->normalizePrices([
             'print_price' => $printPrice,
             'binding_price' => $bindingPrice,
             'cd_price' => $cdPrice,
             'total_price' => $printPrice + $bindingPrice + $cdPrice,
-        ];
+        ]);
     }
 
-    private function printPrice(int $pages, int $copies): int
+    private function normalizePrices(array $prices): array
     {
-        return (int) ceil($pages / 15) * max(1, $copies);
+        return collect($prices)->map(fn ($price) => floor((float) $price) === (float) $price
+            ? (int) $price
+            : round((float) $price, 2))->all();
+    }
+
+    private function printPrice(int $pages, int $copies): float
+    {
+        return ceil($pages / $this->pricing->value('academic_print_pages'))
+            * $this->pricing->value('academic_print_group_price')
+            * max(1, $copies);
     }
 
     private function colorPrintingPrice(int $sheetCount, string $pageSize): float
     {
         if ($pageSize === 'A3') {
             $unitPrice = match (true) {
-                $sheetCount <= 5 => 5,
-                $sheetCount <= 10 => 3.5,
-                default => 2.5,
+                $sheetCount <= 5 => $this->pricing->value('color_a3_first_5'),
+                $sheetCount <= 10 => $this->pricing->value('color_a3_to_10'),
+                default => $this->pricing->value('color_a3_over_10'),
             };
 
             return $sheetCount * $unitPrice;
         }
 
         $unitPrice = match (true) {
-            $sheetCount <= 5 => 2,
-            $sheetCount <= 10 => 1.5,
-            default => 0.80,
+            $sheetCount <= 5 => $this->pricing->value('color_a4_first_5'),
+            $sheetCount <= 10 => $this->pricing->value('color_a4_to_10'),
+            default => $this->pricing->value('color_a4_over_10'),
         };
 
         return $sheetCount * $unitPrice;
     }
 
-    private function notesBindingPrice(int $pages, ?string $binding): int
+    private function notesBindingPrice(int $pages, ?string $binding): float
     {
         if ($binding === 'normal') {
-            return 3;
+            return $this->pricing->value('notes_binding_normal');
         }
 
         if ($binding === 'wire') {
             if ($pages < 100) {
-                return 5;
+                return $this->pricing->value('notes_binding_wire_under_100');
             }
 
             if ($pages < 300) {
-                return 7;
+                return $this->pricing->value('notes_binding_wire_under_300');
             }
 
             if ($pages <= 600) {
-                return 9;
+                return $this->pricing->value('notes_binding_wire_up_to_600');
             }
 
-            return 14;
+            return $this->pricing->value('notes_binding_wire_over_600');
         }
 
         return 0;
@@ -699,7 +719,7 @@ class FileUploadController extends Controller
         ]);
     }
 
-    private function printProductPrintTotal(Order $order): int
+    private function printProductPrintTotal(Order $order): float
     {
         $whitePages = (int) $order->files
             ->where('file_type', 'pdf')
@@ -710,20 +730,21 @@ class FileUploadController extends Controller
             ->filter(fn (OrderFile $file) => $file->paper_color === 'yellow')
             ->sum(fn (OrderFile $file) => $file->pages * max(1, (int) $file->copies));
 
-        $whiteDivisor = $order->service_type === 'notes' ? 12 : 15;
-        $whiteTotal = (int) ceil($whitePages / $whiteDivisor);
-        $yellowDivisor = $order->service_type === 'books' ? 10 : 6;
-        $yellowTotal = (int) ceil($yellowPages / $yellowDivisor);
+        $prefix = $order->service_type === 'notes' ? 'notes' : 'books';
+        $whiteTotal = ceil($whitePages / $this->pricing->value($prefix.'_white_pages'))
+            * $this->pricing->value($prefix.'_white_group_price');
+        $yellowTotal = ceil($yellowPages / $this->pricing->value($prefix.'_yellow_pages'))
+            * $this->pricing->value($prefix.'_yellow_group_price');
 
         return $whiteTotal + $yellowTotal;
     }
 
-    private function deliveryFee(?string $method, float $subtotal): int
+    private function deliveryFee(?string $method, float $subtotal): float
     {
         return match ($method) {
-            'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,
-            'madinah_delivery' => 20,
-            'redbox_delivery' => 30,
+            'islamic_university_delivery' => $subtotal >= $this->pricing->value('delivery_university_free_from') ? 0 : $this->pricing->value('delivery_university_fee'),
+            'madinah_delivery' => $this->pricing->value('delivery_madinah_fee'),
+            'redbox_delivery' => $this->pricing->value('delivery_redbox_fee'),
             default => 0,
         };
     }

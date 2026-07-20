@@ -51,6 +51,7 @@
             const indicator = document.getElementById('livePageIndicator');
             const scrollKey = `alwrraq-live-scroll:${window.location.pathname}${window.location.search}`;
             let revision = @json($livePageSnapshot['revision']);
+            let pricingRevision = @json($livePageSnapshot['pricing_revision']);
             let ordersCount = Number(@json($livePageSnapshot['orders_count']));
             let updating = false;
             let dirty = false;
@@ -174,6 +175,18 @@
 
                     const status = await response.json();
                     updateOrderNotice(Number(status.unseen_count || 0));
+                    const pricingChanged = status.pricing_revision && status.pricing_revision !== pricingRevision;
+                    if (pricingChanged) {
+                        if (pageIsBusy()) {
+                            showIndicator('تم تعديل الأسعار وستظهر بعد الانتهاء من الإدخال', 'waiting', 4500);
+                            return;
+                        }
+
+                        pricingRevision = status.pricing_revision;
+                        sessionStorage.setItem(scrollKey, String(window.scrollY));
+                        window.location.reload();
+                        return;
+                    }
                     if (status.revision === revision) return;
 
                     const hasNewOrder = Number(status.orders_count) > ordersCount;

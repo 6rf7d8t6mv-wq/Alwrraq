@@ -5,13 +5,19 @@ namespace App\Services;
 use App\Models\DiscountCode;
 use App\Models\EducationalInstitution;
 use App\Models\Order;
+use App\Models\ServicePriceSetting;
 use App\Models\StationeryProduct;
 use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 
 class LivePageUpdateService
 {
     public function snapshot(User $user): array
     {
+        $pricingUpdatedAt = Schema::hasTable('service_price_settings')
+            ? (string) (ServicePriceSetting::query()->max('updated_at') ?? 'defaults')
+            : 'defaults';
+
         if ($user->role === 'admin') {
             $orders = Order::query();
             $ordersCount = (int) (clone $orders)->count();
@@ -28,6 +34,7 @@ class LivePageUpdateService
                 (string) (StationeryProduct::query()->max('updated_at') ?? ''),
                 (string) (DiscountCode::query()->max('updated_at') ?? ''),
                 (string) (EducationalInstitution::query()->max('updated_at') ?? ''),
+                $pricingUpdatedAt,
             ];
         } else {
             $orders = Order::query()->where('user_id', $user->id);
@@ -44,6 +51,7 @@ class LivePageUpdateService
                 (string) ((clone $orders)->max('updated_at') ?? ''),
                 (string) ($user->fresh()?->updated_at ?? ''),
                 (string) (StationeryProduct::query()->max('updated_at') ?? ''),
+                $pricingUpdatedAt,
             ];
         }
 
@@ -52,6 +60,7 @@ class LivePageUpdateService
             'orders_count' => $ordersCount,
             'unseen_count' => $unseenCount,
             'role' => $user->role,
+            'pricing_revision' => hash('sha256', $pricingUpdatedAt),
         ];
     }
 }

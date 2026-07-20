@@ -8,6 +8,10 @@ use Illuminate\Support\Collection;
 
 class CartPricingService
 {
+    public function __construct(private readonly ServicePricingService $pricing)
+    {
+    }
+
     public function refreshCartTotals(Collection $orders): array
     {
         $orders->each->load(['files', 'productItems']);
@@ -169,8 +173,10 @@ class CartPricingService
     private function groupPrintPrice(string $service, int $units, string $paperColor, string $pageSize): float
     {
         return match ($service) {
-            'notes' => (float) ceil($units / ($paperColor === 'yellow' ? 6 : 12)),
-            'books' => (float) ceil($units / ($paperColor === 'yellow' ? 10 : 15)),
+            'notes' => ceil($units / $this->pricing->value($paperColor === 'yellow' ? 'notes_yellow_pages' : 'notes_white_pages'))
+                * $this->pricing->value($paperColor === 'yellow' ? 'notes_yellow_group_price' : 'notes_white_group_price'),
+            'books' => ceil($units / $this->pricing->value($paperColor === 'yellow' ? 'books_yellow_pages' : 'books_white_pages'))
+                * $this->pricing->value($paperColor === 'yellow' ? 'books_yellow_group_price' : 'books_white_group_price'),
             'color_printing' => $this->colorPrintingPrice($units, $pageSize),
             default => (float) $this->printPrice($units, 1),
         };
@@ -201,38 +207,40 @@ class CartPricingService
         return $allocations;
     }
 
-    private function printPrice(int $pages, int $copies): int
+    private function printPrice(int $pages, int $copies): float
     {
-        return (int) ceil($pages / 15) * max(1, $copies);
+        return ceil($pages / $this->pricing->value('academic_print_pages'))
+            * $this->pricing->value('academic_print_group_price')
+            * max(1, $copies);
     }
 
     private function colorPrintingPrice(int $sheetCount, string $pageSize): float
     {
         if ($pageSize === 'A3') {
             $unitPrice = match (true) {
-                $sheetCount <= 5 => 5,
-                $sheetCount <= 10 => 3.5,
-                default => 2.5,
+                $sheetCount <= 5 => $this->pricing->value('color_a3_first_5'),
+                $sheetCount <= 10 => $this->pricing->value('color_a3_to_10'),
+                default => $this->pricing->value('color_a3_over_10'),
             };
 
             return $sheetCount * $unitPrice;
         }
 
         $unitPrice = match (true) {
-            $sheetCount <= 5 => 2,
-            $sheetCount <= 10 => 1.5,
-            default => 0.80,
+            $sheetCount <= 5 => $this->pricing->value('color_a4_first_5'),
+            $sheetCount <= 10 => $this->pricing->value('color_a4_to_10'),
+            default => $this->pricing->value('color_a4_over_10'),
         };
 
         return $sheetCount * $unitPrice;
     }
 
-    private function deliveryFee(?string $method, float $subtotal): int
+    private function deliveryFee(?string $method, float $subtotal): float
     {
         return match ($method) {
-            'islamic_university_delivery' => $subtotal >= 35 ? 0 : 5,
-            'madinah_delivery' => 20,
-            'redbox_delivery' => 30,
+            'islamic_university_delivery' => $subtotal >= $this->pricing->value('delivery_university_free_from') ? 0 : $this->pricing->value('delivery_university_fee'),
+            'madinah_delivery' => $this->pricing->value('delivery_madinah_fee'),
+            'redbox_delivery' => $this->pricing->value('delivery_redbox_fee'),
             default => 0,
         };
     }

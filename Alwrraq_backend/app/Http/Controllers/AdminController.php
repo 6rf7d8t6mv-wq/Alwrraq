@@ -8,6 +8,7 @@ use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
 use App\Models\User;
 use App\Services\AdminLiveUpdateService;
+use App\Services\ServicePricingService;
 use App\Services\WordPreviewService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -51,6 +52,7 @@ class AdminController extends Controller
         'invoices_view',
         'payments_view',
         'discounts_apply',
+        'service_prices_update',
     ];
 
     public function dashboard()
@@ -226,7 +228,7 @@ class AdminController extends Controller
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
 
-    public function applyOrderDiscount(Request $request, Order $order)
+    public function applyOrderDiscount(Request $request, Order $order, ServicePricingService $pricing)
     {
         $this->ensureAdmin();
         $this->ensurePermission('discounts_apply');
@@ -248,9 +250,9 @@ class AdminController extends Controller
         $discountAmount = min((int) $data['discount_amount'], $baseTotal);
         $subtotal = max(0, $baseTotal - $discountAmount);
         $deliveryFee = match ($order->delivery_method) {
-            'islamic_university_delivery' => $baseTotal >= 35 ? 0 : 5,
-            'madinah_delivery' => 20,
-            'redbox_delivery' => 30,
+            'islamic_university_delivery' => $baseTotal >= $pricing->value('delivery_university_free_from') ? 0 : $pricing->value('delivery_university_fee'),
+            'madinah_delivery' => $pricing->value('delivery_madinah_fee'),
+            'redbox_delivery' => $pricing->value('delivery_redbox_fee'),
             default => 0,
         };
 
@@ -889,6 +891,7 @@ class AdminController extends Controller
             'invoices_view' => 'المالية: مشاهدة وإصدار الفاتورة',
             'payments_view' => 'المالية: مشاهدة حالة المدفوعات والمبالغ',
             'discounts_apply' => 'المالية: منح كود خصم قبل الدفع',
+            'service_prices_update' => 'الأسعار: تعديل أسعار الخدمات (لا تشمل القرطاسية)',
         ];
     }
 
@@ -906,6 +909,10 @@ class AdminController extends Controller
 
         if ($user?->hasAnyAdminPermission(['customers_view', 'customers_create', 'customers_update', 'customers_delete'])) {
             return 'admin.customers';
+        }
+
+        if ($user?->hasAdminPermission('service_prices_update')) {
+            return 'admin.service-pricing.index';
         }
 
         return 'admin.settings';

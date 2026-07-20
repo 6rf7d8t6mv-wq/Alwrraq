@@ -76,7 +76,9 @@ class AuthController extends Controller
         $this->normalizeAuthInput($request);
 
         $data = $request->validate([
-            'login_identifier' => ['required', 'string', 'regex:/^05[0-9]{8}$/'],
+            // Keep legacy accounts usable in the unified app login. New customer
+            // registration still requires a Saudi mobile number starting with 05.
+            'login_identifier' => ['required', 'string', 'max:30', 'regex:/^[0-9]+$/'],
             'password' => ['required', 'string', 'regex:/^[\x21-\x7E]+$/'],
         ]);
 

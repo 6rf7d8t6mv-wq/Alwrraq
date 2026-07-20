@@ -235,6 +235,7 @@
 
         const asciiPrintable = (value) => convertArabicDigits(value).replace(/[^\x21-\x7E]/g, '');
         const phoneOnly = (value) => convertArabicDigits(value).replace(/[^0-9]/g, '').slice(0, 10);
+        const legacyPhoneOnly = (value) => convertArabicDigits(value).replace(/[^0-9]/g, '').slice(0, 30);
         const emailOnly = (value) => convertArabicDigits(value).replace(/[^A-Za-z0-9._%+\-@]/g, '');
 
         const isAppMode = @json($appMode);
@@ -242,9 +243,9 @@
         document.querySelectorAll('input[name="login_identifier"]').forEach((input) => {
             bindInputRule(
                 input,
-                isAppMode ? /^05[0-9]{8}$/ : /^[\x21-\x7E]+$/,
-                isAppMode ? 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام.' : 'تنبيه: تسجيل الدخول يقبل الحروف الإنجليزية والأرقام والرموز فقط.',
-                isAppMode ? phoneOnly : asciiPrintable
+                isAppMode ? /^[0-9]+$/ : /^[\x21-\x7E]+$/,
+                isAppMode ? 'تنبيه: اكتب رقم الجوال المسجل بالأرقام.' : 'تنبيه: تسجيل الدخول يقبل الحروف الإنجليزية والأرقام والرموز فقط.',
+                isAppMode ? legacyPhoneOnly : asciiPrintable
             );
         });
 

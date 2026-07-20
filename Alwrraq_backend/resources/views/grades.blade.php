@@ -955,7 +955,7 @@
                         <h3>تحميل ملف Word</h3>
                         <input type="file" id="formattingWordFile" accept=".doc,.docx" multiple />
                         <p class="file-info">صيغ مدعومة: .doc, .docx</p>
-                        <p class="file-info">سعر التنسيق: 10 ريال لكل صفحة</p>
+                        <p class="file-info">سعر التنسيق: {{ rtrim(rtrim(number_format($servicePricing['formatting_page_price'], 2, '.', ''), '0'), '.') }} ريال لكل صفحة</p>
                         <button class="upload-button" id="formattingWordUploadBtn" onclick="document.getElementById('formattingWordFile').click()">اختر ملفات</button>
                         <div class="progress-bar" id="formattingWordProgress"><div class="progress-bar-fill"></div></div>
                         <div id="formattingWordError" class="error-msg" style="display: none;"></div>
@@ -1034,6 +1034,7 @@
         <datalist id="saudiUniversitiesList"></datalist>
 
         <script>
+            const servicePricing = @json($servicePricing);
             // Store uploaded files for each service
             const uploadedFiles = {
                 notes: { word: [], pdf: [] },
@@ -1344,8 +1345,10 @@
                 const printPages = Math.max(1, numericValue(pages) || 1) * copyCount;
 
                 if (service === 'books') {
-                    const printPrice = paperColor === 'yellow' ? Math.ceil(printPages / 10) : Math.ceil(printPages / 15);
-                    const bindingPrice = (pageSize === 'A4' ? 55 : 45) * copyCount;
+                    const printPrice = paperColor === 'yellow'
+                        ? Math.ceil(printPages / servicePricing.books_yellow_pages) * servicePricing.books_yellow_group_price
+                        : Math.ceil(printPages / servicePricing.books_white_pages) * servicePricing.books_white_group_price;
+                    const bindingPrice = (pageSize === 'A4' ? servicePricing.books_binding_a4 : servicePricing.books_binding_small) * copyCount;
 
                     return {
                         printPrice,
@@ -1355,7 +1358,9 @@
                     };
                 }
 
-                const printPrice = paperColor === 'yellow' ? Math.ceil(printPages / 6) : Math.ceil(printPages / 12);
+                const printPrice = paperColor === 'yellow'
+                    ? Math.ceil(printPages / servicePricing.notes_yellow_pages) * servicePricing.notes_yellow_group_price
+                    : Math.ceil(printPages / servicePricing.notes_white_pages) * servicePricing.notes_white_group_price;
                 const bindingPrice = calculateNotesBindingPrice(pages, binding) * copyCount;
                 const note = binding === 'wire' && pages > 600 ? 'الملف لازم يتقسم على ملفين' : '';
 
@@ -1371,13 +1376,13 @@
             function calculateColorPrintingFilePrice(pages, binding, pageSize = 'A4', copies = 1, printSides = 'one_side') {
                 const sheetCount = Math.max(1, numericValue(pages) || 1) * Math.max(1, numericValue(copies) || 1);
                 const unitPrice = pageSize === 'A3'
-                    ? (sheetCount <= 5 ? 5 : (sheetCount <= 10 ? 3.5 : 2.5))
-                    : (sheetCount <= 5 ? 2 : (sheetCount <= 10 ? 1.5 : 0.80));
+                    ? (sheetCount <= 5 ? servicePricing.color_a3_first_5 : (sheetCount <= 10 ? servicePricing.color_a3_to_10 : servicePricing.color_a3_over_10))
+                    : (sheetCount <= 5 ? servicePricing.color_a4_first_5 : (sheetCount <= 10 ? servicePricing.color_a4_to_10 : servicePricing.color_a4_over_10));
                 const printPrice = sheetCount * unitPrice;
                 const thermalBindingUnits = printSides === 'two_sides' ? Math.ceil(sheetCount / 2) : sheetCount;
 
                 const bindingPrice = binding === 'thermal'
-                    ? thermalBindingUnits * (pageSize === 'A3' ? 10 : 5)
+                    ? thermalBindingUnits * (pageSize === 'A3' ? servicePricing.thermal_a3_sheet : servicePricing.thermal_a4_sheet)
                     : calculateNotesBindingPrice(pages, binding);
                 const note = binding === 'thermal'
                     ? (printSides === 'two_sides'
@@ -1397,23 +1402,23 @@
                 const pageCount = Math.max(1, numericValue(pages) || 1);
 
                 if (binding === 'normal') {
-                    return 3;
+                    return servicePricing.notes_binding_normal;
                 }
 
                 if (binding === 'wire') {
                     if (pageCount < 100) {
-                        return 5;
+                        return servicePricing.notes_binding_wire_under_100;
                     }
 
                     if (pageCount < 300) {
-                        return 7;
+                        return servicePricing.notes_binding_wire_under_300;
                     }
 
                     if (pageCount <= 600) {
-                        return 9;
+                        return servicePricing.notes_binding_wire_up_to_600;
                     }
 
-                    return 14;
+                    return servicePricing.notes_binding_wire_over_600;
                 }
 
                 return 0;
@@ -1425,16 +1430,18 @@
                     sum[paperColor] += (numericValue(fileData.pages) || 0) * Math.max(1, numericValue(fileData.copies) || 1);
                     return sum;
                 }, { white: 0, yellow: 0 });
-                const whiteDivisor = service === 'notes' ? 12 : 15;
-                const whiteTotal = Math.ceil(totalsByPaper.white / whiteDivisor);
-                const yellowDivisor = service === 'books' ? 10 : 6;
-                const yellowTotal = Math.ceil(totalsByPaper.yellow / yellowDivisor);
+                const whiteDivisor = service === 'notes' ? servicePricing.notes_white_pages : servicePricing.books_white_pages;
+                const whiteGroupPrice = service === 'notes' ? servicePricing.notes_white_group_price : servicePricing.books_white_group_price;
+                const whiteTotal = Math.ceil(totalsByPaper.white / whiteDivisor) * whiteGroupPrice;
+                const yellowDivisor = service === 'books' ? servicePricing.books_yellow_pages : servicePricing.notes_yellow_pages;
+                const yellowGroupPrice = service === 'books' ? servicePricing.books_yellow_group_price : servicePricing.notes_yellow_group_price;
+                const yellowTotal = Math.ceil(totalsByPaper.yellow / yellowDivisor) * yellowGroupPrice;
 
                 return whiteTotal + yellowTotal;
             }
 
             function getPrintPrice(pages) {
-                return Math.ceil(pages / 15);
+                return Math.ceil(pages / servicePricing.academic_print_pages) * servicePricing.academic_print_group_price;
             }
 
             function canUseAcademicWritingColor(coverColor, writingColor) {
@@ -1445,7 +1452,9 @@
                 const copyCount = Math.max(1, numericValue(copies) || 1);
                 const printPrice = getPrintPrice(pages) * copyCount;
                 const cdCount = cdType === 'none' ? 0 : Math.max(1, numericValue(cdCopies) || 1);
-                const cdPrice = cdType === 'printed' ? cdCount * 10 : (cdType === 'plain' ? cdCount * 5 : 0);
+                const cdPrice = cdType === 'printed'
+                    ? cdCount * servicePricing.academic_cd_printed
+                    : (cdType === 'plain' ? cdCount * servicePricing.academic_cd_plain : 0);
                 if (!writingColor) {
                     return {
                         printPrice,
@@ -1455,8 +1464,8 @@
                     };
                 }
 
-                const bindingSinglePrice = writingColor === 'gold' ? 90 : 60;
-                const bindingMultiPrice = writingColor === 'gold' ? 75 : 45;
+                const bindingSinglePrice = writingColor === 'gold' ? servicePricing.academic_gold_single : servicePricing.academic_black_single;
+                const bindingMultiPrice = writingColor === 'gold' ? servicePricing.academic_gold_multiple : servicePricing.academic_black_multiple;
                 const bindingPrice = copyCount === 1 ? bindingSinglePrice : bindingMultiPrice * copyCount;
 
                 return {
@@ -1468,7 +1477,7 @@
             }
 
             function calculateFormattingFilePrice(pages) {
-                const formattingPrice = (numericValue(pages) || 1) * 10;
+                const formattingPrice = (numericValue(pages) || 1) * servicePricing.formatting_page_price;
 
                 return {
                     printPrice: 0,
@@ -1478,7 +1487,7 @@
             }
 
             function calculateResearchPrice(pages) {
-                const researchPrice = Math.max(1, numericValue(pages) || 1) * 10;
+                const researchPrice = Math.max(1, numericValue(pages) || 1) * servicePricing.research_page_price;
 
                 return {
                     printPrice: 0,
@@ -1988,8 +1997,8 @@
                         ? `<div class="academic-choice-cell" data-label="خيار CD">
                             <select class="binding-select academic-choice-select" onchange="setAcademicCdType('${config.service}', '${config.type}', ${index}, this.value)">
                                 <option value="none" ${(fileData.cdType || 'none') === 'none' ? 'selected' : ''}>بدون CD</option>
-                                <option value="plain" ${fileData.cdType === 'plain' ? 'selected' : ''}>CD عادي (٥ ريال)</option>
-                                <option value="printed" ${fileData.cdType === 'printed' ? 'selected' : ''}>CD مطبوع (١٠ ريال)</option>
+                                <option value="plain" ${fileData.cdType === 'plain' ? 'selected' : ''}>CD عادي (${formatMoney(servicePricing.academic_cd_plain)} ريال)</option>
+                                <option value="printed" ${fileData.cdType === 'printed' ? 'selected' : ''}>CD مطبوع (${formatMoney(servicePricing.academic_cd_printed)} ريال)</option>
                             </select>
                         </div>`
                         : '';

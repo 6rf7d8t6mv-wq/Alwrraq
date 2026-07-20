@@ -1,3 +1,4 @@
+@php($servicePricing = app(\App\Services\ServicePricingService::class)->all())
 <!DOCTYPE html>
 <html lang="{{ session('ui_locale', 'ar') === 'en' ? 'en' : 'ar' }}" dir="{{ session('ui_locale', 'ar') === 'en' ? 'ltr' : 'rtl' }}">
 <head>
@@ -755,9 +756,9 @@
                                         @method('patch')
                                         <div class="delivery-options">
                                             <label class="delivery-option"><input type="radio" name="delivery_method" value="branch_pickup" @checked($cartDeliveryOrder->delivery_method === 'branch_pickup')><span class="delivery-option-content"><strong>استلام من الفرع</strong><small>مجاني</small></span></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="islamic_university_delivery" @checked($cartDeliveryOrder->delivery_method === 'islamic_university_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="الجامعة الإسلامية">داخل الجامعة الإسلامية</strong><small class="mobile-compact-value" data-mobile-value="٥ ريال / مجانًا فوق ٣٥">٥ ريال، ومجاني إذا الطلب فوق ٣٥ ريال</small></span></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="madinah_delivery" @checked($cartDeliveryOrder->delivery_method === 'madinah_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="داخل المدينة">داخل المدينة المنورة</strong><small>٢٠ ريال</small></span></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="redbox_delivery" @checked($cartDeliveryOrder->delivery_method === 'redbox_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="خارج المدينة">خارج المدينة المنورة</strong><small>٣٠ ريال عبر RedBox</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="islamic_university_delivery" @checked($cartDeliveryOrder->delivery_method === 'islamic_university_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="الجامعة الإسلامية">داخل الجامعة الإسلامية</strong><small class="mobile-compact-value" data-mobile-value="{{ $servicePricing['delivery_university_fee'] }} ريال / مجانًا فوق {{ $servicePricing['delivery_university_free_from'] }}">{{ $servicePricing['delivery_university_fee'] }} ريال، ومجاني إذا الطلب بلغ {{ $servicePricing['delivery_university_free_from'] }} ريال</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="madinah_delivery" @checked($cartDeliveryOrder->delivery_method === 'madinah_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="داخل المدينة">داخل المدينة المنورة</strong><small>{{ $servicePricing['delivery_madinah_fee'] }} ريال</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="redbox_delivery" @checked($cartDeliveryOrder->delivery_method === 'redbox_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="خارج المدينة">خارج المدينة المنورة</strong><small>{{ $servicePricing['delivery_redbox_fee'] }} ريال عبر RedBox</small></span></label>
                                         </div>
                                         <div class="cart-form-grid" data-delivery-fields="islamic_university_delivery">
                                             <div><label>رقم الوحدة</label><input name="delivery_unit" value="{{ $cartDeliveryOrder->delivery_unit }}"></div>
@@ -961,9 +962,13 @@
             const deliveryMethod = deliveryCard?.dataset.orderDeliveryMethod || '';
             let deliveryFee = 0;
 
-            if (deliveryMethod === 'islamic_university_delivery') deliveryFee = baseTotal >= 35 ? 0 : 5;
-            if (deliveryMethod === 'madinah_delivery') deliveryFee = 20;
-            if (deliveryMethod === 'redbox_delivery') deliveryFee = 30;
+            if (deliveryMethod === 'islamic_university_delivery') {
+                deliveryFee = baseTotal >= @json($servicePricing['delivery_university_free_from'])
+                    ? 0
+                    : @json($servicePricing['delivery_university_fee']);
+            }
+            if (deliveryMethod === 'madinah_delivery') deliveryFee = @json($servicePricing['delivery_madinah_fee']);
+            if (deliveryMethod === 'redbox_delivery') deliveryFee = @json($servicePricing['delivery_redbox_fee']);
 
             if (selectedSummaryNodes.orders) selectedSummaryNodes.orders.textContent = `${selectedCards.length} خدمة`;
             if (selectedSummaryNodes.files) selectedSummaryNodes.files.textContent = `${files} ملف`;

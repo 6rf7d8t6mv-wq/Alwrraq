@@ -26,6 +26,8 @@
         .nav-notice-dot { position: absolute; top: 8px; left: 9px; width: 7px; height: 7px; border-radius: 999px; background: #dc2626; box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.95); }
         nav a.settings-link { background: #0f4c81; border-color: rgba(96, 165, 250, 0.35); }
         nav a.settings-link:hover, nav a.settings-link.active { background: #1d6fa5; border-color: #60a5fa; }
+        nav a.pricing-link { background: #7c3aed; border-color: rgba(196, 181, 253, 0.45); }
+        nav a.pricing-link:hover, nav a.pricing-link.active { background: #6d28d9; border-color: #c4b5fd; }
         .logout { margin-top: 0; justify-content: center; background: #b91c1c; border-color: rgba(248, 113, 113, 0.5); font-weight: 800; }
         .logout:hover { background: #dc2626; border-color: #f87171; }
         .logout .nav-text { flex: 0 1 auto; }
@@ -219,12 +221,21 @@
             .admin-name strong { max-width: 150px; overflow: hidden; font-size: 10px; line-height: 1.2; text-overflow: ellipsis; white-space: nowrap; }
             .admin-name small { font-size: 8px; line-height: 1.2; }
             .mobile-menu-toggle { display: none; }
-            nav { grid-column: 1 / -1; width: 100%; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; align-items: stretch; }
-            nav > a, nav > form, nav > .language-switcher-form { width: 100%; min-width: 0; margin: 0; }
+            nav { grid-column: 1 / -1; width: 100%; display: flex; flex-direction: row; gap: 3px; align-items: stretch; }
+            nav > a { flex: 1 1 0; width: auto; min-width: 0; margin: 0; }
+            nav > .settings-link,
+            nav > form,
+            nav > .language-switcher-form { flex: 0 0 30px; width: 30px !important; min-width: 30px; margin: 0; }
             nav a, .logout, nav .language-switcher-button { width: 100%; min-width: 0; min-height: 27px; margin: 0; padding: 3px 1px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 6.5px; line-height: 1.05; text-align: center; white-space: nowrap; overflow: hidden; }
             nav .nav-icon { flex: 0 0 auto; width: auto; height: auto; border-radius: 0; background: transparent; font-size: 10px; line-height: 1; }
             nav .nav-text { width: 100%; min-width: 0; flex: 0 1 auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             nav .nav-notice-dot { top: 2px; left: 3px; width: 5px; height: 5px; }
+            nav .settings-link .nav-text,
+            nav .logout .nav-text,
+            nav .language-switcher-button span:last-child { display: none; }
+            nav .settings-link .nav-icon,
+            nav .logout .nav-icon,
+            nav .language-switcher-button span:first-child { font-size: 13px; }
             nav a:hover, nav a.active, .logout:hover { transform: none; box-shadow: none; }
             main { padding: 14px 10px 24px; }
             .stats, .forms-grid, .form-grid, .permissions-grid { grid-template-columns: 1fr; }
@@ -290,6 +301,9 @@
             .admin-name strong { max-width: 130px; font-size: 9px; }
             .admin-name small { font-size: 7px; }
             nav { gap: 2px; }
+            nav > .settings-link,
+            nav > form,
+            nav > .language-switcher-form { flex-basis: 26px; width: 26px !important; min-width: 26px; }
             nav a, .logout, nav .language-switcher-button { min-height: 24px; padding: 2px 1px; border-radius: 5px; font-size: 6px; }
             nav .nav-icon { font-size: 9px; }
             main { padding: 10px 6px 18px; }
@@ -428,6 +442,9 @@
                     <a class="{{ request()->routeIs('admin.customers') ? 'active' : '' }}" href="{{ route('admin.customers') }}"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-text">العملاء</span></a>
                 @endif
                 <a class="{{ request()->routeIs('admin.stationery-products.*') ? 'active' : '' }}" href="{{ route('admin.stationery-products.index') }}"><span class="nav-icon" aria-hidden="true">✏️</span><span class="nav-text">القرطاسية</span></a>
+                @if (auth()->user()->hasAdminPermission('service_prices_update'))
+                    <a class="pricing-link {{ request()->routeIs('admin.service-pricing.*') ? 'active' : '' }}" href="{{ route('admin.service-pricing.index') }}"><span class="nav-icon" aria-hidden="true">💰</span><span class="nav-text">الأسعار</span></a>
+                @endif
                 <a class="settings-link {{ request()->routeIs('admin.settings') ? 'active' : '' }}" href="{{ route('admin.settings') }}"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-text">الإعدادات</span></a>
                 <form method="post" action="{{ route('logout') }}">
                     @csrf
