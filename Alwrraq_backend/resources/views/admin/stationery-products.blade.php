@@ -22,6 +22,11 @@
         .admin-product-actions .ghost,
         .admin-product-actions .danger { width: 100%; min-width: 0; min-height: 30px; margin: 0; padding: 6px 5px; font-size: 10px; text-align: center; justify-content: center; }
         .admin-products-empty { grid-column: 1 / -1; padding: 30px 12px; border: 1px dashed #cbd5e1; border-radius: 10px; color: #64748b; text-align: center; font-weight: 800; }
+        .stationery-edit-image { display: grid; gap: 7px; }
+        .stationery-edit-image-preview { position: relative; width: min(220px, 100%); aspect-ratio: 1 / 1; overflow: hidden; border: 1px solid #dbe3ef; border-radius: 12px; background: #f8fafc; }
+        .stationery-edit-image-preview img { width: 100%; height: 100%; display: block; object-fit: contain; background: #ffffff; }
+        .stationery-edit-image-placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; color: #94a3b8; font-size: 11px; font-weight: 900; text-align: center; }
+        .stationery-edit-image-note { margin: 0; color: #64748b; font-size: 10px; line-height: 1.5; }
         @media (max-width: 980px) {
             .admin-products-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
             .admin-product-card { border-radius: 9px; }
@@ -129,11 +134,63 @@
                     <div><label>اسم الشركة</label><input name="company_name" value="{{ $product->company_name }}" required></div>
                     <div><label>نوع المنتج</label><input name="product_type" value="{{ $product->product_type }}" required></div>
                     <div><label>السعر</label><input name="price" type="number" min="0.01" step="0.01" value="{{ $product->price }}" required></div>
-                    <div><label>تغيير الصورة</label><input name="image" type="file" accept="image/jpeg,image/png,image/webp"></div>
+                    <div class="full stationery-edit-image">
+                        <label>صورة المنتج</label>
+                        <div class="stationery-edit-image-preview">
+                            <img
+                                src="{{ $product->image_path ? route('stationery.image', ['filename' => basename($product->image_path)], false) : '' }}"
+                                alt="صورة {{ $product->name }} الحالية"
+                                data-stationery-image-preview
+                                @if (! $product->image_path) style="display:none" @endif
+                            >
+                            <div class="stationery-edit-image-placeholder" data-stationery-image-placeholder @if ($product->image_path) style="display:none" @endif>
+                                {{ $product->image_path ? 'تعذر عرض الصورة الحالية' : 'لا توجد صورة حالية' }}
+                            </div>
+                        </div>
+                        <p class="stationery-edit-image-note">هذه هي الصورة الحالية. اترك الحقل التالي فارغًا للاحتفاظ بها، أو اختر صورة جديدة لاستبدالها.</p>
+                        <input name="image" type="file" accept="image/jpeg,image/png,image/webp" data-stationery-image-input>
+                    </div>
                     <label class="full"><input name="is_active" type="checkbox" value="1" {{ $product->is_active ? 'checked' : '' }} style="width:auto;"> إظهار المنتج للمستخدمين</label>
                 </div>
                 <button class="save" type="submit">حفظ التعديل</button>
             </form>
         </template>
     @endforeach
+
+    <script>
+        document.addEventListener('change', (event) => {
+            const input = event.target.closest('[data-stationery-image-input]');
+            if (!input) return;
+
+            const container = input.closest('.stationery-edit-image');
+            const preview = container?.querySelector('[data-stationery-image-preview]');
+            const placeholder = container?.querySelector('[data-stationery-image-placeholder]');
+            const file = input.files?.[0];
+            if (!preview || !placeholder || !file) return;
+
+            const objectUrl = URL.createObjectURL(file);
+            preview.onload = () => {
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+                URL.revokeObjectURL(objectUrl);
+            };
+            preview.onerror = () => {
+                preview.style.display = 'none';
+                placeholder.style.display = 'grid';
+                placeholder.textContent = 'تعذر معاينة الصورة المختارة';
+                URL.revokeObjectURL(objectUrl);
+            };
+            preview.src = objectUrl;
+            preview.alt = `معاينة ${file.name}`;
+        });
+
+        document.addEventListener('error', (event) => {
+            const preview = event.target.closest?.('[data-stationery-image-preview]');
+            if (!preview) return;
+
+            preview.style.display = 'none';
+            const placeholder = preview.parentElement?.querySelector('[data-stationery-image-placeholder]');
+            if (placeholder) placeholder.style.display = 'grid';
+        }, true);
+    </script>
 @endsection
