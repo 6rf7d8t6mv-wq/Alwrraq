@@ -1,4 +1,7 @@
-<script src="{{ asset('vendor/pdfjs/pdf.min.js') }}"></script>
+@php
+    $pdfJsBasePath = rtrim(request()->getBaseUrl(), '/').'/vendor/pdfjs';
+@endphp
+<script src="{{ $pdfJsBasePath }}/pdf.min.js"></script>
 <script>
     window.addEventListener('load', async () => {
         const preview = document.getElementById(@json($pdfPreviewId));
@@ -6,8 +9,14 @@
         if (!preview || !status) return;
 
         try {
-            pdfjsLib.GlobalWorkerOptions.workerSrc = @json(asset('vendor/pdfjs/pdf.worker.min.js'));
-            const response = await fetch(@json($pdfUrl), {
+            pdfjsLib.GlobalWorkerOptions.workerSrc = @json($pdfJsBasePath.'/pdf.worker.min.js');
+
+            // Keep the authenticated PDF request on the exact WebView origin.
+            // Laravel may be configured with "localhost" while the app is opened
+            // through "127.0.0.1", which browsers correctly treat as two origins.
+            const configuredPdfUrl = new URL(@json($pdfUrl), window.location.href);
+            const sameOriginPdfUrl = `${configuredPdfUrl.pathname}${configuredPdfUrl.search}${configuredPdfUrl.hash}`;
+            const response = await fetch(sameOriginPdfUrl, {
                 credentials: 'same-origin',
                 cache: 'no-store',
                 headers: { Accept: 'application/pdf' },
