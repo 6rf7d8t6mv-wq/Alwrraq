@@ -980,10 +980,12 @@
                     <div class="upload-box" id="imagesBox">
                         <div class="file-icon">🖼️</div>
                         <h3>تحميل الصور</h3>
-                        <input type="file" id="imagesFile" multiple />
+                        <input type="file" id="imagesFile" accept="image/*" multiple />
+                        <input type="file" id="imagesFilesPicker" multiple />
                         <input type="file" id="imagesFolderFile" multiple webkitdirectory directory />
                         <p class="file-info">جميع صيغ الصور مدعومة</p>
-                        <button class="upload-button" id="imagesUploadBtn" type="button" onclick="document.getElementById('imagesFile').click()">اختر صورًا</button>
+                        <button class="upload-button" id="imagesUploadBtn" type="button" onclick="document.getElementById('imagesFile').click()">اختيار من الاستديو</button>
+                        <button class="upload-button" type="button" onclick="document.getElementById('imagesFilesPicker').click()">اختيار صور من الملفات</button>
                         <button class="upload-button" type="button" onclick="document.getElementById('imagesFolderFile').click()">اختر مجلد صور</button>
                         <div class="progress-bar" id="imagesProgress"><div class="progress-bar-fill"></div></div>
                         <div id="imagesError" class="error-msg" style="display: none;"></div>
@@ -1243,7 +1245,7 @@
                 phdWord: { inputId: 'phdWordFile', boxId: 'phdWordBox', progressId: 'phdWordProgress', errorId: 'phdWordError', listId: 'phdWordFilesList', service: 'phd', type: 'word' },
                 phdPdf: { inputId: 'phdPdfFile', boxId: 'phdPdfBox', progressId: 'phdPdfProgress', errorId: 'phdPdfError', listId: 'phdPdfFilesList', service: 'phd', type: 'pdf' },
                 formattingWord: { inputId: 'formattingWordFile', boxId: 'formattingWordBox', progressId: 'formattingWordProgress', errorId: 'formattingWordError', listId: 'formattingWordFilesList', service: 'formatting', type: 'word' },
-                imagesFile: { inputId: 'imagesFile', folderInputId: 'imagesFolderFile', boxId: 'imagesBox', progressId: 'imagesProgress', errorId: 'imagesError', listId: 'imagesFilesList', service: 'images', type: 'image' }
+                imagesFile: { inputId: 'imagesFile', additionalInputIds: ['imagesFilesPicker', 'imagesFolderFile'], boxId: 'imagesBox', progressId: 'imagesProgress', errorId: 'imagesError', listId: 'imagesFilesList', service: 'images', type: 'image' }
             };
 
             const fileTypes = {
@@ -2710,18 +2712,18 @@
                     }
                 });
 
-                if (config.folderInputId) {
-                    const folderInput = document.getElementById(config.folderInputId);
-                    if (folderInput && folderInput.dataset.uploadReady !== 'true') {
-                        folderInput.dataset.uploadReady = 'true';
-                        folderInput.addEventListener('change', function(e) {
+                (config.additionalInputIds || []).forEach((additionalInputId) => {
+                    const additionalInput = document.getElementById(additionalInputId);
+                    if (additionalInput && additionalInput.dataset.uploadReady !== 'true') {
+                        additionalInput.dataset.uploadReady = 'true';
+                        additionalInput.addEventListener('change', function(e) {
                             const files = Array.from(e.target.files);
                             if (files.length > 0) {
                                 uploadMultipleFiles(files, configKey);
                             }
                         });
                     }
-                }
+                });
 
                 box.addEventListener('dragover', (e) => {
                     e.preventDefault();
@@ -2795,9 +2797,9 @@
                     progressDiv.classList.remove('active');
                     uploadBtn.disabled = false;
                     document.getElementById(config.inputId).value = '';
-                    if (config.folderInputId) {
-                        document.getElementById(config.folderInputId).value = '';
-                    }
+                    (config.additionalInputIds || []).forEach((additionalInputId) => {
+                        document.getElementById(additionalInputId).value = '';
+                    });
                 }, 500);
             }
 
