@@ -52,6 +52,8 @@
             const scrollKey = `alwrraq-live-scroll:${window.location.pathname}${window.location.search}`;
             let revision = @json($livePageSnapshot['revision']);
             let pricingRevision = @json($livePageSnapshot['pricing_revision']);
+            let catalogRevision = @json($livePageSnapshot['catalog_revision'] ?? '');
+            let appRevision = @json($livePageSnapshot['app_revision'] ?? '');
             let ordersCount = Number(@json($livePageSnapshot['orders_count']));
             let updating = false;
             let dirty = false;
@@ -175,6 +177,26 @@
 
                     const status = await response.json();
                     updateOrderNotice(Number(status.unseen_count || 0));
+                    const applicationChanged = status.app_revision && status.app_revision !== appRevision;
+                    const catalogChanged = status.catalog_revision && status.catalog_revision !== catalogRevision;
+                    if (applicationChanged || catalogChanged) {
+                        if (pageIsBusy()) {
+                            showIndicator(
+                                applicationChanged
+                                    ? 'وصل تحديث جديد للموقع وسيُطبق بعد الانتهاء من الإدخال'
+                                    : 'تم تحديث الخدمات وستظهر بعد الانتهاء من الإدخال',
+                                'waiting',
+                                4500
+                            );
+                            return;
+                        }
+
+                        appRevision = status.app_revision || appRevision;
+                        catalogRevision = status.catalog_revision || catalogRevision;
+                        sessionStorage.setItem(scrollKey, String(window.scrollY));
+                        window.location.reload();
+                        return;
+                    }
                     const pricingChanged = status.pricing_revision && status.pricing_revision !== pricingRevision;
                     if (pricingChanged) {
                         if (pageIsBusy()) {

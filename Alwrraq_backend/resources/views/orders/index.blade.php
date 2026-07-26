@@ -39,6 +39,8 @@
         .uploaded-file-actions { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
         .uploaded-file-view { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; padding: 7px 10px; border-radius: 8px; background: #2563eb; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; white-space: nowrap; }
         .uploaded-file-view:hover { background: #1d4ed8; }
+        .uploaded-file-actions.image-action-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); flex: 0 1 330px; width: min(330px, 100%); }
+        .uploaded-file-actions.image-action-buttons .uploaded-file-view { min-width: 0; padding-inline: 6px; }
         .paid { background: #dcfce7; color: #166534; }
         .unpaid { background: #fef3c7; color: #92400e; }
         .done { background: #e0f2fe; color: #075985; }
@@ -206,6 +208,9 @@
             .invoice-table-wrap td:last-child { padding: 5px 6px; border-radius: 7px; }
         }
         @media (max-width: 640px) {
+            .uploaded-file-name { align-items: stretch; flex-direction: column; gap: 6px; }
+            .uploaded-file-actions.image-action-buttons { flex-basis: auto; width: 100%; gap: 4px; }
+            .uploaded-file-actions.image-action-buttons .uploaded-file-view { padding: 6px 3px; font-size: 10px; }
             .panel { padding: 12px; }
             .orders-table tr { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding: 8px; }
             .orders-table td { min-height: 46px; padding: 7px; gap: 4px; font-size: 11px; }
@@ -732,7 +737,7 @@
                                                         <td data-label="الملف">
                                                             <div class="uploaded-file-name">
                                                                 <span>{{ $file->original_name }}</span>
-                                                                <div class="uploaded-file-actions">
+                                                                <div class="uploaded-file-actions {{ $file->file_type === 'image' ? 'image-action-buttons' : '' }}">
                                                                     @if ($file->file_type === 'image')
                                                                         <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file]) }}">عرض الصورة</a>
                                                                         <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>

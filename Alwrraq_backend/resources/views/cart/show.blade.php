@@ -173,6 +173,8 @@
         .file-service-type { display: block; margin-top: 4px; color: #64748b; font-size: 12px; font-weight: 900; line-height: 1.5; }
         .file-format-badge { display: inline-flex; align-items: center; justify-content: center; margin-inline-start: 6px; padding: 3px 7px; border-radius: 999px; background: #e0f2fe; color: #0369a1; font-size: 11px; font-weight: 900; vertical-align: middle; }
         .file-actions-inline { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; }
+        .image-action-buttons { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; min-width: 0; }
+        .image-action-buttons .view-file-button { min-width: 0; padding-inline: 6px; }
         .edit-file-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: auto; min-width: 64px; padding: 6px 9px; border-radius: 8px; background: #2563eb; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; }
         .edit-file-button:hover { background: #1d4ed8; }
         .view-file-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: auto; min-width: 74px; padding: 6px 9px; border-radius: 8px; background: #38bdf8; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; }
@@ -252,6 +254,7 @@
             .file-service-type { grid-column: 1 / -1; margin-top: 0; overflow: visible; font-size: 8.5px; line-height: 1.25; white-space: normal; }
             .file-actions-inline { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; gap: 5px; }
             .file-actions-inline form { min-width: 0; }
+            .file-actions-inline .image-action-buttons { grid-column: 1 / -1; gap: 5px; }
             .edit-file-button, .view-file-button, .delete-file-button { width: 100%; min-width: 0; padding: 5px 4px; font-size: 10px; white-space: nowrap; }
             .stationery-product-line { gap: 5px; }
             .stationery-product-line img { flex-basis: 32px; width: 32px; height: 32px; }
@@ -686,9 +689,11 @@
                                                                 <div class="file-actions-inline">
                                                                     <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>
                                                                     @if ($file->file_type === 'image')
-                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}">عرض الصورة</a>
-                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
-                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                                                                        <div class="image-action-buttons">
+                                                                            <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}">عرض الصورة</a>
+                                                                            <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
+                                                                            <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                                                                        </div>
                                                                     @elseif ($cartOrder->service_type !== 'research')
                                                                         <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
                                                                     @endif

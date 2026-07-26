@@ -62,6 +62,7 @@
         #adminModalBody .panel[data-order-id] .academic-university-field span { flex: 0 0 auto; white-space: nowrap; }
         #adminModalBody .panel[data-order-id] .academic-university-field strong { flex: 1 1 auto; text-align: right; word-break: normal; overflow-wrap: normal; }
         #adminModalBody .panel[data-order-id] .file-action-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; min-width: 0; width: min(210px, 100%); }
+        #adminModalBody .panel[data-order-id] .file-action-buttons.image-action-buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); width: min(300px, 100%); }
         #adminModalBody .panel[data-order-id] .file-action-button { min-height: 27px; padding: 4px 6px; border-radius: 6px; font-size: 8px; }
         #adminModalBody .panel[data-order-id] .delivered-files-section { margin: 0; padding: 7px; border-radius: 9px; background: #f8fafc; }
         #adminModalBody .panel[data-order-id] .delivered-files-section h2 { margin: 0 0 6px; font-size: 11px; line-height: 1.3; }
@@ -606,7 +607,7 @@
                                         <div class="order-file-field actions-field">
                                             <span>الملف</span>
                                             @if (auth()->user()->hasAdminPermission('files_download'))
-                                                <div class="file-action-buttons">
+                                                <div class="file-action-buttons {{ $file->file_type === 'image' ? 'image-action-buttons' : '' }}">
                                                     @if ($file->file_type === 'image')
                                                         <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الصورة</a>
                                                         <a class="file-action-button view" href="{{ route('admin.files.view', ['file' => $file, 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
