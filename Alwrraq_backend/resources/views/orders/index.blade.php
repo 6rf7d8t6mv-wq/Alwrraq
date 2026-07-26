@@ -344,6 +344,7 @@
                                     'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
                                     'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
                                     'stationery' => 'منتجات القرطاسية',
+                                    'images' => 'رفع الصور',
                                 ];
                                 $projectNames = [
                                     'thesis' => 'رسالة ماجستير',
@@ -489,6 +490,7 @@
                             'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
                             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
                             'stationery' => 'القرطاسية',
+                            'images' => 'رفع الصور',
                         ];
                         $serviceFullNames = [
                             'notes' => 'طباعة المذكرات وملفات ال PDF',
@@ -499,9 +501,10 @@
                             'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
                             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
                             'stationery' => 'القرطاسية',
+                            'images' => 'رفع الصور',
                         ];
-                        $noPrintServices = ['formatting', 'research', 'stationery'];
-                        $hasDeliveredFile = in_array($order->service_type, $noPrintServices, true) && $order->deliveredFiles->isNotEmpty();
+                        $noPrintServices = ['formatting', 'research', 'stationery', 'images'];
+                        $hasDeliveredFile = in_array($order->service_type, ['formatting', 'research'], true) && $order->deliveredFiles->isNotEmpty();
                         $projectNames = [
                             'thesis' => 'رسالة ماجستير',
                             'supplementary' => 'بحث تكميلي',
@@ -556,6 +559,7 @@
                             'notes' => 'التغليف',
                             'formatting' => 'التنسيق',
                             'research' => 'إنشاء البحوث',
+                            'images' => 'الخدمة',
                             default => 'التجليد',
                         };
                         $bindingPriceLabel = match ($order->service_type) {
@@ -565,6 +569,7 @@
                             'formatting' => 'سعر التنسيق',
                             'research' => 'سعر إنشاء البحوث',
                             'stationery' => 'إجمالي المنتجات',
+                            'images' => 'سعر الخدمة',
                             default => 'سعر التجليد',
                         };
                         $deliveryMethodNames = [
@@ -726,7 +731,7 @@
                                                         <td data-label="الملف">
                                                             <div class="uploaded-file-name">
                                                                 <span>{{ $file->original_name }}</span>
-                                                                @if ($order->service_type !== 'research')
+                                                                @if (! in_array($order->service_type, ['research', 'images'], true))
                                                                     <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
                                                                 @endif
                                                             </div>
@@ -858,7 +863,7 @@
                         </div>
                     @endif
 
-                    @if (in_array($order->service_type, $noPrintServices, true))
+                    @if (in_array($order->service_type, ['formatting', 'research'], true))
                         <div class="modal-backdrop" id="deliveredFilesModal{{ $order->id }}" tabindex="-1" onclick="closeOrderModal(event, 'deliveredFilesModal{{ $order->id }}')">
                             <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
                                 <div class="modal-head">

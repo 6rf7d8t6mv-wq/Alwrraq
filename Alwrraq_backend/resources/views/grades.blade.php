@@ -964,6 +964,45 @@
                 </div>
             </div>
 
+            <!-- Image Upload Service -->
+            <div id="uploadImages" class="upload-content">
+                <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
+                <h2>رفع الصور</h2>
+                <div class="service-notice">
+                    <span class="service-notice-icon">i</span>
+                    <div class="service-notice-content">
+                        <p class="service-notice-title">رفع صور أو مجلد كامل</p>
+                        <p class="service-notice-text">يمكنك اختيار صور متعددة أو اختيار مجلد كامل يحتوي على الصور.</p>
+                    </div>
+                </div>
+
+                <div class="upload-section">
+                    <div class="upload-box" id="imagesBox">
+                        <div class="file-icon">🖼️</div>
+                        <h3>تحميل الصور</h3>
+                        <input type="file" id="imagesFile" multiple />
+                        <input type="file" id="imagesFolderFile" multiple webkitdirectory directory />
+                        <p class="file-info">جميع صيغ الصور مدعومة</p>
+                        <button class="upload-button" id="imagesUploadBtn" type="button" onclick="document.getElementById('imagesFile').click()">اختر صورًا</button>
+                        <button class="upload-button" type="button" onclick="document.getElementById('imagesFolderFile').click()">اختر مجلد صور</button>
+                        <div class="progress-bar" id="imagesProgress"><div class="progress-bar-fill"></div></div>
+                        <div id="imagesError" class="error-msg" style="display: none;"></div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 40px; margin-bottom: 40px;">
+                    <h3 style="margin-bottom: 16px; color: #111827;">🖼️ الصور المحملة</h3>
+                    <div class="files-list">
+                        <div id="imagesFilesList" class="empty-message">لم يتم تحميل أي صور</div>
+                    </div>
+                </div>
+
+                <div class="binding-section">
+                    <h3>إجمالي الخدمة</h3>
+                    <div id="imagesPricingSummary" class="pricing-summary empty">ارفع الصور لعرض السعر والانتقال للسلة.</div>
+                </div>
+            </div>
+
             <!-- Research Creation Service -->
             <div id="uploadResearch" class="upload-content">
                 <button class="back-button" onclick="backToServices()">← العودة للخدمات</button>
@@ -1015,6 +1054,7 @@
 
         <script>
             const servicePricing = @json($servicePricing);
+            const customServicePrices = @json($customServicePrices ?? []);
             // Store uploaded files for each service
             const uploadedFiles = {
                 notes: { word: [], pdf: [] },
@@ -1023,6 +1063,7 @@
                 thesis: { word: [], pdf: [] },
                 phd: { word: [], pdf: [] },
                 formatting: { word: [], pdf: [] },
+                images: { image: [] },
                 research: { word: [], pdf: [] }
             };
             const currentOrders = {
@@ -1032,6 +1073,7 @@
                 thesis: null,
                 phd: null,
                 formatting: null,
+                images: null,
                 research: null
             };
             const savedResearchRequest = {
@@ -1200,12 +1242,18 @@
                 thesisPdf: { inputId: 'thesisPdfFile', boxId: 'thesisPdfBox', progressId: 'thesisPdfProgress', errorId: 'thesisPdfError', listId: 'thesisPdfFilesList', service: 'thesis', type: 'pdf' },
                 phdWord: { inputId: 'phdWordFile', boxId: 'phdWordBox', progressId: 'phdWordProgress', errorId: 'phdWordError', listId: 'phdWordFilesList', service: 'phd', type: 'word' },
                 phdPdf: { inputId: 'phdPdfFile', boxId: 'phdPdfBox', progressId: 'phdPdfProgress', errorId: 'phdPdfError', listId: 'phdPdfFilesList', service: 'phd', type: 'pdf' },
-                formattingWord: { inputId: 'formattingWordFile', boxId: 'formattingWordBox', progressId: 'formattingWordProgress', errorId: 'formattingWordError', listId: 'formattingWordFilesList', service: 'formatting', type: 'word' }
+                formattingWord: { inputId: 'formattingWordFile', boxId: 'formattingWordBox', progressId: 'formattingWordProgress', errorId: 'formattingWordError', listId: 'formattingWordFilesList', service: 'formatting', type: 'word' },
+                imagesFile: { inputId: 'imagesFile', folderInputId: 'imagesFolderFile', boxId: 'imagesBox', progressId: 'imagesProgress', errorId: 'imagesError', listId: 'imagesFilesList', service: 'images', type: 'image' }
             };
 
             const fileTypes = {
                 word: { types: ['application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'], extensions: ['.doc', '.docx'] },
-                pdf: { types: ['application/pdf'], extensions: ['.pdf'] }
+                pdf: { types: ['application/pdf'], extensions: ['.pdf'] },
+                image: {
+                    mimePrefix: 'image/',
+                    types: [],
+                    extensions: ['.jpg', '.jpeg', '.jpe', '.png', '.gif', '.webp', '.bmp', '.dib', '.tif', '.tiff', '.heic', '.heif', '.avif', '.svg', '.ico', '.jfif', '.jxl', '.jp2', '.j2k', '.jpf', '.jpx', '.apng', '.psd', '.psb', '.ai', '.eps', '.hdr', '.exr', '.pbm', '.pgm', '.ppm', '.pnm', '.raw', '.dng', '.cr2', '.cr3', '.nef', '.nrw', '.arw', '.srf', '.sr2', '.raf', '.orf', '.rw2', '.pef', '.x3f']
+                }
             };
 
             function getConfigKey(service, type) {
@@ -1248,6 +1296,7 @@
                 document.getElementById('uploadThesis').classList.remove('active');
                 document.getElementById('uploadPhd').classList.remove('active');
                 document.getElementById('uploadFormatting').classList.remove('active');
+                document.getElementById('uploadImages').classList.remove('active');
                 document.getElementById('uploadResearch').classList.remove('active');
             }
 
@@ -1524,7 +1573,8 @@
 
                 const noPrintServiceLabels = {
                     formatting: 'سعر التنسيق',
-                    research: 'سعر إنشاء البحوث'
+                    research: 'سعر إنشاء البحوث',
+                    images: 'سعر الخدمة'
                 };
                 const productBindingLabel = service === 'books'
                     ? 'سعر التجليد'
@@ -1669,6 +1719,24 @@
                 }, { print: 0, binding: 0, total: 0 });
 
                 renderCheckoutSummary(summary, 'formatting', '', totals, true);
+            }
+
+            function updateImagesPricingSummary() {
+                const summary = document.getElementById('imagesPricingSummary');
+                if (!summary) return;
+
+                const files = uploadedFiles.images.image;
+                if (files.length === 0) {
+                    renderCheckoutSummary(summary, 'images', 'ارفع الصور لعرض السعر والانتقال للسلة.');
+                    return;
+                }
+
+                const servicePrice = Number(customServicePrices[activeServiceDefinitionId] || 1);
+                renderCheckoutSummary(summary, 'images', '', {
+                    print: 0,
+                    binding: servicePrice,
+                    total: servicePrice
+                }, true);
             }
 
             function updateResearchPricingSummary() {
@@ -1878,6 +1946,26 @@
                 const config = fileConfigs[configKey];
                 const listDiv = document.getElementById(config.listId);
                 const files = uploadedFiles[config.service][config.type];
+
+                if (config.service === 'images') {
+                    if (files.length === 0) {
+                        listDiv.innerHTML = '<div class="empty-message">لم يتم تحميل أي صور</div>';
+                        return;
+                    }
+
+                    listDiv.innerHTML = files.map((fileData, index) => `
+                        <div class="files-list-item">
+                            <div class="file-name-cell" data-label="اسم الصورة">
+                                <span class="file-name-text">${escapeHtml(fileData.relativePath || fileData.filename)}</span>
+                            </div>
+                            <div class="file-size" data-label="الحجم">${escapeHtml(fileData.size)}</div>
+                            <div data-label="الحالة" style="color: #047857; font-weight: 600;">✓ مرفوعة</div>
+                            <div class="file-remove" data-label="الإجراء" onclick="removeFile('images', 'image', ${index})">حذف</div>
+                        </div>
+                    `).join('');
+                    return;
+                }
+
                 const showPrice = config.service === 'notes' || config.service === 'books' || config.service === 'color_printing';
                 const showColorPrintingPrice = config.service === 'color_printing';
                 const showAcademicPrice = (config.service === 'thesis' || config.service === 'phd') && config.type === 'pdf';
@@ -2149,6 +2237,8 @@
                     updateAcademicPricingSummary(service);
                 } else if (service === 'formatting') {
                     updateFormattingPricingSummary();
+                } else if (service === 'images') {
+                    updateImagesPricingSummary();
                 }
             }
 
@@ -2620,6 +2710,19 @@
                     }
                 });
 
+                if (config.folderInputId) {
+                    const folderInput = document.getElementById(config.folderInputId);
+                    if (folderInput && folderInput.dataset.uploadReady !== 'true') {
+                        folderInput.dataset.uploadReady = 'true';
+                        folderInput.addEventListener('change', function(e) {
+                            const files = Array.from(e.target.files);
+                            if (files.length > 0) {
+                                uploadMultipleFiles(files, configKey);
+                            }
+                        });
+                    }
+                }
+
                 box.addEventListener('dragover', (e) => {
                     e.preventDefault();
                     box.classList.add('drag-over');
@@ -2648,7 +2751,8 @@
                 const uploadBtn = document.getElementById(config.inputId.replace('File', 'UploadBtn'));
 
                 const validFiles = files.filter(file => {
-                    const isValidType = fileType.types.includes(file.type) || 
+                    const isValidType = (fileType.mimePrefix && file.type.startsWith(fileType.mimePrefix)) ||
+                                       fileType.types.includes(file.type) ||
                                        fileType.extensions.some(ext => file.name.toLowerCase().endsWith(ext));
                     if (!isValidType) {
                         errorDiv.textContent = `${file.name}: صيغة غير صحيحة`;
@@ -2691,6 +2795,9 @@
                     progressDiv.classList.remove('active');
                     uploadBtn.disabled = false;
                     document.getElementById(config.inputId).value = '';
+                    if (config.folderInputId) {
+                        document.getElementById(config.folderInputId).value = '';
+                    }
                 }, 500);
             }
 
@@ -2702,6 +2809,9 @@
                     formData.append('file', file);
                     formData.append('type', config.type);
                     formData.append('service', config.service);
+                    if (config.type === 'image') {
+                        formData.append('relative_path', file.webkitRelativePath || file.name);
+                    }
                     if (activeServiceDefinitionId) {
                         formData.append('service_definition_id', activeServiceDefinitionId);
                     }
@@ -2721,7 +2831,8 @@
                                 currentOrders[config.service] = response.order_id;
                                 uploadedFiles[config.service][config.type].push({
                                     id: response.file_id,
-                                    filename: response.filename,
+                                    filename: response.original_name || response.filename,
+                                    relativePath: response.relative_path || file.webkitRelativePath || file.name,
                                     pages: response.pages || pageCount,
                                     size: formatFileSize(response.size),
                                     binding: response.binding_type || (config.service === 'books' ? 'normal' : ''),
@@ -2744,6 +2855,8 @@
                                     updatePrintProductPricingSummary(config.service);
                                 } else if (config.service === 'thesis' || config.service === 'phd') {
                                     updateAcademicPricingSummary(config.service);
+                                } else if (config.service === 'images') {
+                                    updateImagesPricingSummary();
                                 }
                             }
                         } else {
@@ -2790,8 +2903,9 @@
                     return;
                 }
 
-                uploadedFiles[service].word = [];
-                uploadedFiles[service].pdf = [];
+                Object.keys(uploadedFiles[service]).forEach((type) => {
+                    uploadedFiles[service][type] = [];
+                });
 
                 (payload.files || []).forEach((file) => {
                     const type = file.file_type;
@@ -2818,6 +2932,7 @@
                         cdType: file.cd_type || 'none',
                         cdCopies: Number(file.cd_copies || 0),
                         cdPrice: Number(file.cd_price || 0),
+                        relativePath: file.relative_path || file.filename,
                     });
                 });
 
@@ -2827,6 +2942,9 @@
                         updateFilesList(configKey);
                     }
                 });
+                if (service === 'images') {
+                    updateImagesPricingSummary();
+                }
             }
 
             bindEnglishNumberWarnings();
@@ -2834,7 +2952,7 @@
             const editOrderPayload = @json($editOrderPayload ?? null);
             const requestedService = new URLSearchParams(window.location.search).get('service') || editOrderPayload?.service_type;
             const requestedServiceDefinition = new URLSearchParams(window.location.search).get('service_definition') || editOrderPayload?.service_definition_id;
-            const editableServices = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research'];
+            const editableServices = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research', 'images'];
             if (requestedService && editableServices.includes(requestedService)) {
                 selectService(requestedService, requestedServiceDefinition);
             }

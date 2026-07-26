@@ -15,6 +15,7 @@ class ServiceDefinition extends Model
         'phd' => 'رسالة دكتوراه',
         'formatting' => 'تنسيق وتدقيق ملف Word',
         'research' => 'إنشاء بحث بدون رفع ملف',
+        'images' => 'رفع صور أو مجلد صور',
         'stationery' => 'متجر القرطاسية',
     ];
 

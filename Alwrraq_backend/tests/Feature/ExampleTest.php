@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
 use App\Models\User;
+use App\Models\ServiceDefinition;
 use App\Services\LivePageUpdateService;
 use App\Services\ServicePricingService;
 use Illuminate\Support\Facades\Storage;
@@ -109,6 +110,26 @@ class ExampleTest extends TestCase
             'servicePricing' => $servicePricing,
             'paymentPage' => false,
         ])->assertSee('السلة فارغة');
+    }
+
+    public function test_custom_services_receive_an_automatic_default_price(): void
+    {
+        $customService = new ServiceDefinition();
+        $customService->forceFill([
+            'id' => 99,
+            'is_system' => false,
+        ]);
+
+        $systemService = new ServiceDefinition();
+        $systemService->forceFill([
+            'id' => 1,
+            'is_system' => true,
+        ]);
+
+        $pricing = app(ServicePricingService::class);
+
+        $this->assertSame(1.0, $pricing->customServicePrice($customService));
+        $this->assertSame(0.0, $pricing->customServicePrice($systemService));
     }
 
     public function test_paid_and_unpaid_admin_order_pages_are_private(): void

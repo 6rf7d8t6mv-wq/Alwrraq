@@ -119,6 +119,7 @@ Route::get('/home', function (Request $request) {
                     'filename' => $file->original_name,
                     'pages' => $file->pages,
                     'size' => $formatSize((int) $file->size),
+                    'relative_path' => $file->relative_path,
                     'binding_type' => $file->binding_type,
                     'copies' => $file->copies,
                     'print_sides' => $file->print_sides,
@@ -148,8 +149,9 @@ Route::get('/home', function (Request $request) {
         ->orderBy('sort_order')
         ->orderBy('id')
         ->get();
+    $customServicePrices = app(ServicePricingService::class)->customServicePrices($serviceDefinitions);
 
-    return view('grades', compact('students', 'editOrderPayload', 'servicePricing', 'serviceDefinitions'));
+    return view('grades', compact('students', 'editOrderPayload', 'servicePricing', 'serviceDefinitions', 'customServicePrices'));
 })->middleware('auth')->name('home');
 
 Route::post('/upload-file', [FileUploadController::class, 'upload'])->middleware('auth');
@@ -241,4 +243,5 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('/delivered-files/{deliveredFile}', [AdminController::class, 'destroyDeliveredFile'])->name('delivered-files.destroy');
     Route::get('/files/{file}/view', [AdminController::class, 'viewFile'])->name('files.view');
     Route::get('/files/{file}/download', [AdminController::class, 'download'])->name('files.download');
+    Route::get('/orders/{order}/images/download', [AdminController::class, 'downloadOrderImages'])->name('orders.images.download');
 });

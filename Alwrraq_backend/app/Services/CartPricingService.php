@@ -14,7 +14,7 @@ class CartPricingService
 
     public function refreshCartTotals(Collection $orders): array
     {
-        $orders->each->load(['files', 'productItems']);
+        $orders->each->load(['files', 'productItems', 'serviceDefinition']);
 
         $printAllocations = $this->cartPrintAllocations($orders);
 
@@ -25,6 +25,7 @@ class CartPricingService
 
             return [$order->id => (float) ($printAllocations[$order->id] ?? 0)
                 + (float) $filesForBinding->sum('binding_price')
+                + $this->pricing->customServicePrice($order->serviceDefinition)
                 + (float) $order->productItems->sum('total_price')
                 + (float) $order->files->sum('cd_price')];
         })->all();
@@ -61,7 +62,8 @@ class CartPricingService
             $filesForBinding = in_array($order->service_type, ['thesis', 'phd'], true)
                 ? $order->files->where('file_type', 'pdf')
                 : $order->files;
-            $bindingTotal = (float) $filesForBinding->sum('binding_price');
+            $bindingTotal = (float) $filesForBinding->sum('binding_price')
+                + $this->pricing->customServicePrice($order->serviceDefinition);
             $bindingTotal += (float) $order->productItems->sum('total_price');
             $cdTotal = (float) $order->files->sum('cd_price');
             $printTotal = (float) ($printAllocations[$order->id] ?? 0);
@@ -150,7 +152,7 @@ class CartPricingService
 
     private function printUnits(Order $order, OrderFile $file): int
     {
-        if (in_array($order->service_type, ['formatting', 'research'], true)) {
+        if (in_array($order->service_type, ['formatting', 'research', 'images'], true)) {
             return 0;
         }
 

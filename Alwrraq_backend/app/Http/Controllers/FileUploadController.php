@@ -8,6 +8,7 @@ use App\Models\ServiceDefinition;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class FileUploadController extends Controller
 {
@@ -33,7 +34,7 @@ class FileUploadController extends Controller
             $type = $request->input('type', 'unknown');
             $service = $request->input('service', 'notes');
 
-            if (! in_array($service, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research'], true)) {
+            if (! in_array($service, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research', 'images'], true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'نوع الخدمة غير معروف',
@@ -41,11 +42,31 @@ class FileUploadController extends Controller
             }
 
             $serviceDefinition = $this->resolveServiceDefinition($request, $service);
+            if ($service === 'images' && ! $serviceDefinition) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'اختر خدمة صور صالحة',
+                ], 422);
+            }
 
             if (in_array($service, ['notes', 'books', 'color_printing'], true) && $type !== 'pdf') {
                 return response()->json([
                     'success' => false,
                     'message' => 'هذه الخدمة تقبل ملفات PDF فقط',
+                ], 400);
+            }
+
+            if ($service === 'images' && $type !== 'image') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'هذه الخدمة تقبل الصور فقط',
+                ], 400);
+            }
+
+            if ($type === 'image' && $service !== 'images') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'رفع الصور متاح فقط داخل خدمة الصور',
                 ], 400);
             }
 
@@ -64,6 +85,17 @@ class FileUploadController extends Controller
             } elseif ($type === 'pdf') {
                 $allowedMimes = ['application/pdf'];
                 $allowedExtensions = ['pdf'];
+            } elseif ($type === 'image') {
+                $allowedMimes = [];
+                $allowedExtensions = [
+                    'jpg', 'jpeg', 'jpe', 'png', 'gif', 'webp', 'bmp', 'dib',
+                    'tif', 'tiff', 'heic', 'heif', 'avif', 'svg', 'ico',
+                    'jfif', 'jxl', 'jp2', 'j2k', 'jpf', 'jpx', 'apng',
+                    'psd', 'psb', 'ai', 'eps', 'hdr', 'exr',
+                    'pbm', 'pgm', 'ppm', 'pnm',
+                    'raw', 'dng', 'cr2', 'cr3', 'nef', 'nrw', 'arw', 'srf',
+                    'sr2', 'raf', 'orf', 'rw2', 'pef', 'x3f',
+                ];
             } else {
                 return response()->json([
                     'success' => false,
@@ -72,7 +104,12 @@ class FileUploadController extends Controller
             }
 
             // Check MIME type
-            if (! in_array($file->getMimeType(), $allowedMimes)) {
+            $mimeType = strtolower((string) $file->getMimeType());
+            $isSupportedImage = $type === 'image'
+                && (str_starts_with($mimeType, 'image/')
+                    || in_array(strtolower($file->getClientOriginalExtension()), $allowedExtensions, true));
+
+            if (! $isSupportedImage && ! in_array($mimeType, $allowedMimes, true)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'صيغة الملف غير مدعومة',
@@ -81,7 +118,7 @@ class FileUploadController extends Controller
 
             // Check file extension
             $extension = strtolower($file->getClientOriginalExtension());
-            if (! in_array($extension, $allowedExtensions)) {
+            if ($type !== 'image' && ! in_array($extension, $allowedExtensions)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'صيغة الملف غير صحيحة',
@@ -99,7 +136,9 @@ class FileUploadController extends Controller
             // Generate unique filename
             $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
             $timestamp = now()->timestamp;
-            $filename = $originalName.'_'.$timestamp.'.'.$extension;
+            $filename = $type === 'image'
+                ? Str::uuid()->toString().($extension === '' ? '' : '.'.$extension)
+                : $originalName.'_'.$timestamp.'.'.$extension;
             $fileSize = filesize($file->getRealPath()) ?: 0;
 
             // Count pages
@@ -142,6 +181,9 @@ class FileUploadController extends Controller
                 'original_name' => $file->getClientOriginalName(),
                 'stored_name' => $filename,
                 'path' => $path,
+                'relative_path' => $type === 'image'
+                    ? $this->normalizeRelativeImagePath((string) $request->input('relative_path'), $file->getClientOriginalName())
+                    : null,
                 'size' => $fileSize,
                 'pages' => $pageCount,
                 'copies' => 1,
@@ -166,19 +208,26 @@ class FileUploadController extends Controller
 
             $orderFile = OrderFile::query()->create($filePayload);
 
-            $prices = $this->calculatePrices(
-                $service,
-                $pageCount,
-                $orderFile->copies,
-                $orderFile->binding_type,
-                $orderFile->writing_color,
-                $orderFile->file_type,
-                $orderFile->paper_color,
-                $orderFile->page_size,
-                $orderFile->print_sides,
-                $orderFile->cd_type,
-                $orderFile->cd_copies
-            );
+            $prices = $service === 'images'
+                ? [
+                    'print_price' => 0,
+                    'binding_price' => 0,
+                    'cd_price' => 0,
+                    'total_price' => 0,
+                ]
+                : $this->calculatePrices(
+                    $service,
+                    $pageCount,
+                    $orderFile->copies,
+                    $orderFile->binding_type,
+                    $orderFile->writing_color,
+                    $orderFile->file_type,
+                    $orderFile->paper_color,
+                    $orderFile->page_size,
+                    $orderFile->print_sides,
+                    $orderFile->cd_type,
+                    $orderFile->cd_copies
+                );
 
             $orderFile->fill($prices)->save();
             $this->refreshOrderTotals($order);
@@ -190,6 +239,8 @@ class FileUploadController extends Controller
                     'file_id' => $orderFile->id,
                     'order_id' => $order->id,
                     'filename' => $filename,
+                    'original_name' => $orderFile->original_name,
+                    'relative_path' => $orderFile->relative_path,
                     'path' => $path,
                     'size' => $fileSize,
                     'pages' => $pageCount,
@@ -207,6 +258,7 @@ class FileUploadController extends Controller
                     'binding_price' => $orderFile->binding_price,
                     'cd_price' => $orderFile->cd_price,
                     'total_price' => $orderFile->total_price,
+                    'order_totals' => $this->orderTotalsPayload($order->fresh()),
                 ]);
             } else {
                 return response()->json([
@@ -442,6 +494,22 @@ class FileUploadController extends Controller
             ->where('code', $workflow)
             ->where('workflow_type', $workflow)
             ->first();
+    }
+
+    private function normalizeRelativeImagePath(string $relativePath, string $fallbackName): string
+    {
+        $path = str_replace('\\', '/', trim($relativePath));
+        $segments = collect(explode('/', $path))
+            ->reject(fn (string $segment) => $segment === '' || $segment === '.' || $segment === '..')
+            ->map(fn (string $segment) => trim((string) preg_replace('/[\\x00-\\x1F\\x7F]/u', '', $segment)))
+            ->filter()
+            ->values();
+
+        if ($segments->isEmpty()) {
+            return $fallbackName;
+        }
+
+        return Str::limit($segments->implode('/'), 1000, '');
     }
 
     public function destroyFile(OrderFile $file)
@@ -708,9 +776,9 @@ class FileUploadController extends Controller
 
     private function refreshOrderTotals(Order $order): void
     {
-        $order->load('files');
+        $order->load(['files', 'serviceDefinition']);
         $printTotal = 0;
-        if (! in_array($order->service_type, ['formatting', 'research'], true)) {
+        if (! in_array($order->service_type, ['formatting', 'research', 'images'], true)) {
             if (in_array($order->service_type, ['notes', 'books'], true)) {
                 $printTotal = $this->printProductPrintTotal($order);
             } elseif ($order->service_type === 'color_printing') {
@@ -726,7 +794,8 @@ class FileUploadController extends Controller
         $filesForBinding = in_array($order->service_type, ['thesis', 'phd'], true)
             ? $order->files->where('file_type', 'pdf')
             : $order->files;
-        $bindingTotal = (float) $filesForBinding->sum('binding_price');
+        $bindingTotal = (float) $filesForBinding->sum('binding_price')
+            + $this->pricing->customServicePrice($order->serviceDefinition);
         $cdTotal = (float) $order->files->sum('cd_price');
         $baseTotal = $printTotal + $bindingTotal + $cdTotal;
         $discountAmount = min((float) $order->discount_amount, $baseTotal);

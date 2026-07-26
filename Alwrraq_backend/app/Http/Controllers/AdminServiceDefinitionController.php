@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\ServiceDefinition;
+use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +21,7 @@ class AdminServiceDefinitionController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    public function store(Request $request, ServicePricingService $pricing)
     {
         $this->ensureAdmin();
         $data = $this->validated($request);
@@ -29,9 +31,10 @@ class AdminServiceDefinitionController extends Controller
         $data['is_system'] = false;
         $data['sort_order'] = ((int) ServiceDefinition::query()->max('sort_order')) + 10;
 
-        ServiceDefinition::query()->create($data);
+        $service = ServiceDefinition::query()->create($data);
+        $pricing->ensureCustomServicePrice($service, (int) Auth::id());
 
-        return back()->with('status', 'تمت إضافة الخدمة بنجاح.');
+        return back()->with('status', 'تمت إضافة الخدمة وتفعيل سعرها الافتراضي بنجاح.');
     }
 
     public function update(Request $request, ServiceDefinition $service)

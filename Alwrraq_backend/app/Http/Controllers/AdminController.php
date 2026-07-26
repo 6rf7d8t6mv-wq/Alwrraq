@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use ZipArchive;
 
 class AdminController extends Controller
 {
@@ -73,7 +74,7 @@ class AdminController extends Controller
             ->latest()
             ->take(6)
             ->get();
-        $serviceTypes = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research', 'stationery'];
+        $serviceTypes = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research', 'stationery', 'images'];
         $serviceTotals = collect($serviceTypes)->mapWithKeys(fn (string $service) => [
             $service => (float) $orders
                 ->where('service_type', $service)
@@ -578,6 +579,66 @@ class AdminController extends Controller
         abort_unless(is_file($absolutePath), 404);
 
         return Response::download($absolutePath, $file->original_name);
+    }
+
+    public function downloadOrderImages(Order $order)
+    {
+        $this->ensureAdmin();
+        $this->ensurePermission('files_download');
+        abort_unless($order->service_type === 'images', 404);
+
+        $files = $order->files()->where('file_type', 'image')->get();
+        abort_if($files->isEmpty(), 404);
+
+        $zipPath = tempnam(sys_get_temp_dir(), 'alwrraq-images-');
+        abort_if($zipPath === false, 500);
+
+        $zip = new ZipArchive();
+        if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+            @unlink($zipPath);
+            abort(500);
+        }
+
+        $usedNames = [];
+        $addedFiles = 0;
+        foreach ($files as $file) {
+            $absolutePath = storage_path('app/'.$file->path);
+            if (! is_file($absolutePath)) {
+                continue;
+            }
+
+            $fallbackName = basename(str_replace('\\', '/', $file->original_name));
+            $relativePath = str_replace('\\', '/', $file->relative_path ?: $fallbackName);
+            $relativePath = collect(explode('/', $relativePath))
+                ->reject(fn (string $segment) => $segment === '' || $segment === '.' || $segment === '..')
+                ->map(fn (string $segment) => preg_replace('/[\\x00-\\x1F\\x7F]/u', '', $segment))
+                ->implode('/');
+            $relativePath = $relativePath ?: $fallbackName;
+
+            $candidate = $relativePath;
+            $counter = 2;
+            while (isset($usedNames[$candidate])) {
+                $extension = pathinfo($relativePath, PATHINFO_EXTENSION);
+                $base = $extension === '' ? $relativePath : substr($relativePath, 0, -strlen($extension) - 1);
+                $candidate = $base.'-'.$counter.($extension === '' ? '' : '.'.$extension);
+                $counter++;
+            }
+
+            $usedNames[$candidate] = true;
+            if ($zip->addFile($absolutePath, $candidate)) {
+                $addedFiles++;
+            }
+        }
+        $zip->close();
+
+        if ($addedFiles === 0) {
+            @unlink($zipPath);
+            abort(404);
+        }
+
+        return response()
+            ->download($zipPath, 'صور-الطلب-'.$order->id.'.zip')
+            ->deleteFileAfterSend(true);
     }
 
     public function completeOrder(Order $order)

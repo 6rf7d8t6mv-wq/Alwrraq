@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ServiceDefinition;
 use App\Models\ServicePriceSetting;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Facade;
@@ -9,6 +10,8 @@ use Illuminate\Support\Facades\Schema;
 
 class ServicePricingService
 {
+    public const CUSTOM_SERVICE_DEFAULT_PRICE = 1;
+
     public const DEFINITIONS = [
         'notes_white_pages' => ['group' => 'طباعة المذكرات والملفات', 'label' => 'عدد صفحات الورق الأبيض للمجموعة', 'default' => 12, 'integer' => true, 'suffix' => 'صفحة'],
         'notes_white_group_price' => ['group' => 'طباعة المذكرات والملفات', 'label' => 'سعر مجموعة الورق الأبيض', 'default' => 1, 'suffix' => 'ريال'],
@@ -82,6 +85,37 @@ class ServicePricingService
         return $this->all()[$key] ?? throw new \InvalidArgumentException("Unknown service price: {$key}");
     }
 
+    public function customServicePrice(?ServiceDefinition $service): float
+    {
+        if (! $service || $service->is_system) {
+            return 0;
+        }
+
+        return $this->customServicePrices([$service])[$service->id] ?? self::CUSTOM_SERVICE_DEFAULT_PRICE;
+    }
+
+    public function customServicePrices(iterable $services): array
+    {
+        $services = collect($services)
+            ->filter(fn (ServiceDefinition $service) => ! $service->is_system)
+            ->values();
+
+        if ($services->isEmpty()) {
+            return [];
+        }
+
+        $keysById = $services->mapWithKeys(
+            fn (ServiceDefinition $service) => [$service->id => $this->customServicePriceKey($service->id)]
+        );
+        $storedPrices = Facade::getFacadeApplication() && Schema::hasTable('service_price_settings')
+            ? ServicePriceSetting::query()->whereIn('key', $keysById->values())->pluck('value', 'key')
+            : collect();
+
+        return $keysById->mapWithKeys(fn (string $key, int $serviceId) => [
+            $serviceId => (float) ($storedPrices[$key] ?? self::CUSTOM_SERVICE_DEFAULT_PRICE),
+        ])->all();
+    }
+
     public function groupedDefinitions(): array
     {
         $values = $this->all();
@@ -118,5 +152,39 @@ class ServicePricingService
         });
 
         $this->loaded = null;
+    }
+
+    public function ensureCustomServicePrice(ServiceDefinition $service, int $userId): void
+    {
+        if ($service->is_system) {
+            return;
+        }
+
+        ServicePriceSetting::query()->firstOrCreate(
+            ['key' => $this->customServicePriceKey($service->id)],
+            ['value' => self::CUSTOM_SERVICE_DEFAULT_PRICE, 'updated_by' => $userId]
+        );
+    }
+
+    public function updateCustomServicePrices(array $prices, int $userId): void
+    {
+        $services = ServiceDefinition::query()
+            ->where('is_system', false)
+            ->whereIn('id', array_keys($prices))
+            ->get();
+
+        DB::transaction(function () use ($services, $prices, $userId) {
+            foreach ($services as $service) {
+                ServicePriceSetting::query()->updateOrCreate(
+                    ['key' => $this->customServicePriceKey($service->id)],
+                    ['value' => $prices[$service->id], 'updated_by' => $userId]
+                );
+            }
+        });
+    }
+
+    private function customServicePriceKey(int $serviceId): string
+    {
+        return 'service_definition_'.$serviceId.'_price';
     }
 }

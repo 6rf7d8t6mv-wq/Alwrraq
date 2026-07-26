@@ -218,7 +218,7 @@
 
     @php
         $dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        $noPrintServices = ['formatting', 'research', 'stationery'];
+        $noPrintServices = ['formatting', 'research', 'stationery', 'images'];
         $serviceNames = [
             'notes' => 'مذكرات',
             'books' => 'كتب',
@@ -228,6 +228,7 @@
             'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
             'stationery' => 'القرطاسية',
+            'images' => 'رفع الصور',
         ];
         $serviceFullNames = [
             'notes' => 'طباعة المذكرات وملفات ال PDF',
@@ -238,6 +239,7 @@
             'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
             'stationery' => 'القرطاسية',
+            'images' => 'رفع الصور',
         ];
         $statusNames = [
             'new' => 'جديد',
@@ -304,6 +306,7 @@
                             'formatting' => 'التنسيق',
                             'research' => 'إنشاء البحوث',
                             'stationery' => 'المنتجات',
+                            'images' => 'الخدمة',
                             default => 'التجليد',
                         };
                         $bindingPriceLabel = match ($order->service_type) {
@@ -313,6 +316,7 @@
                             'formatting' => 'سعر التنسيق',
                             'research' => 'سعر إنشاء البحوث',
                             'stationery' => 'إجمالي المنتجات',
+                            'images' => 'سعر الخدمة',
                             default => 'سعر التجليد',
                         };
                         $bindingNames = $order->service_type === 'books'
@@ -459,6 +463,16 @@
                                     <div class="order-file-field price total product-total-field"><span>الإجمالي</span><strong>{{ $item->total_price }} ريال</strong></div>
                                 </div>
                             @endforeach
+                            @if ($order->service_type === 'images' && $order->files->isNotEmpty() && auth()->user()->hasAdminPermission('files_download'))
+                                <div class="order-file-card">
+                                    <div class="order-file-field actions-field">
+                                        <span>جميع صور الطلب</span>
+                                        <div class="file-action-buttons">
+                                            <a class="file-action-button download" href="{{ route('admin.orders.images.download', $order) }}" data-direct-file-download>تحميل مجلد الصور ZIP</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
                             @foreach ($order->files as $file)
                                 @php($isAcademicWord = in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word')
                                 <div class="order-file-card">
@@ -486,7 +500,16 @@
                                             <strong>{{ strtoupper($file->file_type) }}</strong>
                                         </div>
                                     @endif
-                                    @if ($isAcademicWord)
+                                    @if ($order->service_type === 'images')
+                                        <div class="order-file-field">
+                                            <span>المسار داخل المجلد</span>
+                                            <strong>{{ $file->relative_path ?: $file->original_name }}</strong>
+                                        </div>
+                                        <div class="order-file-field">
+                                            <span>الحجم</span>
+                                            <strong>{{ number_format($file->size / 1024, 1) }} KB</strong>
+                                        </div>
+                                    @elseif ($isAcademicWord)
                                         <div class="order-file-field">
                                             <span>الاستخدام</span>
                                             <strong>ملف Word للعرض فقط، وغير محتسب ضمن الطباعة أو التجليد أو التسعير.</strong>
@@ -584,7 +607,9 @@
                                             <span>الملف</span>
                                             @if (auth()->user()->hasAdminPermission('files_download'))
                                                 <div class="file-action-buttons">
-                                                    <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الملف</a>
+                                                    @if ($file->file_type !== 'image')
+                                                        <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الملف</a>
+                                                    @endif
                                                     <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الملف</a>
                                                 </div>
                                             @else

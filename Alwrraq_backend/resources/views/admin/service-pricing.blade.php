@@ -54,6 +54,31 @@
         @method('patch')
 
         <div class="pricing-groups">
+            @if ($customServices->isNotEmpty())
+                <section class="panel pricing-group">
+                    <h2>الخدمات المضافة من إدارة الخدمات</h2>
+                    <div class="pricing-fields">
+                        @foreach ($customServices as $service)
+                            <div class="pricing-field">
+                                <label for="service-price-{{ $service->id }}">{{ $service->title }}</label>
+                                <div class="pricing-input-wrap">
+                                    <input
+                                        id="service-price-{{ $service->id }}"
+                                        name="service_prices[{{ $service->id }}]"
+                                        type="number"
+                                        min="0.01"
+                                        step="0.01"
+                                        inputmode="decimal"
+                                        value="{{ old('service_prices.'.$service->id, rtrim(rtrim(number_format($customServicePrices[$service->id], 4, '.', ''), '0'), '.')) }}"
+                                        required
+                                    >
+                                    <span>ريال</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </section>
+            @endif
             @foreach ($priceGroups as $groupName => $fields)
                 <section class="panel pricing-group">
                     <h2>{{ $groupName }}</h2>

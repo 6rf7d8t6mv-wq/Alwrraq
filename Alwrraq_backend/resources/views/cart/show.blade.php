@@ -382,8 +382,9 @@
                     'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
                     'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
                     'stationery' => 'القرطاسية',
+                    'images' => 'رفع الصور',
                 ];
-                $noPrintServices = ['formatting', 'research', 'stationery'];
+                $noPrintServices = ['formatting', 'research', 'stationery', 'images'];
                 $projectNames = [
                     'thesis' => 'رسالة ماجستير',
                     'supplementary' => 'بحث تكميلي',
@@ -546,6 +547,7 @@
                                     'notes' => 'التغليف',
                                     'formatting' => 'التنسيق',
                                     'research' => 'إنشاء البحوث',
+                                    'images' => 'الخدمة',
                                     default => 'التجليد',
                                 };
                                 $cartBindingPriceLabel = match ($cartOrder->service_type) {
@@ -555,6 +557,7 @@
                                     'formatting' => 'سعر التنسيق',
                                     'research' => 'سعر إنشاء البحوث',
                                     'stationery' => 'إجمالي المنتجات',
+                                    'images' => 'سعر الخدمة',
                                     default => 'سعر التجليد',
                                 };
                                 $cartProjectTypes = $cartOrder->service_type === 'thesis'
@@ -682,7 +685,7 @@
                                                                 </span>
                                                                 <div class="file-actions-inline">
                                                                     <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>
-                                                                    @if ($cartOrder->service_type !== 'research')
+                                                                    @if (! in_array($cartOrder->service_type, ['research', 'images'], true))
                                                                         <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
                                                                     @endif
                                                                     <form method="post" action="{{ url('/order-files/' . $file->id) }}">

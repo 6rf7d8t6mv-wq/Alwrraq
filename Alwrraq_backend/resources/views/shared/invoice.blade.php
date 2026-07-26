@@ -8,6 +8,7 @@
         'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
         'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
         'stationery' => 'القرطاسية',
+        'images' => 'رفع الصور',
     ];
     $serviceFullNames = [
         'notes' => 'طباعة المذكرات وملفات ال PDF',
@@ -18,6 +19,7 @@
         'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
         'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
         'stationery' => 'القرطاسية',
+        'images' => 'رفع الصور',
     ];
     $projectNames = [
         'thesis' => 'رسالة ماجستير',
@@ -67,13 +69,14 @@
         'beige' => 'جلد بيج',
         'brown' => 'جلد بني',
     ];
-    $noPrintServices = ['formatting', 'research', 'stationery'];
+    $noPrintServices = ['formatting', 'research', 'stationery', 'images'];
     $bindingLabel = match ($order->service_type) {
         'books' => 'التجليد',
         'color_printing' => 'التغليف',
         'notes' => 'التغليف',
         'formatting' => 'التنسيق',
         'research' => 'إنشاء البحوث',
+        'images' => 'الخدمة',
         default => 'التجليد',
     };
     $bindingPriceLabel = match ($order->service_type) {
@@ -83,6 +86,7 @@
         'formatting' => 'سعر التنسيق',
         'research' => 'سعر إنشاء البحوث',
         'stationery' => 'إجمالي المنتجات',
+        'images' => 'سعر الخدمة',
         default => 'سعر التجليد',
     };
     $paymentMethod = [

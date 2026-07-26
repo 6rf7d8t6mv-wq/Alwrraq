@@ -13,6 +13,7 @@ class OrderFile extends Model
         'original_name',
         'stored_name',
         'path',
+        'relative_path',
         'size',
         'pages',
         'copies',
