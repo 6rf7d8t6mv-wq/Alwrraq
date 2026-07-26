@@ -174,6 +174,8 @@
             .upload-button { padding: 10px 16px; background: #0f172a; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; margin-top: 12px; transition: all 0.3s; }
             .upload-button:hover { background: #1e293b; }
             .upload-button:disabled { background: #cbd5e1; cursor: not-allowed; }
+            .image-upload-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+            .image-upload-actions .upload-button { display: inline-flex; align-items: center; justify-content: center; }
             
             .binding-section { margin-top: 30px; padding: 20px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; }
             .binding-section h3 { margin-top: 0; margin-bottom: 16px; color: #111827; font-size: 18px; }
@@ -298,6 +300,19 @@
                     border-radius: 8px;
                     font-size: 11px;
                     white-space: nowrap;
+                }
+                .upload-box .image-upload-actions {
+                    grid-column: 3;
+                    grid-row: 1 / span 2;
+                    align-self: center;
+                    display: grid;
+                    gap: 4px;
+                }
+                .upload-box .image-upload-actions .upload-button {
+                    grid-column: auto;
+                    grid-row: auto;
+                    width: 100%;
+                    margin: 0;
                 }
                 .upload-box .progress-bar,
                 .upload-box .error-msg {
@@ -984,9 +999,11 @@
                         <input type="file" id="imagesFilesPicker" multiple />
                         <input type="file" id="imagesFolderFile" multiple webkitdirectory directory />
                         <p class="file-info">جميع صيغ الصور مدعومة</p>
-                        <button class="upload-button" id="imagesUploadBtn" type="button" onclick="document.getElementById('imagesFile').click()">اختيار من الاستديو</button>
-                        <button class="upload-button" type="button" onclick="document.getElementById('imagesFilesPicker').click()">اختيار صور من الملفات</button>
-                        <button class="upload-button" type="button" onclick="document.getElementById('imagesFolderFile').click()">اختر مجلد صور</button>
+                        <div class="image-upload-actions">
+                            <label class="upload-button" id="imagesUploadBtn" for="imagesFile">اختيار من الاستديو</label>
+                            <label class="upload-button" for="imagesFilesPicker">اختيار صور من الملفات</label>
+                            <label class="upload-button" for="imagesFolderFile">اختر مجلد صور</label>
+                        </div>
                         <div class="progress-bar" id="imagesProgress"><div class="progress-bar-fill"></div></div>
                         <div id="imagesError" class="error-msg" style="display: none;"></div>
                     </div>
