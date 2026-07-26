@@ -685,7 +685,11 @@
                                                                 </span>
                                                                 <div class="file-actions-inline">
                                                                     <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>
-                                                                    @if (! in_array($cartOrder->service_type, ['research', 'images'], true))
+                                                                    @if ($file->file_type === 'image')
+                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}">عرض الصورة</a>
+                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
+                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                                                                    @elseif ($cartOrder->service_type !== 'research')
                                                                         <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
                                                                     @endif
                                                                     <form method="post" action="{{ url('/order-files/' . $file->id) }}">

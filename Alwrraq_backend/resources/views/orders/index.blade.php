@@ -36,6 +36,7 @@
         .service-detail { color: #64748b; font-size: 12px; line-height: 1.5; }
         .uploaded-file-name { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 0; }
         .uploaded-file-name span { min-width: 0; overflow-wrap: anywhere; word-break: normal; font-weight: 900; }
+        .uploaded-file-actions { display: inline-flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
         .uploaded-file-view { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; padding: 7px 10px; border-radius: 8px; background: #2563eb; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; white-space: nowrap; }
         .uploaded-file-view:hover { background: #1d4ed8; }
         .paid { background: #dcfce7; color: #166534; }
@@ -731,9 +732,15 @@
                                                         <td data-label="الملف">
                                                             <div class="uploaded-file-name">
                                                                 <span>{{ $file->original_name }}</span>
-                                                                @if (! in_array($order->service_type, ['research', 'images'], true))
-                                                                    <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
-                                                                @endif
+                                                                <div class="uploaded-file-actions">
+                                                                    @if ($file->file_type === 'image')
+                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file]) }}">عرض الصورة</a>
+                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
+                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                                                                    @elseif ($order->service_type !== 'research')
+                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
+                                                                    @endif
+                                                                </div>
                                                             </div>
                                                         </td>
                                                         @if ($order->service_type === 'research')

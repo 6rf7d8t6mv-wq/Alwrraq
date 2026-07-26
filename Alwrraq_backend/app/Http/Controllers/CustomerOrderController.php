@@ -94,6 +94,10 @@ class CustomerOrderController extends Controller
                 ->withErrors(['file' => $message]);
         }
 
+        if (request()->boolean('download')) {
+            return Response::download($absolutePath, $file->original_name);
+        }
+
         if (request()->boolean('raw')) {
             $inlineMime = strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) === 'pdf'
                 ? 'application/pdf'
@@ -105,13 +109,14 @@ class CustomerOrderController extends Controller
         }
 
         $isPdf = strtolower($file->file_type) === 'pdf';
+        $isImage = strtolower($file->file_type) === 'image';
         $wordPreviewHtml = strtolower($file->file_type) === 'word'
             ? $wordPreview->toHtml($absolutePath)
             : null;
-        $isPreviewable = $isPdf || filled($wordPreviewHtml);
+        $isPreviewable = $isPdf || $isImage || filled($wordPreviewHtml);
 
         return response()
-            ->view('orders.file-viewer', compact('order', 'file', 'isPreviewable', 'isPdf', 'wordPreviewHtml'))
+            ->view('orders.file-viewer', compact('order', 'file', 'isPreviewable', 'isPdf', 'isImage', 'wordPreviewHtml'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>عرض الملف</title>
+    <title>{{ $isImage ? 'عرض الصورة' : 'عرض الملف' }}</title>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
@@ -33,6 +33,8 @@
         .pdf-preview { width: 100%; flex: 1; min-height: 720px; padding: 10px; background: #cbd5e1; overflow: auto; }
         .pdf-page { display: block; max-width: 100%; height: auto; margin: 0 auto 10px; background: #fff; box-shadow: 0 5px 18px rgba(15, 23, 42, .18); }
         .pdf-status { padding: 30px 12px; color: #475569; font-weight: 900; text-align: center; }
+        .image-preview { flex: 1; min-height: 720px; padding: 18px; display: grid; place-items: center; background: #e2e8f0; }
+        .image-preview img { display: block; max-width: 100%; max-height: calc(100vh - 100px); object-fit: contain; background: #ffffff; box-shadow: 0 8px 24px rgba(15, 23, 42, .18); }
         .word-preview { flex: 1; min-height: 720px; padding: clamp(22px, 5vw, 54px); overflow: auto; background: #ffffff; color: #111827; font-family: Arial, Tahoma, sans-serif; font-size: 16px; line-height: 1.9; }
         .word-preview p { margin: 0 0 12px; white-space: pre-wrap; }
         .word-table-wrap { width: 100%; margin: 16px 0; overflow-x: auto; }
@@ -46,6 +48,17 @@
         @media (max-width: 860px) {
             .viewer { grid-template-columns: 1fr; }
             .pdf-preview { min-height: 560px; }
+            .image-preview { min-height: 560px; padding: 10px; }
+        }
+        @media print {
+            @page { margin: 8mm; }
+            body { background: #ffffff; }
+            .side, .preview-head { display: none; }
+            .page { padding: 0; }
+            .viewer { display: block; max-width: none; }
+            .preview { min-height: 0; border: 0; box-shadow: none; }
+            .image-preview { min-height: 0; padding: 0; background: #ffffff; }
+            .image-preview img { width: 100%; max-width: 100%; max-height: 270mm; box-shadow: none; object-fit: contain; }
         }
     </style>
 </head>
@@ -61,7 +74,7 @@
                         <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                         <h1>الورّاق</h1>
                     </div>
-                    <span class="brand-page-title">عرض الملف</span>
+                    <span class="brand-page-title">{{ $isImage ? 'عرض الصورة' : 'عرض الملف' }}</span>
                 </div>
 
                 <p class="file-name">{{ $file->original_name }}</p>
@@ -69,10 +82,17 @@
                 <div class="meta">
                     <div><span>رقم الطلب</span><strong>#{{ $order->id }}</strong></div>
                     <div><span>نوع الملف</span><strong>{{ $displayFileType }}</strong></div>
-                    <div><span>عدد الصفحات</span><strong>{{ $file->pages }}</strong></div>
+                    <div>
+                        <span>{{ $isImage ? 'الحجم' : 'عدد الصفحات' }}</span>
+                        <strong>{{ $isImage ? number_format($file->size / 1024, 1).' KB' : $file->pages }}</strong>
+                    </div>
                 </div>
 
                 <div class="actions">
+                    @if ($isImage)
+                        <button class="action dark" type="button" onclick="window.print()">طباعة الصورة</button>
+                        <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                    @endif
                     @if (request('from') === 'upload')
                         <a class="action green" href="{{ route('home', ['service' => $order->service_type, 'order' => $order->id]) }}">العودة للملفات المحملة</a>
                     @elseif (request('from') === 'cart')
@@ -85,13 +105,17 @@
 
             <main class="panel preview">
                 <div class="preview-head">
-                    <h2>معاينة الملف</h2>
+                    <h2>{{ $isImage ? 'عرض الصورة' : 'معاينة الملف' }}</h2>
                     <span>{{ $displayFileType }}</span>
                 </div>
 
                 @if ($isPdf)
                     <div class="pdf-preview" id="uploadedPdfPreview">
                         <div class="pdf-status" id="uploadedPdfStatus">جاري تحميل ملف PDF...</div>
+                    </div>
+                @elseif ($isImage)
+                    <div class="image-preview">
+                        <img id="uploadedImagePreview" src="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'raw' => 1]) }}" alt="{{ $file->original_name }}">
                     </div>
                 @elseif ($wordPreviewHtml)
                     <article class="word-preview" dir="auto">{!! $wordPreviewHtml !!}</article>
@@ -112,6 +136,17 @@
             'pdfStatusId' => 'uploadedPdfStatus',
             'pdfUrl' => route('orders.file.view', ['order' => $order, 'file' => $file, 'raw' => 1]),
         ])
+    @endif
+    @if ($isImage && request()->boolean('print'))
+        <script>
+            const uploadedImagePreview = document.getElementById('uploadedImagePreview');
+            const printUploadedImage = () => setTimeout(() => window.print(), 150);
+            if (uploadedImagePreview.complete) {
+                printUploadedImage();
+            } else {
+                uploadedImagePreview.addEventListener('load', printUploadedImage, { once: true });
+            }
+        </script>
     @endif
     @include('shared.language-tools')
 </body>

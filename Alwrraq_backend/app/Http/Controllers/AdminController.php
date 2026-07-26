@@ -736,9 +736,11 @@ class AdminController extends Controller
             'phd' => 'طباعة وتجليد رسالة دكتوراه',
             'formatting' => 'تنسيق وتدقيق الرسائل الجامعية',
             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
+            'images' => 'رفع الصور',
         ];
 
         $isPdf = strtolower($file->file_type) === 'pdf';
+        $isImage = strtolower($file->file_type) === 'image';
         $wordPreviewHtml = strtolower($file->file_type) === 'word'
             ? $wordPreview->toHtml($absolutePath)
             : null;
@@ -753,6 +755,7 @@ class AdminController extends Controller
             'bindingNames',
             'serviceNames',
             'isPdf',
+            'isImage',
             'wordPreviewHtml',
             'isPrintablePreview',
             'printColor'

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>عرض الملف - الورّاق</title>
+    <title>{{ $isImage ? 'عرض الصورة' : 'عرض الملف' }} - الورّاق</title>
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Tahoma, Arial, sans-serif; background: #f3f6fb; color: #0f172a; }
@@ -42,6 +42,8 @@
         .pdf-preview { width: 100%; flex: 1; min-height: 760px; padding: 10px; background: #cbd5e1; overflow: auto; }
         .pdf-page { display: block; max-width: 100%; height: auto; margin: 0 auto 10px; background: #fff; box-shadow: 0 5px 18px rgba(15, 23, 42, .18); }
         .pdf-status { padding: 30px 12px; color: #475569; font-weight: 900; text-align: center; }
+        .image-preview { flex: 1; min-height: 760px; padding: 18px; display: grid; place-items: center; background: #e2e8f0; }
+        .image-preview img { display: block; max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; background: #ffffff; box-shadow: 0 8px 24px rgba(15, 23, 42, .18); }
         .word-preview { flex: 1; min-height: 760px; padding: clamp(22px, 4vw, 48px); overflow: auto; background: #ffffff; color: #111827; font-family: Arial, Tahoma, sans-serif; font-size: 15px; line-height: 1.9; }
         .word-preview p { margin: 0 0 11px; white-space: pre-wrap; }
         .word-table-wrap { width: 100%; margin: 14px 0; overflow-x: auto; }
@@ -57,6 +59,7 @@
             .viewer-shell { grid-template-columns: 1fr; }
             .info-panel { position: static; }
             .pdf-preview { min-height: 620px; }
+            .image-preview { min-height: 620px; padding: 10px; }
             .word-preview { min-height: 620px; }
             .brand { min-height: 44px; }
             .meta-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -83,6 +86,7 @@
             .preview-head h2 { font-size: 11px; }
             .preview-head span { font-size: 8px; }
             .pdf-preview { min-height: 560px; }
+            .image-preview { min-height: 560px; }
             .word-preview { min-height: 560px; padding: 16px 12px; font-size: 13px; }
         }
         @media (min-width: 1100px) {
@@ -107,6 +111,8 @@
             .viewer-shell { display: block; max-width: none; }
             .preview-panel { border: 0; box-shadow: none; min-height: 100vh; }
             .pdf-preview { min-height: 100vh; }
+            .image-preview { min-height: 0; padding: 0; background: #ffffff; }
+            .image-preview img { width: 100%; max-width: 100%; max-height: 270mm; box-shadow: none; object-fit: contain; }
         }
     </style>
 </head>
@@ -120,7 +126,7 @@
                         <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                         <h1>الورّاق</h1>
                     </div>
-                    <span class="brand-page-title">عرض الملف</span>
+                    <span class="brand-page-title">{{ $isImage ? 'عرض الصورة' : 'عرض الملف' }}</span>
                 </div>
 
                 <p class="file-name">{{ $file->original_name }}</p>
@@ -136,8 +142,8 @@
                         <strong>{{ $displayFileType }}</strong>
                     </div>
                     <div class="meta-item">
-                        <span>عدد الصفحات</span>
-                        <strong>{{ $file->pages }}</strong>
+                        <span>{{ $isImage ? 'الحجم' : 'عدد الصفحات' }}</span>
+                        <strong>{{ $isImage ? number_format($file->size / 1024, 1).' KB' : $file->pages }}</strong>
                     </div>
                     <div class="meta-item wide">
                         <span>العميل</span>
@@ -147,7 +153,12 @@
                         <span>الخدمة</span>
                         <strong>{{ $order->serviceDefinition?->title ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong>
                     </div>
-                    @if ($isAcademicWord)
+                    @if ($isImage)
+                    <div class="meta-item wide">
+                        <span>مسار الصورة</span>
+                        <strong>{{ $file->relative_path ?: $file->original_name }}</strong>
+                    </div>
+                    @elseif ($isAcademicWord)
                     <div class="meta-item wide">
                         <span>الاستخدام</span>
                         <strong>ملف Word للعرض فقط، وغير محتسب ضمن الطباعة أو التجليد أو التسعير.</strong>
@@ -182,28 +193,38 @@
                     @endif
                 </div>
 
-                <div class="notice">
-                    الطباعة المباشرة تفتح طباعة الفاتورة أولًا، وبعد إنهائها تفتح طباعة الملف. تأكد من ضبط الطابعة على نفس البيانات أعلاه، ولا تعتمد على لون الورق من أمر الطباعة.
-                </div>
+                @if ($isImage)
+                    <div class="notice">يمكن عرض الصورة أو طباعتها مباشرة من المتصفح دون حفظها على الجهاز.</div>
+                @else
+                    <div class="notice">
+                        الطباعة المباشرة تفتح طباعة الفاتورة أولًا، وبعد إنهائها تفتح طباعة الملف. تأكد من ضبط الطابعة على نفس البيانات أعلاه، ولا تعتمد على لون الورق من أمر الطباعة.
+                    </div>
+                @endif
 
                 <div class="actions">
-                    @if ($isPrintablePreview)
+                    @if ($isImage)
+                        <button class="action yellow" type="button" onclick="window.print()">طباعة الصورة</button>
+                    @elseif ($isPrintablePreview)
                         <button class="action yellow" type="button" onclick="printInvoiceThenPreview('adminFileInvoice{{ $order->id }}', '{{ route('admin.files.view', ['file' => $file, 'raw' => 1]) }}')">طباعة الملف مباشرة</button>
                     @endif
-                    <a class="action blue" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الملف</a>
+                    <a class="action blue" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>{{ $isImage ? 'تحميل الصورة' : 'تحميل الملف' }}</a>
                     <a class="action green" href="{{ route($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid', ['open_order' => $order->id]) }}">العودة لعرض الطلب</a>
                 </div>
             </aside>
 
             <main class="panel preview-panel">
                 <div class="preview-head">
-                    <h2>عرض الملف</h2>
+                    <h2>{{ $isImage ? 'عرض الصورة' : 'عرض الملف' }}</h2>
                     <span>{{ $displayFileType }}</span>
                 </div>
 
                 @if ($isPdf)
                     <div class="pdf-preview" id="adminPdfPreview">
                         <div class="pdf-status" id="adminPdfStatus">جاري تحميل ملف PDF...</div>
+                    </div>
+                @elseif ($isImage)
+                    <div class="image-preview">
+                        <img id="adminImagePreview" src="{{ route('admin.files.view', ['file' => $file, 'raw' => 1]) }}" alt="{{ $file->original_name }}">
                     </div>
                 @elseif ($wordPreviewHtml)
                     <article class="word-preview" dir="auto">{!! $wordPreviewHtml !!}</article>
@@ -231,6 +252,18 @@
             'pdfStatusId' => 'adminPdfStatus',
             'pdfUrl' => route('admin.files.view', ['file' => $file, 'raw' => 1]),
         ])
+    @endif
+
+    @if ($isImage && request()->boolean('print'))
+        <script>
+            const adminImagePreview = document.getElementById('adminImagePreview');
+            const printAdminImage = () => setTimeout(() => window.print(), 150);
+            if (adminImagePreview.complete) {
+                printAdminImage();
+            } else {
+                adminImagePreview.addEventListener('load', printAdminImage, { once: true });
+            }
+        </script>
     @endif
 
     <script>

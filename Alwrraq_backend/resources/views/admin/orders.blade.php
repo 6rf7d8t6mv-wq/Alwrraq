@@ -607,10 +607,14 @@
                                             <span>الملف</span>
                                             @if (auth()->user()->hasAdminPermission('files_download'))
                                                 <div class="file-action-buttons">
-                                                    @if ($file->file_type !== 'image')
+                                                    @if ($file->file_type === 'image')
+                                                        <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الصورة</a>
+                                                        <a class="file-action-button view" href="{{ route('admin.files.view', ['file' => $file, 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
+                                                        <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الصورة</a>
+                                                    @else
                                                         <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الملف</a>
+                                                        <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الملف</a>
                                                     @endif
-                                                    <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الملف</a>
                                                 </div>
                                             @else
                                                 <strong class="muted">لا توجد صلاحية تحميل</strong>
