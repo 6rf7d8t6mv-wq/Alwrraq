@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderFile;
+use App\Models\ServiceDefinition;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -38,6 +39,8 @@ class FileUploadController extends Controller
                     'message' => 'نوع الخدمة غير معروف',
                 ], 400);
             }
+
+            $serviceDefinition = $this->resolveServiceDefinition($request, $service);
 
             if (in_array($service, ['notes', 'books', 'color_printing'], true) && $type !== 'pdf') {
                 return response()->json([
@@ -120,6 +123,7 @@ class FileUploadController extends Controller
             $order = Order::query()->firstOrCreate([
                 'user_id' => Auth::id(),
                 'service_type' => $service,
+                'service_definition_id' => $serviceDefinition?->id,
                 'status' => 'new',
                 'payment_status' => 'unpaid',
             ], [
@@ -354,7 +358,9 @@ class FileUploadController extends Controller
             'research_instructor_name' => ['required', 'string', 'max:255'],
             'university_name' => ['required', 'string', 'max:255'],
             'pages' => ['required', 'integer', 'min:1', 'max:9999'],
+            'service_definition_id' => ['nullable', 'integer', 'exists:service_definitions,id'],
         ]);
+        $serviceDefinition = $this->resolveServiceDefinition($request, 'research');
 
         $researchTitle = trim($data['research_title']);
         $pages = (int) $data['pages'];
@@ -363,6 +369,7 @@ class FileUploadController extends Controller
         $order = Order::query()->firstOrCreate([
             'user_id' => Auth::id(),
             'service_type' => 'research',
+            'service_definition_id' => $serviceDefinition?->id,
             'status' => 'new',
             'payment_status' => 'unpaid',
         ], [
@@ -417,6 +424,24 @@ class FileUploadController extends Controller
             'total_price' => $orderFile->total_price,
             'order_totals' => $this->orderTotalsPayload($order->fresh()),
         ]);
+    }
+
+    private function resolveServiceDefinition(Request $request, string $workflow): ?ServiceDefinition
+    {
+        $definitionId = $request->integer('service_definition_id');
+
+        if ($definitionId) {
+            return ServiceDefinition::query()
+                ->whereKey($definitionId)
+                ->where('workflow_type', $workflow)
+                ->where('is_active', true)
+                ->firstOrFail();
+        }
+
+        return ServiceDefinition::query()
+            ->where('code', $workflow)
+            ->where('workflow_type', $workflow)
+            ->first();
     }
 
     public function destroyFile(OrderFile $file)

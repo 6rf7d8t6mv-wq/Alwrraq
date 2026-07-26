@@ -441,6 +441,7 @@
                 @if (auth()->user()->hasAnyAdminPermission(['customers_view', 'customers_create', 'customers_update', 'customers_delete']))
                     <a class="{{ request()->routeIs('admin.customers') ? 'active' : '' }}" href="{{ route('admin.customers') }}"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-text">العملاء</span></a>
                 @endif
+                <a class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}" href="{{ route('admin.services.index') }}"><span class="nav-icon" aria-hidden="true">🧩</span><span class="nav-text">إدارة الخدمات</span></a>
                 <a class="{{ request()->routeIs('admin.stationery-products.*') ? 'active' : '' }}" href="{{ route('admin.stationery-products.index') }}"><span class="nav-icon" aria-hidden="true">✏️</span><span class="nav-text">القرطاسية</span></a>
                 @if (auth()->user()->hasAdminPermission('service_prices_update'))
                     <a class="pricing-link {{ request()->routeIs('admin.service-pricing.*') ? 'active' : '' }}" href="{{ route('admin.service-pricing.index') }}"><span class="nav-icon" aria-hidden="true">💰</span><span class="nav-text">الأسعار</span></a>

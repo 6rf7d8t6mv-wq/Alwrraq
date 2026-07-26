@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminServiceDefinitionController;
 use App\Http\Controllers\AdminStationeryProductController;
 use App\Http\Controllers\AdminServicePricingController;
 use App\Http\Controllers\AuthController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\LivePageUpdateController;
 use App\Http\Controllers\PublicAssetController;
 use App\Http\Controllers\StationeryController;
 use App\Models\Order;
+use App\Models\ServiceDefinition;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -110,6 +112,7 @@ Route::get('/home', function (Request $request) {
             $editOrderPayload = [
                 'id' => $editOrder->id,
                 'service_type' => $editOrder->service_type,
+                'service_definition_id' => $editOrder->service_definition_id,
                 'files' => $editOrder->files->map(fn ($file) => [
                     'id' => $file->id,
                     'file_type' => $file->file_type,
@@ -140,8 +143,13 @@ Route::get('/home', function (Request $request) {
     }
 
     $servicePricing = app(ServicePricingService::class)->all();
+    $serviceDefinitions = ServiceDefinition::query()
+        ->where('is_active', true)
+        ->orderBy('sort_order')
+        ->orderBy('id')
+        ->get();
 
-    return view('grades', compact('students', 'editOrderPayload', 'servicePricing'));
+    return view('grades', compact('students', 'editOrderPayload', 'servicePricing', 'serviceDefinitions'));
 })->middleware('auth')->name('home');
 
 Route::post('/upload-file', [FileUploadController::class, 'upload'])->middleware('auth');
@@ -199,6 +207,9 @@ Route::middleware('auth')->prefix('account')->name('account.')->group(function (
 Route::get('/admin', [AuthController::class, 'showAdminLogin'])->name('admin.dashboard');
 
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/services', [AdminServiceDefinitionController::class, 'index'])->name('services.index');
+    Route::post('/services', [AdminServiceDefinitionController::class, 'store'])->name('services.store');
+    Route::patch('/services/{service}', [AdminServiceDefinitionController::class, 'update'])->name('services.update');
     Route::get('/stationery-products', [AdminStationeryProductController::class, 'index'])->name('stationery-products.index');
     Route::post('/stationery-products', [AdminStationeryProductController::class, 'store'])->name('stationery-products.store');
     Route::patch('/stationery-products/{product}', [AdminStationeryProductController::class, 'update'])->name('stationery-products.update');

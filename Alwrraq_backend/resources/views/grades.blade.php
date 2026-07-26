@@ -587,61 +587,18 @@
                     <h2 class="services-title">اختر الخدمة المطلوبة</h2>
                 </div>
 
-                <article class="service-card">
-                    <div class="service-icon">📝</div>
-                    <h3 class="service-title">طباعة المذكرات وملفات ال PDF</h3>
-                    <p class="service-description">طباعة أبيض وأسود بدون ألوان للمذكرات وملفات ال PDF بجميع أحجامها وتغليفها.</p>
-                    <button class="service-entry" type="button" onclick="selectService('notes')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">🎨</div>
-                    <h3 class="service-title">طباعة الملفات بالألوان</h3>
-                    <p class="service-description">طباعة ملفات PDF ملونة مع اختيار حجم الصفحة وعدد النسخ والتغليف.</p>
-                    <button class="service-entry" type="button" onclick="selectService('color_printing')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">📘</div>
-                    <h3 class="service-title">طباعة وتجليد كتب كعب جلد طبيعي</h3>
-                    <p class="service-description">طباعة ملفات PDF والكتب بجميع أحجامها والتغليف وتجليد كعب جلد طبيعي.</p>
-                    <button class="service-entry" type="button" onclick="selectService('books')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">📚</div>
-                    <h3 class="service-title">طباعة وتجليد رسالة ماجستير أو بحث تكميلي أو بحث تخرج</h3>
-                    <p class="service-description">خدمة مخصصة للرسائل العلمية والبحث التكميلي وبحث التخرج مع احتساب النسخ والتجليد.</p>
-                    <button class="service-entry" type="button" onclick="selectService('thesis')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">🎓</div>
-                    <h3 class="service-title">طباعة وتجليد رسالة دكتوراه</h3>
-                    <p class="service-description">تجهيز ملفات الدكتوراه للطباعة والتجليد مع عرض كامل للتكاليف قبل الإضافة للسلة.</p>
-                    <button class="service-entry" type="button" onclick="selectService('phd')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">✍️</div>
-                    <h3 class="service-title">تنسيق وتدقيق الرسائل الجامعية</h3>
-                    <p class="service-description">رفع ملف Word فقط واحتساب سعر التنسيق تلقائيًا حسب عدد الصفحات.</p>
-                    <button class="service-entry" type="button" onclick="selectService('formatting')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">📑</div>
-                    <h3 class="service-title">إنشاء بحوث جامعية وأكاديمية ودراسية</h3>
-                    <p class="service-description">اكتب اسم البحث وعدد الصفحات المطلوبة، ويتم احتساب سعر الخدمة تلقائيًا.</p>
-                    <button class="service-entry" type="button" onclick="selectService('research')">الدخول للخدمة</button>
-                </article>
-
-                <article class="service-card">
-                    <div class="service-icon">✏️</div>
-                    <h3 class="service-title">القرطاسية</h3>
-                    <p class="service-description">تصفح منتجات القرطاسية وابحث عنها وأضف ما تحتاجه إلى السلة.</p>
-                    <button class="service-entry" type="button" onclick="window.location.href='{{ route('stationery.index') }}'">الدخول للمتجر</button>
-                </article>
+                @foreach ($serviceDefinitions as $serviceDefinition)
+                    <article class="service-card">
+                        <div class="service-icon">{{ $serviceDefinition->icon ?: '🧩' }}</div>
+                        <h3 class="service-title">{{ $serviceDefinition->title }}</h3>
+                        <p class="service-description">{{ $serviceDefinition->description }}</p>
+                        @if ($serviceDefinition->workflow_type === 'stationery')
+                            <button class="service-entry" type="button" onclick="window.location.href='{{ route('stationery.index') }}'">الدخول للمتجر</button>
+                        @else
+                            <button class="service-entry" type="button" onclick="selectService(@js($serviceDefinition->workflow_type), {{ $serviceDefinition->id }})">الدخول للخدمة</button>
+                        @endif
+                    </article>
+                @endforeach
             </div>
 
             <!-- Upload Section for Notes -->
@@ -1255,14 +1212,22 @@
                 return Object.keys(fileConfigs).find(key => fileConfigs[key].service === service && fileConfigs[key].type === type);
             }
 
-            function selectService(service) {
+            let activeServiceDefinitionId = null;
+
+            function selectService(service, serviceDefinitionId = null) {
                 initializeSaudiUniversitiesList();
+                activeServiceDefinitionId = serviceDefinitionId ? Number(serviceDefinitionId) : null;
                 document.body.classList.add('customer-service-view');
                 const uploadIds = {
                     color_printing: 'uploadColorPrinting'
                 };
                 const serviceUrl = new URL(window.location.href);
                 serviceUrl.searchParams.set('service', service);
+                if (activeServiceDefinitionId) {
+                    serviceUrl.searchParams.set('service_definition', activeServiceDefinitionId);
+                } else {
+                    serviceUrl.searchParams.delete('service_definition');
+                }
                 window.history.replaceState({}, '', serviceUrl);
                 document.getElementById('servicesScreen').style.display = 'none';
                 document.getElementById(uploadIds[service] || ('upload' + service.charAt(0).toUpperCase() + service.slice(1))).classList.add('active');
@@ -1273,6 +1238,7 @@
                 document.body.classList.remove('customer-service-view');
                 const homeUrl = new URL(window.location.href);
                 homeUrl.searchParams.delete('service');
+                homeUrl.searchParams.delete('service_definition');
                 homeUrl.searchParams.delete('order');
                 window.history.replaceState({}, '', homeUrl);
                 document.getElementById('servicesScreen').style.display = '';
@@ -1810,6 +1776,7 @@
                             research_student_name: studentName,
                             research_instructor_name: instructorName,
                             university_name: institutionName,
+                            service_definition_id: activeServiceDefinitionId,
                             pages
                         })
                     });
@@ -2735,6 +2702,9 @@
                     formData.append('file', file);
                     formData.append('type', config.type);
                     formData.append('service', config.service);
+                    if (activeServiceDefinitionId) {
+                        formData.append('service_definition_id', activeServiceDefinitionId);
+                    }
 
                     const xhr = new XMLHttpRequest();
 
@@ -2863,9 +2833,10 @@
 
             const editOrderPayload = @json($editOrderPayload ?? null);
             const requestedService = new URLSearchParams(window.location.search).get('service') || editOrderPayload?.service_type;
+            const requestedServiceDefinition = new URLSearchParams(window.location.search).get('service_definition') || editOrderPayload?.service_definition_id;
             const editableServices = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'formatting', 'research'];
             if (requestedService && editableServices.includes(requestedService)) {
-                selectService(requestedService);
+                selectService(requestedService, requestedServiceDefinition);
             }
             hydrateEditOrder(editOrderPayload);
 

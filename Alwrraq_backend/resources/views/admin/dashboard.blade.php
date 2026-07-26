@@ -220,7 +220,7 @@
                                 <tr>
                                     <td data-label="رقم الطلب"><span class="dashboard-order-value"><span class="order-id">#{{ $order->id }}</span></span></td>
                                     <td data-label="العميل"><span class="dashboard-order-value">{{ $order->user->name }}<br><span class="muted">{{ $order->user->phone }}</span></span></td>
-                                    <td data-label="الخدمة"><span class="dashboard-order-value">{{ $serviceNames[$order->service_type] ?? $order->service_type }}</span></td>
+                                    <td data-label="الخدمة"><span class="dashboard-order-value">{{ $order->serviceDefinition?->title ?? $serviceNames[$order->service_type] ?? $order->service_type }}</span></td>
                                     <td data-label="الحالة"><span class="dashboard-order-value"><span class="badge">{{ $displayStatus }}</span></span></td>
                                     <td data-label="الدفع"><span class="dashboard-order-value"><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span></span></td>
                                     <td data-label="الإجمالي"><span class="dashboard-order-value"><strong>{{ $order->grand_total }} ريال</strong></span></td>

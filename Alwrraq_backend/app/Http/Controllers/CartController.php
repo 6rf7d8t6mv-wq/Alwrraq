@@ -226,7 +226,7 @@ class CartController extends Controller
             ->delete();
 
         return $cartQuery
-            ->with(['files', 'productItems.product', 'deliveredFiles'])
+            ->with(['files', 'productItems.product', 'deliveredFiles', 'serviceDefinition'])
             ->withCount('files')
             ->latest()
             ->get();

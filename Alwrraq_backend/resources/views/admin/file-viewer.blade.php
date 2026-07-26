@@ -145,7 +145,7 @@
                     </div>
                     <div class="meta-item wide">
                         <span>الخدمة</span>
-                        <strong>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</strong>
+                        <strong>{{ $order->serviceDefinition?->title ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong>
                     </div>
                     @if ($isAcademicWord)
                     <div class="meta-item wide">

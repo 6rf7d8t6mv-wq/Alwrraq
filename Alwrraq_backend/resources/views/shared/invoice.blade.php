@@ -135,7 +135,7 @@
     <div class="invoice-grid">
         <div><span>العميل</span><strong>{{ $order->user->name }}</strong></div>
         <div><span>رقم الجوال</span><strong>{{ $order->user->phone }}</strong></div>
-        <div><span>الخدمة</span><strong>{{ $serviceFullNames[$order->service_type] ?? $order->service_type }}</strong></div>
+        <div><span>الخدمة</span><strong>{{ $order->serviceDefinition?->title ?? $serviceFullNames[$order->service_type] ?? $order->service_type }}</strong></div>
         <div><span>تاريخ الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $order->created_at->format('Y-m-d H:i') }}</strong></div>
         <div><span>حالة الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
         <div><span>طريقة الدفع</span><strong>{{ $paymentMethod }}</strong></div>

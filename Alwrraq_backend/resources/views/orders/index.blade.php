@@ -411,7 +411,7 @@
                                         </div>
                                         <div class="order-main-item">
                                             <span>الخدمة</span>
-                                            <strong>{{ $serviceNames[$order->service_type] ?? $order->service_type }}</strong>
+                                            <strong>{{ $order->serviceDefinition?->title ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong>
                                         </div>
                                     </div>
                                 </td>
@@ -613,7 +613,7 @@
                             </div>
                             <div class="modal-body">
                                 <div class="detail-grid">
-                                    <div class="detail-card full"><span>الخدمة</span><strong>{{ $serviceFullNames[$order->service_type] ?? $order->service_type }}</strong></div>
+                                    <div class="detail-card full"><span>الخدمة</span><strong>{{ $order->serviceDefinition?->title ?? $serviceFullNames[$order->service_type] ?? $order->service_type }}</strong></div>
                                     @if ($projectTypes->isNotEmpty())
                                         <div class="detail-card full"><span>تفصيل مشروع الرسالة</span><strong>{{ $projectTypes->implode('، ') }}</strong></div>
                                     @endif

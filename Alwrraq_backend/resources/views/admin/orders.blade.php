@@ -386,7 +386,7 @@
                             <div><span class="label">رقم الطلب</span><span class="tiny-status-dot {{ $orderDotColor }}" data-order-status-dot></span>#{{ $order->id }}</div>
                             <div><span class="label">العميل</span>{{ $order->user->name }} - {{ $order->user->phone }}</div>
                             <div><span class="label">تاريخ إنشاء الطلب</span><span data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $orderCreatedAtText }}</span></div>
-                            <div class="order-service-field"><span class="label">الخدمة</span><strong class="order-service-name">{{ $serviceFullNames[$order->service_type] ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong></div>
+                            <div class="order-service-field"><span class="label">الخدمة</span><strong class="order-service-name">{{ $order->serviceDefinition?->title ?? $serviceFullNames[$order->service_type] ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong></div>
                             <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
                             <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'google_pay' => 'Google Pay', 'mada' => 'Mada', 'visa' => 'Visa', 'mastercard' => 'Mastercard', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
                             @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))

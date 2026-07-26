@@ -466,7 +466,7 @@
                 $cartDiscountOrder = $cartOrders->first(fn ($order) => filled($order->discount_code)) ?? $cartOrders->first();
                 $missingRequirements = collect();
                 foreach ($cartOrders as $cartOrder) {
-                    $serviceLabel = $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type;
+                    $serviceLabel = $cartOrder->serviceDefinition?->title ?? $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type;
                     if (in_array($cartOrder->service_type, ['notes', 'books', 'color_printing'], true) && $cartOrder->files->contains(fn ($file) => blank($file->binding_type))) {
                         $missingRequirements->push($serviceLabel . ': اختيار نوع التغليف لكل ملف.');
                     }
@@ -579,7 +579,7 @@
                                 <div class="cart-order-head">
                                     <div class="cart-order-heading">
                                         <span class="cart-order-label">الخدمة المختارة</span>
-                                        <h3 class="cart-order-title">{{ $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type }}</h3>
+                                        <h3 class="cart-order-title">{{ $cartOrder->serviceDefinition?->title ?? $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type }}</h3>
                                         <div class="cart-order-meta">
                                             <span data-local-datetime="{{ $cartOrder->created_at->toIso8601String() }}">{{ $createdAtText }}</span>
                                         </div>
@@ -678,7 +678,7 @@
                                                             <div class="file-name-cell">
                                                                 <span class="file-name-text">
                                                                     <span class="file-name-primary">{{ $file->original_name }}</span><span class="file-format-badge">{{ strtoupper($file->file_type) }}</span>
-                                                                    <span class="file-service-type">{{ $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type }}</span>
+                                                                    <span class="file-service-type">{{ $cartOrder->serviceDefinition?->title ?? $serviceNames[$cartOrder->service_type] ?? $cartOrder->service_type }}</span>
                                                                 </span>
                                                                 <div class="file-actions-inline">
                                                                     <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>

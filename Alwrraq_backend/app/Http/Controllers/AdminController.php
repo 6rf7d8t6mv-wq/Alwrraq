@@ -60,7 +60,7 @@ class AdminController extends Controller
         $this->ensureAdmin();
 
         $orders = Order::query()
-            ->with(['user', 'files', 'productItems', 'deliveredFiles'])
+            ->with(['user', 'files', 'productItems', 'deliveredFiles', 'serviceDefinition'])
             ->latest()
             ->get();
 
@@ -177,7 +177,7 @@ class AdminController extends Controller
         }
 
         $orders = Order::query()
-            ->with(['user', 'files', 'deliveredFiles'])
+            ->with(['user', 'files', 'deliveredFiles', 'serviceDefinition'])
             ->when($paymentView === 'paid', fn ($query) => $query->where('payment_status', 'paid'))
             ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', '!=', 'paid'))
             ->when($search !== '', function ($query) use ($search) {

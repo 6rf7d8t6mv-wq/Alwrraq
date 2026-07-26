@@ -17,7 +17,7 @@ class CustomerOrderController extends Controller
         $orders = Order::query()
             ->where('user_id', Auth::id())
             ->where('payment_status', 'paid')
-            ->with(['files', 'productItems', 'deliveredFiles'])
+            ->with(['files', 'productItems', 'deliveredFiles', 'serviceDefinition'])
             ->withCount(['files', 'productItems'])
             ->latest()
             ->get();

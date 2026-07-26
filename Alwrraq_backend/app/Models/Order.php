@@ -11,6 +11,7 @@ class Order extends Model
     protected $fillable = [
         'user_id',
         'service_type',
+        'service_definition_id',
         'status',
         'payment_status',
         'payment_method',
@@ -65,6 +66,11 @@ class Order extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function serviceDefinition(): BelongsTo
+    {
+        return $this->belongsTo(ServiceDefinition::class);
     }
 
     public function files(): HasMany
