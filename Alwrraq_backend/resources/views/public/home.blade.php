@@ -3,11 +3,11 @@
     $pageUrl = $siteUrl . '/';
     $isEnglish = session('ui_locale', 'ar') === 'en';
     $pageTitle = $isEnglish
-        ? 'Alwrraq | Printing, Binding, and Stationery Across Saudi Arabia'
-        : 'الورّاق | طباعة وتجليد الرسائل والكتب والقرطاسية في السعودية';
+        ? 'Alwrraq | Document Copying, Binding, and Stationery Across Saudi Arabia'
+        : 'الورّاق | تصوير وتجليد الرسائل والقرطاسية في السعودية';
     $pageDescription = $isEnglish
-        ? 'Print and bind theses, books, and notes, upload PDF and Word files, and shop stationery with delivery across Saudi Arabia. Alwrraq branch is in Madinah.'
-        : 'طباعة وتجليد رسائل الماجستير والدكتوراه والكتب والمذكرات، ورفع ملفات PDF وWord وشراء القرطاسية مع التوصيل لجميع مناطق السعودية. فرعنا في المدينة المنورة.';
+        ? 'Copy and bind theses and notes, upload PDF and Word files, and shop stationery with delivery across Saudi Arabia. Alwrraq branch is in Madinah.'
+        : 'تصوير وتجليد رسائل الماجستير والدكتوراه والمذكرات، ورفع ملفات PDF وWord وشراء القرطاسية مع التوصيل لجميع مناطق السعودية. فرعنا في المدينة المنورة.';
     $logoUrl = $siteUrl . '/images/alwrraq-logo.jpeg';
     $socialImageUrl = $siteUrl . route('public.showcase-image', ['device' => 'desktop'], false);
     $structuredData = [
@@ -49,9 +49,9 @@
                     '@type' => 'OfferCatalog',
                     'name' => 'خدمات الورّاق',
                     'itemListElement' => collect([
-                        'طباعة وتجليد رسائل الماجستير',
-                        'طباعة وتجليد رسائل الدكتوراه',
-                        'طباعة الكتب والمذكرات والملفات',
+                        'تصوير وتجليد رسائل الماجستير',
+                        'تصوير وتجليد رسائل الدكتوراه',
+                        'تصوير المذكرات والملفات',
                         'تنسيق وتدقيق الرسائل الجامعية',
                         'إنشاء بحوث جامعية وأكاديمية ودراسية',
                         'منتجات القرطاسية',
@@ -469,24 +469,24 @@
         <section class="hero">
             <div class="container hero-grid">
                 <div>
-                    <span class="eyebrow">طباعة الرسائل العلمية والكتب والمذكرات وتجليدها وخدمات القرطاسية</span>
-                    <h1 class="hero-title" aria-label="الورّاق الأول في السعودية لطباعة وتجليد الرسائل العلمية والكتب وبيع الخدمات القرطاسية وتوصلك لبيتك">
-                        <span class="hero-title-line">الورّاق الأول في السعــودية لطباعـة</span>
-                        <span class="hero-title-line">وتجليد الرسائل العلمية والكتب وبيع</span>
+                    <span class="eyebrow">تصوير الرسائل العلمية والمذكرات وتجليدها وخدمات القرطاسية</span>
+                    <h1 class="hero-title" aria-label="الورّاق الأول في السعودية لتصوير وتجليد الرسائل العلمية وبيع الخدمات القرطاسية وتوصلك لبيتك">
+                        <span class="hero-title-line">الورّاق الأول في السعــودية لتصويـر</span>
+                        <span class="hero-title-line">وتجليد الرسائل العلمية وبيع</span>
                         <span class="hero-title-line">الخدمـات القرطاسـية وتوصـلك لبيتـك</span>
                     </h1>
-                    <p>منصة تخدم الدكتور والأستاذ والمعيد والمعلم والباحث والطالب وجميع الفئات في رفع الملفات، واختيار الطباعة والتجليد، وشراء القرطاسية، ومتابعة الطلب من مكان واحد. فرعنا في المدينة المنورة ونوصل لجميع مناطق المملكة عبر شركة RedBox.</p>
+                    <p>منصة تخدم الدكتور والأستاذ والمعيد والمعلم والباحث والطالب وجميع الفئات في رفع الملفات، واختيار التصوير والتجليد، وشراء القرطاسية، ومتابعة الطلب من مكان واحد. فرعنا في المدينة المنورة ونوصل لجميع مناطق المملكة عبر شركة RedBox.</p>
                     <div class="hero-stats" aria-label="مميزات مختصرة">
                         <div class="stat"><strong>رفع إلكتروني</strong><span>ملفاتك داخل حسابك</span></div>
                         <div class="stat"><strong>متابعة مباشرة</strong><span>حالة الطلب والفاتورة</span></div>
-                        <div class="stat"><strong>خيارات دقيقة</strong><span>طباعة وتجليد وتوصيل</span></div>
+                        <div class="stat"><strong>خيارات دقيقة</strong><span>تصوير وتجليد وتوصيل</span></div>
                     </div>
                 </div>
                 <div class="hero-card" aria-label="ملخص الخدمات">
                     <h2>كل طلبك في خطوات واضحة</h2>
                     <ul class="hero-list">
                         <li><span class="check">✓</span><span>رفع ملفات PDF و Word حسب نوع الخدمة.</span></li>
-                        <li><span class="check">✓</span><span>اختيار النسخ، حجم الصفحة، الطباعة، والتجليد.</span></li>
+                        <li><span class="check">✓</span><span>اختيار النسخ، حجم الصفحة، التصوير، والتجليد.</span></li>
                         <li><span class="check">✓</span><span>تصفح منتجات القرطاسية وإضافتها للسلة بسهولة.</span></li>
                         <li><span class="check">✓</span><span>متابعة الطلب والفواتير والملفات المستلمة.</span></li>
                     </ul>
@@ -501,7 +501,7 @@
                         <span class="about-badge">من نحن</span>
                         <h2>الورّاق تجربة متكاملة لجميع الفئات بخدمة موثوقة وتنفيذ منظم</h2>
                         <p>
-                            الورّاق منصة متخصصة في تسهيل خدمات الطباعة والتجليد والقرطاسية ورفع الملفات ومتابعة الطلبات للدكاترة والأساتذة والمعيدين والمعلمين والباحثين والطلاب وجميع الفئات. صممت لتجمع بين وضوح الإجراءات وسرعة التنفيذ وحفظ تفاصيل الطلب في مكان واحد. نحن إحدى مؤسسات شركة مسير المدينة المحدودة، وفرعنا في المدينة المنورة مع توصيل الطلبات إلى جميع مناطق المملكة العربية السعودية عبر شركة RedBox.
+                            الورّاق منصة متخصصة في تسهيل خدمات التصوير والتجليد والقرطاسية ورفع الملفات ومتابعة الطلبات للدكاترة والأساتذة والمعيدين والمعلمين والباحثين والطلاب وجميع الفئات. صممت لتجمع بين وضوح الإجراءات وسرعة التنفيذ وحفظ تفاصيل الطلب في مكان واحد. نحن إحدى مؤسسات شركة مسير المدينة المحدودة، وفرعنا في المدينة المنورة مع توصيل الطلبات إلى جميع مناطق المملكة العربية السعودية عبر شركة RedBox.
                         </p>
                     </div>
                     <div class="about-panel" aria-label="قيم الورّاق">
@@ -523,10 +523,10 @@
                     </div>
                     <div class="devices">
                         <figure class="device device-desktop">
-                            <img class="showcase-preview" src="{{ route('public.showcase-image', ['device' => 'desktop'], false) }}" alt="واجهة منصة الورّاق لطلبات الطباعة والقرطاسية على الكمبيوتر" width="2879" height="1625" loading="lazy" decoding="async">
+                            <img class="showcase-preview" src="{{ route('public.showcase-image', ['device' => 'desktop'], false) }}" alt="واجهة منصة الورّاق لطلبات التصوير والقرطاسية على الكمبيوتر" width="2879" height="1625" loading="lazy" decoding="async">
                         </figure>
                         <figure class="device device-phone">
-                            <img class="showcase-preview" src="{{ route('public.showcase-image', ['device' => 'mobile'], false) }}" alt="واجهة منصة الورّاق لخدمات الطباعة والتجليد على الجوال" width="702" height="1462" loading="lazy" decoding="async">
+                            <img class="showcase-preview" src="{{ route('public.showcase-image', ['device' => 'mobile'], false) }}" alt="واجهة منصة الورّاق لخدمات التصوير والتجليد على الجوال" width="702" height="1462" loading="lazy" decoding="async">
                         </figure>
                     </div>
                 </div>
@@ -537,19 +537,18 @@
             <div class="container">
                 <div class="section-head">
                     <h2>خدماتنا</h2>
-                    <p>خدمات أكاديمية وطباعية ومنتجات قرطاسية تخدم جميع الفئات في أنحاء المملكة، مع فرع في المدينة المنورة وشحن عبر RedBox.</p>
+                    <p>خدمات أكاديمية وتصوير وتجليد ومنتجات قرطاسية تخدم جميع الفئات في أنحاء المملكة، مع فرع في المدينة المنورة وشحن عبر RedBox.</p>
                 </div>
                 <div class="cards">
                     <article class="card"><div class="card-icon">01</div><h3>تنسيق وتدقيق الرسائل الجامعية</h3></article>
                     <article class="card"><div class="card-icon">02</div><h3>تدقيق لغوي للرسائل العلمية</h3></article>
-                    <article class="card"><div class="card-icon">03</div><h3>طباعة وتجليد رسائل الماجستير</h3></article>
-                    <article class="card"><div class="card-icon">04</div><h3>طباعة وتجليد رسائل الدكتوراه</h3></article>
+                    <article class="card"><div class="card-icon">03</div><h3>تصوير وتجليد رسائل الماجستير</h3></article>
+                    <article class="card"><div class="card-icon">04</div><h3>تصوير وتجليد رسائل الدكتوراه</h3></article>
                     <article class="card"><div class="card-icon">05</div><h3>إنشاء بحوث جامعية وأكاديمية ودراسية</h3></article>
-                    <article class="card"><div class="card-icon">06</div><h3>طباعة المذكرات والكتب</h3></article>
-                    <article class="card"><div class="card-icon">07</div><h3>تجليد الكتب كعب جلد طبيعي</h3></article>
-                    <article class="card"><div class="card-icon">08</div><h3>طباعة الملفات بالألوان</h3></article>
-                    <article class="card"><div class="card-icon">09</div><h3>رفع الملفات ومتابعة الطلب</h3></article>
-                    <article class="card"><div class="card-icon">10</div><h3>القرطاسية</h3></article>
+                    <article class="card"><div class="card-icon">06</div><h3>تصوير المذكرات والملفات</h3></article>
+                    <article class="card"><div class="card-icon">07</div><h3>تصوير الملفات بالألوان</h3></article>
+                    <article class="card"><div class="card-icon">08</div><h3>رفع الملفات ومتابعة الطلب</h3></article>
+                    <article class="card"><div class="card-icon">09</div><h3>القرطاسية</h3></article>
                 </div>
             </div>
         </section>
@@ -563,7 +562,7 @@
                 <div class="steps">
                     <div class="step"><h3>أنشئ حسابًا أو سجل الدخول</h3><p>ابدأ بحسابك للوصول إلى الخدمات.</p></div>
                     <div class="step"><h3>ارفع ملفاتك</h3><p>أضف ملفًا أو أكثر داخل الطلب.</p></div>
-                    <div class="step"><h3>اختر الإعدادات</h3><p>حدد الطباعة والتجليد والعدد.</p></div>
+                    <div class="step"><h3>اختر الإعدادات</h3><p>حدد التصوير والتجليد والعدد.</p></div>
                     <div class="step"><h3>راجع الطلب وأكمل الدفع</h3><p>تأكد من الإجمالي وأكمل العملية.</p></div>
                     <div class="step"><h3>تابع حالة الطلب</h3><p>راجع طلباتك والملفات المستلمة.</p></div>
                 </div>
