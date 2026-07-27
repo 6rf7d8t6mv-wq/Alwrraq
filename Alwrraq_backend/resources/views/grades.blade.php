@@ -2068,14 +2068,21 @@
                                 </select>
                             </div>
                             <div data-label="عدد النسخ">
-                                ${imageType === 'personal'
-                                    ? `<select class="binding-select" onchange="setImageFileCopies(${index}, this.value)">
-                                        <option value="5" ${copies === 5 ? 'selected' : ''}>5 نسخ</option>
-                                        <option value="8" ${copies === 8 ? 'selected' : ''}>8 نسخ</option>
-                                        <option value="16" ${copies === 16 ? 'selected' : ''}>16 نسخة</option>
-                                    </select>`
-                                    : `<input class="copies-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="${copies}" onchange="setImageFileCopies(${index}, this.value)">`
-                                }
+                                <div class="copies-stepper">
+                                    <button class="copies-stepper-button" type="button" ${!imageType || copies <= (imageType === 'personal' ? 5 : 1) ? 'disabled' : ''} onclick="changeImageFileCopies(${index}, -1)">-</button>
+                                    <input
+                                        class="copies-input"
+                                        type="number"
+                                        inputmode="numeric"
+                                        min="${imageType === 'personal' ? 5 : 1}"
+                                        max="${imageType === 'personal' ? 16 : 999}"
+                                        step="1"
+                                        value="${copies}"
+                                        ${!imageType ? 'disabled' : ''}
+                                        ${imageType === 'personal' ? 'readonly' : `onchange="setImageFileCopies(${index}, this.value)"`}
+                                    >
+                                    <button class="copies-stepper-button" type="button" ${!imageType || copies >= (imageType === 'personal' ? 16 : 999) ? 'disabled' : ''} onclick="changeImageFileCopies(${index}, 1)">+</button>
+                                </div>
                             </div>
                             <div class="file-price" data-label="السعر">${formatMoney(imagePrice)} ريال</div>
                             <div data-label="الحالة" style="color: #047857; font-weight: 600;">✓ مرفوعة</div>
@@ -2349,6 +2356,7 @@
 
             function setImageFileCopies(index, value) {
                 const fileData = uploadedFiles.images.image[index];
+                if (!fileData.imagePrintType) return;
                 const allowedPersonalCopies = [5, 8, 16];
                 const numericCopies = Number(value);
                 fileData.copies = fileData.imagePrintType === 'personal'
@@ -2360,6 +2368,20 @@
                 });
                 updateFilesList('imagesFile');
                 updateImagesPricingSummary();
+            }
+
+            function changeImageFileCopies(index, direction) {
+                const fileData = uploadedFiles.images.image[index];
+                if (fileData.imagePrintType === 'personal') {
+                    const allowedCopies = [5, 8, 16];
+                    const currentIndex = Math.max(0, allowedCopies.indexOf(Number(fileData.copies || 5)));
+                    const nextIndex = Math.min(allowedCopies.length - 1, Math.max(0, currentIndex + direction));
+                    setImageFileCopies(index, allowedCopies[nextIndex]);
+                    return;
+                }
+
+                const currentCopies = Math.min(999, Math.max(1, Number(fileData.copies || 1)));
+                setImageFileCopies(index, Math.min(999, Math.max(1, currentCopies + direction)));
             }
 
             function viewUploadedFile(service, type, index) {
