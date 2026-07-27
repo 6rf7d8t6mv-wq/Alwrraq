@@ -5,6 +5,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <meta name="csrf-token" content="{{ csrf_token() }}">
         <title>خدمات النسخ والتصوير</title>
+        <link rel="icon" type="image/jpeg" href="{{ asset('images/alwrraq-logo.jpeg') }}">
+        <link rel="apple-touch-icon" href="{{ asset('images/alwrraq-logo.jpeg') }}">
         <style>
             :root { --sidebar-width: clamp(180px, 20vw, 240px); --page-gap: clamp(14px, 3vw, 40px); }
             * { box-sizing: border-box; }
