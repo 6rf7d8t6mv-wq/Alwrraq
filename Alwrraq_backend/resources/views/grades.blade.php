@@ -991,6 +991,32 @@
                     </div>
                 </div>
 
+                <div class="binding-section">
+                    <h3>خيارات تصوير الصور</h3>
+                    <div class="research-form-grid">
+                        <div class="research-field">
+                            <label for="imagesPrintType">نوع التصوير</label>
+                            <select id="imagesPrintType" class="binding-select" onchange="updateImageUploadOptions()">
+                                <option value="color">تصوير ملون</option>
+                                <option value="black_white">تصوير أبيض وأسود</option>
+                                <option value="personal">صورة شخصية</option>
+                            </select>
+                        </div>
+                        <div id="imagesStandardCopiesField" class="research-field">
+                            <label for="imagesStandardCopies">عدد النسخ من كل صورة</label>
+                            <input id="imagesStandardCopies" class="copies-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="1">
+                        </div>
+                        <div id="imagesPersonalCopiesField" class="research-field" hidden>
+                            <label for="imagesPersonalCopies">عدد نسخ الصورة الشخصية</label>
+                            <select id="imagesPersonalCopies" class="binding-select">
+                                <option value="5">5 نسخ</option>
+                                <option value="8">8 نسخ</option>
+                                <option value="16">16 نسخة</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="upload-section">
                     <div class="upload-box" id="imagesBox">
                         <div class="file-icon">🖼️</div>
@@ -1553,6 +1579,84 @@
                 };
             }
 
+            function calculateImagePrintPrice(type, copies) {
+                if (!['color', 'black_white', 'personal'].includes(type)) {
+                    return 0;
+                }
+
+                const copyCount = Math.max(1, numericValue(copies) || 1);
+                if (type === 'personal') {
+                    return Number(servicePricing[`images_personal_${copyCount}_price`] || 0);
+                }
+
+                const prefix = type === 'black_white' ? 'images_bw' : 'images_color';
+                return Math.ceil(copyCount / Number(servicePricing[`${prefix}_group_size`] || 1))
+                    * Number(servicePricing[`${prefix}_group_price`] || 0);
+            }
+
+            function calculateImagesOrderPricing(files) {
+                const allocations = files.map(() => 0);
+                const types = {
+                    color: { copies: 0, price: 0 },
+                    black_white: { copies: 0, price: 0 },
+                    personal: { copies: 0, price: 0 }
+                };
+
+                ['color', 'black_white'].forEach((type) => {
+                    const indexes = [];
+                    files.forEach((fileData, index) => {
+                        if (fileData.imagePrintType === type) {
+                            const copies = Math.max(1, numericValue(fileData.copies) || 1);
+                            indexes.push({ index, copies });
+                            types[type].copies += copies;
+                        }
+                    });
+                    types[type].price = types[type].copies > 0
+                        ? calculateImagePrintPrice(type, types[type].copies)
+                        : 0;
+
+                    let remaining = Math.round(types[type].price * 100) / 100;
+                    indexes.forEach((item, itemIndex) => {
+                        const amount = itemIndex === indexes.length - 1
+                            ? remaining
+                            : Math.round((types[type].price * item.copies / types[type].copies) * 100) / 100;
+                        allocations[item.index] = amount;
+                        remaining = Math.round((remaining - amount) * 100) / 100;
+                    });
+                });
+
+                files.forEach((fileData, index) => {
+                    if (fileData.imagePrintType !== 'personal') return;
+                    const copies = Math.max(1, numericValue(fileData.copies) || 1);
+                    const price = calculateImagePrintPrice('personal', copies);
+                    allocations[index] = price;
+                    types.personal.copies += copies;
+                    types.personal.price += price;
+                });
+
+                return {
+                    allocations,
+                    types,
+                    total: allocations.reduce((sum, price) => sum + price, 0)
+                };
+            }
+
+            function updateImageUploadOptions() {
+                const type = document.getElementById('imagesPrintType')?.value || 'color';
+                const personal = type === 'personal';
+                document.getElementById('imagesStandardCopiesField').hidden = personal;
+                document.getElementById('imagesPersonalCopiesField').hidden = !personal;
+            }
+
+            function currentImageUploadOptions() {
+                const type = document.getElementById('imagesPrintType')?.value || 'color';
+                const copies = type === 'personal'
+                    ? Number(document.getElementById('imagesPersonalCopies')?.value || 5)
+                    : Math.min(999, Math.max(1, Number(document.getElementById('imagesStandardCopies')?.value || 1)));
+
+                return { type, copies };
+            }
+
             function getAllNotesFiles() {
                 return uploadedFiles.notes.pdf;
             }
@@ -1593,7 +1697,7 @@
                 const noPrintServiceLabels = {
                     formatting: 'سعر التنسيق',
                     research: 'سعر إنشاء البحوث',
-                    images: 'سعر الخدمة'
+                    images: 'سعر تصوير الصور'
                 };
                 const productBindingLabel = service === 'books'
                     ? 'سعر التجليد'
@@ -1601,9 +1705,17 @@
                 const cdMetric = ['thesis', 'phd'].includes(service)
                     ? `<span class="checkout-summary-metric"><span class="checkout-summary-label">سعر CD</span><strong class="checkout-summary-value">${formatMoney(totals.cd || 0)} ريال</strong></span>`
                     : '';
+                const imageMetrics = service === 'images' && totals.types
+                    ? `
+                        <span class="checkout-summary-metric"><span class="checkout-summary-label">ملون (${totals.types.color.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.color.price)} ريال</strong></span>
+                        <span class="checkout-summary-metric"><span class="checkout-summary-label">أبيض وأسود (${totals.types.black_white.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.black_white.price)} ريال</strong></span>
+                        <span class="checkout-summary-metric"><span class="checkout-summary-label">صور شخصية (${totals.types.personal.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.personal.price)} ريال</strong></span>
+                    `
+                    : '';
 
                 const totalsHtml = noPrintServiceLabels[service]
                     ? `
+                        ${imageMetrics}
                         <span class="checkout-summary-metric"><span class="checkout-summary-label">${noPrintServiceLabels[service]}</span><strong class="checkout-summary-value">${formatMoney(totals.binding)} ريال</strong></span>
                         <span class="checkout-summary-metric"><span class="checkout-summary-label">الإجمالي</span><strong class="checkout-summary-value">${formatMoney(totals.total)} ريال</strong></span>
                     `
@@ -1749,12 +1861,17 @@
                     renderCheckoutSummary(summary, 'images', 'ارفع الصور لعرض السعر والانتقال للسلة.');
                     return;
                 }
+                if (files.some(fileData => !fileData.imagePrintType)) {
+                    renderCheckoutSummary(summary, 'images', 'اختر نوع التصوير لكل صورة قبل الانتقال للسلة.');
+                    return;
+                }
 
-                const servicePrice = Number(customServicePrices[activeServiceDefinitionId] || 1);
+                const pricing = calculateImagesOrderPricing(files);
                 renderCheckoutSummary(summary, 'images', '', {
                     print: 0,
-                    binding: servicePrice,
-                    total: servicePrice
+                    binding: pricing.total,
+                    total: pricing.total,
+                    types: pricing.types
                 }, true);
             }
 
@@ -1972,16 +2089,43 @@
                         return;
                     }
 
-                    listDiv.innerHTML = files.map((fileData, index) => `
-                        <div class="files-list-item">
+                    const imageOrderPricing = calculateImagesOrderPricing(files);
+                    listDiv.innerHTML = files.map((fileData, index) => {
+                        const imageType = fileData.imagePrintType || '';
+                        const copies = Number(fileData.copies || (imageType === 'personal' ? 5 : 1));
+                        const imagePrice = imageOrderPricing.allocations[index] || 0;
+
+                        return `
+                        <div class="files-list-item has-formatting-price">
                             <div class="file-name-cell" data-label="اسم الصورة">
                                 <span class="file-name-text">${escapeHtml(fileData.relativePath || fileData.filename)}</span>
                             </div>
                             <div class="file-size" data-label="الحجم">${escapeHtml(fileData.size)}</div>
+                            <div data-label="نوع التصوير">
+                                <select class="binding-select" onchange="setImageFileType(${index}, this.value)">
+                                    <option value="" ${!imageType ? 'selected' : ''} disabled>اختر نوع التصوير</option>
+                                    <option value="color" ${imageType === 'color' ? 'selected' : ''}>ملون</option>
+                                    <option value="black_white" ${imageType === 'black_white' ? 'selected' : ''}>أبيض وأسود</option>
+                                    <option value="personal" ${imageType === 'personal' ? 'selected' : ''}>صورة شخصية</option>
+                                </select>
+                            </div>
+                            <div data-label="عدد النسخ">
+                                ${imageType === 'personal'
+                                    ? `<select class="binding-select" onchange="setImageFileCopies(${index}, this.value)">
+                                        <option value="5" ${copies === 5 ? 'selected' : ''}>5 نسخ</option>
+                                        <option value="8" ${copies === 8 ? 'selected' : ''}>8 نسخ</option>
+                                        <option value="16" ${copies === 16 ? 'selected' : ''}>16 نسخة</option>
+                                    </select>`
+                                    : `<input class="copies-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="${copies}" onchange="setImageFileCopies(${index}, this.value)">`
+                                }
+                            </div>
+                            <div class="file-price" data-label="السعر">${formatMoney(imagePrice)} ريال</div>
                             <div data-label="الحالة" style="color: #047857; font-weight: 600;">✓ مرفوعة</div>
                             <div class="file-remove" data-label="الإجراء" onclick="removeFile('images', 'image', ${index})">حذف</div>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
+                    bindEnglishNumberWarnings(listDiv);
                     return;
                 }
 
@@ -2231,6 +2375,33 @@
                 } catch (error) {
                     console.error('Failed to delete file', error);
                 }
+            }
+
+            function setImageFileType(index, type) {
+                const fileData = uploadedFiles.images.image[index];
+                fileData.imagePrintType = type;
+                fileData.copies = type === 'personal' ? 5 : 1;
+                updateStoredFile(fileData, {
+                    image_print_type: fileData.imagePrintType,
+                    copies: fileData.copies
+                });
+                updateFilesList('imagesFile');
+                updateImagesPricingSummary();
+            }
+
+            function setImageFileCopies(index, value) {
+                const fileData = uploadedFiles.images.image[index];
+                const allowedPersonalCopies = [5, 8, 16];
+                const numericCopies = Number(value);
+                fileData.copies = fileData.imagePrintType === 'personal'
+                    ? (allowedPersonalCopies.includes(numericCopies) ? numericCopies : 5)
+                    : Math.min(999, Math.max(1, numericCopies || 1));
+                updateStoredFile(fileData, {
+                    image_print_type: fileData.imagePrintType || 'color',
+                    copies: fileData.copies
+                });
+                updateFilesList('imagesFile');
+                updateImagesPricingSummary();
             }
 
             function viewUploadedFile(service, type, index) {
@@ -2830,6 +3001,9 @@
                     formData.append('service', config.service);
                     if (config.type === 'image') {
                         formData.append('relative_path', file.webkitRelativePath || file.name);
+                        const imageOptions = currentImageUploadOptions();
+                        formData.append('image_print_type', imageOptions.type);
+                        formData.append('copies', imageOptions.copies);
                     }
                     if (activeServiceDefinitionId) {
                         formData.append('service_definition_id', activeServiceDefinitionId);
@@ -2867,7 +3041,9 @@
                                     writingColor: response.writing_color || '',
                                     cdType: response.cd_type || 'none',
                                     cdCopies: Number(response.cd_copies || 0),
-                                    cdPrice: Number(response.cd_price || 0)
+                                    cdPrice: Number(response.cd_price || 0),
+                                    imagePrintType: response.image_print_type || 'color',
+                                    copies: Number(response.copies || 1)
                                 });
                                 updateFilesList(configKey);
                                 if (config.service === 'notes' || config.service === 'books' || config.service === 'color_printing') {
@@ -2951,6 +3127,7 @@
                         cdType: file.cd_type || 'none',
                         cdCopies: Number(file.cd_copies || 0),
                         cdPrice: Number(file.cd_price || 0),
+                        imagePrintType: file.image_print_type || '',
                         relativePath: file.relative_path || file.filename,
                     });
                 });
@@ -2967,6 +3144,7 @@
             }
 
             bindEnglishNumberWarnings();
+            updateImageUploadOptions();
 
             const editOrderPayload = @json($editOrderPayload ?? null);
             const requestedService = new URLSearchParams(window.location.search).get('service') || editOrderPayload?.service_type;

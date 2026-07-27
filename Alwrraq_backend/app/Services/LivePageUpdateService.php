@@ -15,12 +15,18 @@ class LivePageUpdateService
 {
     public function snapshot(User $user): array
     {
-        $pricingUpdatedAt = Schema::hasTable('service_price_settings')
-            ? (string) (ServicePriceSetting::query()->max('updated_at') ?? 'defaults')
-            : 'defaults';
-        $catalogUpdatedAt = Schema::hasTable('service_definitions')
-            ? (string) (ServiceDefinition::query()->max('updated_at') ?? 'defaults')
-            : 'defaults';
+        $pricingRevision = Schema::hasTable('service_price_settings')
+            ? hash('sha256', ServicePriceSetting::query()
+                ->orderBy('key')
+                ->get(['key', 'value', 'updated_at'])
+                ->toJson())
+            : hash('sha256', 'defaults');
+        $catalogRevision = Schema::hasTable('service_definitions')
+            ? hash('sha256', ServiceDefinition::query()
+                ->orderBy('id')
+                ->get(['id', 'title', 'description', 'icon', 'workflow_type', 'requires_file', 'is_active', 'sort_order', 'updated_at'])
+                ->toJson())
+            : hash('sha256', 'defaults');
         $applicationRevision = $this->applicationRevision();
 
         if ($user->role === 'admin') {
@@ -39,8 +45,8 @@ class LivePageUpdateService
                 (string) (StationeryProduct::query()->max('updated_at') ?? ''),
                 (string) (DiscountCode::query()->max('updated_at') ?? ''),
                 (string) (EducationalInstitution::query()->max('updated_at') ?? ''),
-                $pricingUpdatedAt,
-                $catalogUpdatedAt,
+                $pricingRevision,
+                $catalogRevision,
                 $applicationRevision,
             ];
         } else {
@@ -58,8 +64,8 @@ class LivePageUpdateService
                 (string) ((clone $orders)->max('updated_at') ?? ''),
                 (string) ($user->fresh()?->updated_at ?? ''),
                 (string) (StationeryProduct::query()->max('updated_at') ?? ''),
-                $pricingUpdatedAt,
-                $catalogUpdatedAt,
+                $pricingRevision,
+                $catalogRevision,
                 $applicationRevision,
             ];
         }
@@ -69,8 +75,8 @@ class LivePageUpdateService
             'orders_count' => $ordersCount,
             'unseen_count' => $unseenCount,
             'role' => $user->role,
-            'pricing_revision' => hash('sha256', $pricingUpdatedAt),
-            'catalog_revision' => hash('sha256', $catalogUpdatedAt),
+            'pricing_revision' => $pricingRevision,
+            'catalog_revision' => $catalogRevision,
             'app_revision' => $applicationRevision,
         ];
     }
@@ -84,6 +90,7 @@ class LivePageUpdateService
             }
         }
 
+        $gitRevision = '';
         foreach ([base_path('.git'), dirname(base_path()).'/.git'] as $gitDirectory) {
             $headPath = $gitDirectory.'/HEAD';
             if (! is_file($headPath)) {
@@ -92,13 +99,15 @@ class LivePageUpdateService
 
             $head = trim((string) file_get_contents($headPath));
             if (! str_starts_with($head, 'ref: ')) {
-                return $head;
+                $gitRevision = $head;
+                break;
             }
 
             $reference = trim(substr($head, 5));
             $referencePath = $gitDirectory.'/'.$reference;
             if (is_file($referencePath)) {
-                return trim((string) file_get_contents($referencePath));
+                $gitRevision = trim((string) file_get_contents($referencePath));
+                break;
             }
 
             $packedRefsPath = $gitDirectory.'/packed-refs';
@@ -110,12 +119,43 @@ class LivePageUpdateService
 
                     [$revision, $packedReference] = array_pad(preg_split('/\s+/', trim($line), 2), 2, '');
                     if ($packedReference === $reference) {
-                        return $revision;
+                        $gitRevision = $revision;
+                        break 2;
                     }
                 }
             }
         }
 
-        return (string) config('app.version', 'unknown');
+        $revision = $gitRevision !== '' ? $gitRevision : (string) config('app.version', 'unknown');
+
+        return app()->environment('local')
+            ? hash('sha256', $revision.'|'.$this->localSourceRevision())
+            : $revision;
+    }
+
+    private function localSourceRevision(): string
+    {
+        $files = [];
+
+        foreach ([app_path(), base_path('routes'), resource_path('views')] as $directory) {
+            if (! is_dir($directory)) {
+                continue;
+            }
+
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS)
+            );
+            foreach ($iterator as $file) {
+                if (! $file->isFile()) {
+                    continue;
+                }
+
+                $files[] = implode('|', [$file->getPathname(), $file->getMTime(), $file->getSize()]);
+            }
+        }
+
+        sort($files);
+
+        return hash('sha256', implode("\n", $files));
     }
 }

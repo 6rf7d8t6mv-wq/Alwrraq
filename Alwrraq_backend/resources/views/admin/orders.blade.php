@@ -408,7 +408,9 @@
                                 </div>
                             @endif
                             <div><span class="label">الإجمالي</span>
-                                @if (in_array($order->service_type, $noPrintServices, true))
+                                @if ($order->service_type === 'images')
+                                    تصوير الصور {{ $order->print_total }} | الكل {{ $order->grand_total }} ريال
+                                @elseif (in_array($order->service_type, $noPrintServices, true))
                                     {{ $bindingLabel }} {{ $order->binding_total }} | الكل {{ $order->grand_total }} ريال
                                 @else
                                     طباعة {{ $order->print_total }} | {{ $bindingLabel }} {{ $order->binding_total }} | توصيل {{ $order->delivery_fee }} | الكل {{ $order->grand_total }} ريال
@@ -509,6 +511,22 @@
                                         <div class="order-file-field">
                                             <span>الحجم</span>
                                             <strong>{{ number_format($file->size / 1024, 1) }} KB</strong>
+                                        </div>
+                                        <div class="order-file-field">
+                                            <span>نوع التصوير</span>
+                                            <strong>{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</strong>
+                                        </div>
+                                        <div class="order-file-field">
+                                            <span>عدد النسخ</span>
+                                            <strong>{{ $file->copies }}</strong>
+                                        </div>
+                                        <div class="order-file-field price">
+                                            <span>سعر تصوير الصورة</span>
+                                            <strong>{{ $file->print_price }} ريال</strong>
+                                        </div>
+                                        <div class="order-file-field price total">
+                                            <span>الإجمالي</span>
+                                            <strong>{{ $file->total_price }} ريال</strong>
                                         </div>
                                     @elseif ($isAcademicWord)
                                         <div class="order-file-field">

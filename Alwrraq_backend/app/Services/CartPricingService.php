@@ -15,6 +15,9 @@ class CartPricingService
     public function refreshCartTotals(Collection $orders): array
     {
         $orders->each->load(['files', 'productItems', 'serviceDefinition']);
+        $orders
+            ->where('service_type', 'images')
+            ->each(fn (Order $order) => $this->synchronizeImagePrices($order));
 
         $printAllocations = $this->cartPrintAllocations($orders);
 
@@ -23,7 +26,12 @@ class CartPricingService
                 ? $order->files->where('file_type', 'pdf')
                 : $order->files;
 
+            $imagePrintTotal = $order->service_type === 'images'
+                ? (float) $order->files->sum('print_price')
+                : 0;
+
             return [$order->id => (float) ($printAllocations[$order->id] ?? 0)
+                + $imagePrintTotal
                 + (float) $filesForBinding->sum('binding_price')
                 + $this->pricing->customServicePrice($order->serviceDefinition)
                 + (float) $order->productItems->sum('total_price')
@@ -66,7 +74,8 @@ class CartPricingService
                 + $this->pricing->customServicePrice($order->serviceDefinition);
             $bindingTotal += (float) $order->productItems->sum('total_price');
             $cdTotal = (float) $order->files->sum('cd_price');
-            $printTotal = (float) ($printAllocations[$order->id] ?? 0);
+            $printTotal = (float) ($printAllocations[$order->id] ?? 0)
+                + ($order->service_type === 'images' ? (float) $order->files->sum('print_price') : 0);
             $baseTotal = $printTotal + $bindingTotal + $cdTotal;
             $discountAmount = (float) ($discountAllocations[$order->id] ?? 0);
             $orderDeliveryFee = $deliveryAnchor?->id === $order->id ? $deliveryFee : 0;
@@ -245,5 +254,25 @@ class CartPricingService
             'redbox_delivery' => $this->pricing->value('delivery_redbox_fee'),
             default => 0,
         };
+    }
+
+    private function synchronizeImagePrices(Order $order): void
+    {
+        $pricing = $this->pricing->imageOrderPricing($order->files);
+
+        foreach ($order->files->values() as $index => $file) {
+            $price = (float) ($pricing['allocations'][$index] ?? 0);
+            if (abs((float) $file->total_price - $price) < 0.001
+                && abs((float) $file->print_price - $price) < 0.001) {
+                continue;
+            }
+
+            $file->forceFill([
+                'print_price' => $price,
+                'binding_price' => 0,
+                'cd_price' => 0,
+                'total_price' => $price,
+            ])->save();
+        }
     }
 }

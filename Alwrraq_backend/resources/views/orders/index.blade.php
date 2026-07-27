@@ -690,6 +690,9 @@
                                                     @if ($order->service_type !== 'research')
                                                         <th>النوع</th>
                                                     @endif
+                                                    @if ($order->service_type === 'images')
+                                                        <th>نوع التصوير</th>
+                                                    @endif
                                                     @if ($order->service_type === 'thesis')
                                                         <th>مشروع الرسالة</th>
                                                     @endif
@@ -701,7 +704,9 @@
                                 <th>عدد CD</th>
                                 <th>سعر CD</th>
                             @endif
-                                                    <th>الصفحات</th>
+                                                    @if ($order->service_type !== 'images')
+                                                        <th>الصفحات</th>
+                                                    @endif
                                                     @if ($order->service_type !== 'research')
                                                         <th>النسخ</th>
                                                     @endif
@@ -723,7 +728,11 @@
                                                     @if (! in_array($order->service_type, $noPrintServices, true))
                                                         <th>سعر الطباعة</th>
                                                     @endif
-                                                    <th>{{ $bindingPriceLabel }}</th>
+                                                    @if ($order->service_type === 'images')
+                                                        <th>سعر تصوير الصورة</th>
+                                                    @else
+                                                        <th>{{ $bindingPriceLabel }}</th>
+                                                    @endif
                                                     <th>إجمالي الملف</th>
                                                     @if ($order->payment_status !== 'paid')
                                                         <th>حذف</th>
@@ -768,6 +777,9 @@
                                                         @if ($order->service_type !== 'research')
                                                             <td data-label="النوع">{{ strtoupper($file->file_type) }}</td>
                                                         @endif
+                                                        @if ($order->service_type === 'images')
+                                                            <td data-label="نوع التصوير">{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</td>
+                                                        @endif
                                                         @if ($order->service_type === 'thesis')
                                                             <td data-label="مشروع الرسالة">{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
                                                         @endif
@@ -779,7 +791,9 @@
                                 <td data-label="عدد CD">{{ $file->cd_type === 'none' ? 0 : $file->cd_copies }}</td>
                                 <td class="price-cell" data-label="سعر CD">{{ $file->cd_price }} ريال</td>
                             @endif
-                                                        <td data-label="الصفحات">{{ $file->pages }}</td>
+                                                        @if ($order->service_type !== 'images')
+                                                            <td data-label="الصفحات">{{ $file->pages }}</td>
+                                                        @endif
                                                         @if ($order->service_type !== 'research')
                                                             <td data-label="النسخ">{{ $file->copies }}</td>
                                                         @endif
@@ -801,7 +815,11 @@
                                                         @if (! in_array($order->service_type, $noPrintServices, true))
                                                             <td class="price-cell" data-label="سعر الطباعة">{{ $file->print_price }} ريال</td>
                                                         @endif
-                                                        <td class="price-cell" data-label="{{ $bindingPriceLabel }}">{{ $file->binding_price }} ريال</td>
+                                                        @if ($order->service_type === 'images')
+                                                            <td class="price-cell" data-label="سعر تصوير الصورة">{{ $file->print_price }} ريال</td>
+                                                        @else
+                                                            <td class="price-cell" data-label="{{ $bindingPriceLabel }}">{{ $file->binding_price }} ريال</td>
+                                                        @endif
                                                         <td class="price-cell" data-label="إجمالي الملف">{{ $file->total_price }} ريال</td>
                                                         @if ($order->payment_status !== 'paid')
                                                             <td data-label="حذف">
@@ -825,7 +843,11 @@
                                     @if (! in_array($order->service_type, $noPrintServices, true))
                                         <div class="total-card"><span>سعر الطباعة</span><strong>{{ $order->print_total }} ريال</strong></div>
                                     @endif
-                                    <div class="total-card"><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+                                    @if ($order->service_type === 'images')
+                                        <div class="total-card"><span>سعر تصوير الصور</span><strong>{{ $order->print_total }} ريال</strong></div>
+                                    @else
+                                        <div class="total-card"><span>{{ $bindingPriceLabel }}</span><strong>{{ $order->binding_total }} ريال</strong></div>
+                                    @endif
                                     @if (in_array($order->service_type, ['thesis', 'phd'], true))
                                         <div class="total-card"><span>سعر CD</span><strong>{{ $order->files->sum('cd_price') }} ريال</strong></div>
                                     @endif

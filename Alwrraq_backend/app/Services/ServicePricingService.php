@@ -51,6 +51,14 @@ class ServicePricingService
         'thermal_a4_sheet' => ['group' => 'الطباعة بالألوان', 'label' => 'التغليف الحراري A4 لكل ورقة', 'default' => 5, 'suffix' => 'ريال'],
         'thermal_a3_sheet' => ['group' => 'الطباعة بالألوان', 'label' => 'التغليف الحراري A3 لكل ورقة', 'default' => 10, 'suffix' => 'ريال'],
 
+        'images_color_group_size' => ['group' => 'تصوير الصور', 'label' => 'عدد نسخ الصور الملونة في المجموعة', 'default' => 1, 'integer' => true, 'suffix' => 'نسخة'],
+        'images_color_group_price' => ['group' => 'تصوير الصور', 'label' => 'سعر مجموعة الصور الملونة', 'default' => 1, 'suffix' => 'ريال'],
+        'images_bw_group_size' => ['group' => 'تصوير الصور', 'label' => 'عدد نسخ الصور بالأبيض والأسود في المجموعة', 'default' => 1, 'integer' => true, 'suffix' => 'نسخة'],
+        'images_bw_group_price' => ['group' => 'تصوير الصور', 'label' => 'سعر مجموعة الصور بالأبيض والأسود', 'default' => 1, 'suffix' => 'ريال'],
+        'images_personal_5_price' => ['group' => 'تصوير الصور', 'label' => 'سعر الصورة الشخصية — 5 نسخ', 'default' => 1, 'suffix' => 'ريال'],
+        'images_personal_8_price' => ['group' => 'تصوير الصور', 'label' => 'سعر الصورة الشخصية — 8 نسخ', 'default' => 1, 'suffix' => 'ريال'],
+        'images_personal_16_price' => ['group' => 'تصوير الصور', 'label' => 'سعر الصورة الشخصية — 16 نسخة', 'default' => 1, 'suffix' => 'ريال'],
+
         'delivery_university_fee' => ['group' => 'الاستلام والتوصيل', 'label' => 'التوصيل داخل الجامعة الإسلامية', 'default' => 5, 'suffix' => 'ريال'],
         'delivery_university_free_from' => ['group' => 'الاستلام والتوصيل', 'label' => 'مجاني داخل الجامعة ابتداءً من', 'default' => 35, 'suffix' => 'ريال'],
         'delivery_madinah_fee' => ['group' => 'الاستلام والتوصيل', 'label' => 'التوصيل داخل المدينة المنورة', 'default' => 20, 'suffix' => 'ريال'],
@@ -87,7 +95,7 @@ class ServicePricingService
 
     public function customServicePrice(?ServiceDefinition $service): float
     {
-        if (! $service || $service->is_system) {
+        if (! $service || $service->is_system || $service->workflow_type === 'images') {
             return 0;
         }
 
@@ -126,6 +134,65 @@ class ServicePricingService
         }
 
         return $groups;
+    }
+
+    public function imagePrintPrice(string $type, int $copies): float
+    {
+        $copies = max(1, $copies);
+
+        if ($type === 'personal') {
+            return $this->value('images_personal_'.$copies.'_price');
+        }
+
+        $prefix = $type === 'black_white' ? 'images_bw' : 'images_color';
+
+        return ceil($copies / $this->value($prefix.'_group_size'))
+            * $this->value($prefix.'_group_price');
+    }
+
+    public function imageOrderPricing(iterable $files): array
+    {
+        $files = collect($files)->values();
+        $allocations = array_fill(0, $files->count(), 0.0);
+        $typeTotals = [
+            'color' => ['copies' => 0, 'price' => 0.0],
+            'black_white' => ['copies' => 0, 'price' => 0.0],
+            'personal' => ['copies' => 0, 'price' => 0.0],
+        ];
+
+        foreach (['color', 'black_white'] as $type) {
+            $unitsByIndex = $files
+                ->mapWithKeys(fn ($file, int $index) => [
+                    $index => ($file->image_print_type === $type ? max(1, (int) $file->copies) : 0),
+                ])
+                ->filter(fn (int $copies) => $copies > 0)
+                ->all();
+            $copies = array_sum($unitsByIndex);
+            $price = $copies > 0 ? $this->imagePrintPrice($type, $copies) : 0.0;
+            $typeTotals[$type] = ['copies' => $copies, 'price' => $price];
+
+            foreach ($this->allocatePrice($price, $unitsByIndex) as $index => $amount) {
+                $allocations[$index] = $amount;
+            }
+        }
+
+        foreach ($files as $index => $file) {
+            if ($file->image_print_type !== 'personal') {
+                continue;
+            }
+
+            $copies = max(1, (int) $file->copies);
+            $price = $this->imagePrintPrice('personal', $copies);
+            $allocations[$index] = $price;
+            $typeTotals['personal']['copies'] += $copies;
+            $typeTotals['personal']['price'] += $price;
+        }
+
+        return [
+            'total' => array_sum($allocations),
+            'allocations' => $allocations,
+            'types' => $typeTotals,
+        ];
     }
 
     public function validationRules(): array
@@ -186,5 +253,30 @@ class ServicePricingService
     private function customServicePriceKey(int $serviceId): string
     {
         return 'service_definition_'.$serviceId.'_price';
+    }
+
+    private function allocatePrice(float $amount, array $unitsByIndex): array
+    {
+        $totalUnits = array_sum($unitsByIndex);
+        if ($totalUnits <= 0 || $amount <= 0) {
+            return array_fill_keys(array_keys($unitsByIndex), 0.0);
+        }
+
+        $remaining = round($amount, 2);
+        $lastIndex = array_key_last($unitsByIndex);
+        $allocations = [];
+
+        foreach ($unitsByIndex as $index => $units) {
+            if ($index === $lastIndex) {
+                $allocations[$index] = $remaining;
+                break;
+            }
+
+            $share = round(($amount * $units) / $totalUnits, 2);
+            $allocations[$index] = $share;
+            $remaining = round($remaining - $share, 2);
+        }
+
+        return $allocations;
     }
 }

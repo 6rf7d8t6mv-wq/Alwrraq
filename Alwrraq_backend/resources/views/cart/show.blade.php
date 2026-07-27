@@ -477,6 +477,9 @@
                     if ($cartOrder->service_type === 'books' && $cartOrder->files->contains(fn ($file) => blank($file->cover_color))) {
                         $missingRequirements->push($serviceLabel . ': اختيار لون الجلد لكل ملف.');
                     }
+                    if ($cartOrder->service_type === 'images' && $cartOrder->files->contains(fn ($file) => blank($file->image_print_type))) {
+                        $missingRequirements->push($serviceLabel . ': اختيار نوع التصوير لكل صورة.');
+                    }
                     $academicPdfFiles = in_array($cartOrder->service_type, ['thesis', 'phd'], true)
                         ? $cartOrder->files->where('file_type', 'pdf')
                         : collect();
@@ -642,6 +645,9 @@
                                                     @if ($cartOrder->service_type === 'thesis')
                                                         <th>مشروع الرسالة</th>
                                                     @endif
+                                                    @if ($cartOrder->service_type === 'images')
+                                                        <th>نوع التصوير</th>
+                                                    @endif
                                                     @if (in_array($cartOrder->service_type, ['thesis', 'phd'], true))
                                                         <th>الجامعة/المعهد</th>
                                                         <th>لون الرسالة</th>
@@ -650,7 +656,9 @@
                                                         <th>عدد CD</th>
                                                         <th>سعر CD</th>
                                                     @endif
-                                                    <th>الصفحات</th>
+                                                    @if ($cartOrder->service_type !== 'images')
+                                                        <th>الصفحات</th>
+                                                    @endif
                                                     @if ($cartOrder->service_type !== 'research')
                                                         <th>النسخ</th>
                                                     @endif
@@ -672,7 +680,11 @@
                                                     @if (! in_array($cartOrder->service_type, $noPrintServices, true))
                                                         <th>سعر الطباعة</th>
                                                     @endif
-                                                    <th>{{ $cartBindingPriceLabel }}</th>
+                                                    @if ($cartOrder->service_type === 'images')
+                                                        <th>سعر تصوير الصورة</th>
+                                                    @else
+                                                        <th>{{ $cartBindingPriceLabel }}</th>
+                                                    @endif
                                                     <th>إجمالي الملف</th>
                                                 </tr>
                                             </thead>
@@ -716,6 +728,9 @@
                                                         @if ($cartOrder->service_type === 'thesis')
                                                             <td data-label="مشروع الرسالة" data-mobile-label="المشروع"><span class="detail-value">{{ $projectNames[$file->thesis_project_type] ?? '-' }}</span></td>
                                                         @endif
+                                                        @if ($cartOrder->service_type === 'images')
+                                                            <td data-label="نوع التصوير" data-mobile-label="التصوير"><span class="detail-value">{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</span></td>
+                                                        @endif
                                                         @if (in_array($cartOrder->service_type, ['thesis', 'phd'], true))
                                                             <td data-label="الجامعة/المعهد" data-mobile-label="الجامعة"><span class="detail-value">{{ $file->university_name ?: '-' }}</span></td>
                                                             <td data-label="لون الرسالة" data-mobile-label="الغلاف"><span class="detail-value">{{ $coverColorNames[$file->cover_color] ?? '-' }}</span></td>
@@ -724,7 +739,9 @@
                                                             <td data-label="عدد CD" data-mobile-label="العدد"><span class="detail-value">{{ $file->cd_type === 'none' ? 0 : $file->cd_copies }}</span></td>
                                                             <td class="price-cell" data-label="سعر CD" data-mobile-label="السعر"><span class="detail-value">{{ $file->cd_price }} ريال</span></td>
                                                         @endif
-                                                        <td data-label="الصفحات"><span class="detail-value">{{ $file->pages }}</span></td>
+                                                        @if ($cartOrder->service_type !== 'images')
+                                                            <td data-label="الصفحات"><span class="detail-value">{{ $file->pages }}</span></td>
+                                                        @endif
                                                         @if ($cartOrder->service_type !== 'research')
                                                             <td data-label="النسخ"><span class="detail-value">{{ $file->copies }}</span></td>
                                                         @endif
@@ -746,7 +763,11 @@
                                                         @if (! in_array($cartOrder->service_type, $noPrintServices, true))
                                                             <td class="price-cell" data-label="سعر الطباعة" data-mobile-label="الطباعة"><span class="detail-value">{{ $file->print_price }} ريال</span></td>
                                                         @endif
-                                                        <td class="price-cell" data-label="{{ $cartBindingPriceLabel }}" data-mobile-label="السعر"><span class="detail-value">{{ $file->binding_price }} ريال</span></td>
+                                                        @if ($cartOrder->service_type === 'images')
+                                                            <td class="price-cell" data-label="سعر تصوير الصورة" data-mobile-label="السعر"><span class="detail-value">{{ $file->print_price }} ريال</span></td>
+                                                        @else
+                                                            <td class="price-cell" data-label="{{ $cartBindingPriceLabel }}" data-mobile-label="السعر"><span class="detail-value">{{ $file->binding_price }} ريال</span></td>
+                                                        @endif
                                                         <td class="price-cell" data-label="إجمالي الملف" data-mobile-label="الإجمالي"><span class="detail-value">{{ $file->total_price }} ريال</span></td>
                                                         @endif
                                                     </tr>

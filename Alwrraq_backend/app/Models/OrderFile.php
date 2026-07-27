@@ -14,6 +14,7 @@ class OrderFile extends Model
         'stored_name',
         'path',
         'relative_path',
+        'image_print_type',
         'size',
         'pages',
         'copies',

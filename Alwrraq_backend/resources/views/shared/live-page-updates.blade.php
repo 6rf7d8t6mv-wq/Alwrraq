@@ -56,7 +56,7 @@
             let appRevision = @json($livePageSnapshot['app_revision'] ?? '');
             let ordersCount = Number(@json($livePageSnapshot['orders_count']));
             let updating = false;
-            let dirty = false;
+            let busyUntil = 0;
             let indicatorTimer = null;
 
             const savedScroll = sessionStorage.getItem(scrollKey);
@@ -91,14 +91,10 @@
             };
 
             const pageIsBusy = () => {
-                if (dirty) return true;
-                if (document.querySelector('dialog[open]')) return true;
+                if (Date.now() < busyUntil) return true;
+                if (document.querySelector('.progress-bar.active, [aria-busy="true"]')) return true;
                 if ([...document.querySelectorAll('input[type="file"]')].some((input) => input.files?.length)) return true;
-
-                const active = document.activeElement;
-                return Boolean(active?.closest('main, #adminModalBody') && (
-                    active.matches('input, textarea, select') || active.isContentEditable
-                ));
+                return false;
             };
 
             const refreshMain = async (nextRevision) => {
@@ -123,7 +119,6 @@
 
                 currentMain.innerHTML = nextMain.innerHTML;
                 revision = nextRevision;
-                dirty = false;
                 window.localizeDateTimes?.(currentMain);
                 window.bindAutoSearchForms?.(currentMain);
                 window.bindEnglishNumberWarnings?.(currentMain);
@@ -222,12 +217,16 @@
             };
 
             document.addEventListener('input', (event) => {
-                if (event.target.closest('main, #adminModalBody') && event.isTrusted) dirty = true;
+                if (event.target.closest('main, #adminModalBody') && event.isTrusted) {
+                    busyUntil = Date.now() + 2500;
+                }
             }, true);
             document.addEventListener('change', (event) => {
-                if (event.target.closest('main, #adminModalBody') && event.isTrusted) dirty = true;
+                if (event.target.closest('main, #adminModalBody') && event.isTrusted) {
+                    busyUntil = Date.now() + 2500;
+                }
             }, true);
-            document.addEventListener('submit', () => { dirty = true; }, true);
+            document.addEventListener('submit', () => { busyUntil = Date.now() + 5000; }, true);
 
             showIndicator('التحديث المباشر متصل', '', 1800);
             const timer = setInterval(poll, 1000);

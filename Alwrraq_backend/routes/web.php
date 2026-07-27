@@ -120,6 +120,7 @@ Route::get('/home', function (Request $request) {
                     'pages' => $file->pages,
                     'size' => $formatSize((int) $file->size),
                     'relative_path' => $file->relative_path,
+                    'image_print_type' => $file->image_print_type,
                     'binding_type' => $file->binding_type,
                     'copies' => $file->copies,
                     'print_sides' => $file->print_sides,

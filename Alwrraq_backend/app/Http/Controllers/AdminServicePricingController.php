@@ -17,6 +17,7 @@ class AdminServicePricingController extends Controller
         $lastUpdate = ServicePriceSetting::query()->with('updater')->latest('updated_at')->first();
         $customServices = ServiceDefinition::query()
             ->where('is_system', false)
+            ->where('workflow_type', '!=', 'images')
             ->orderBy('sort_order')
             ->orderBy('id')
             ->get();
@@ -34,6 +35,7 @@ class AdminServicePricingController extends Controller
         $this->authorizePricing();
         $customServiceIds = ServiceDefinition::query()
             ->where('is_system', false)
+            ->where('workflow_type', '!=', 'images')
             ->pluck('id');
         $rules = $pricing->validationRules();
         foreach ($customServiceIds as $serviceId) {

@@ -49,6 +49,30 @@ class FileUploadController extends Controller
                 ], 422);
             }
 
+            $imagePrintType = null;
+            $imageCopies = 1;
+            if ($service === 'images') {
+                $imagePrintType = (string) $request->input('image_print_type', 'color');
+                $imageCopies = (int) $request->input('copies', $imagePrintType === 'personal' ? 5 : 1);
+
+                if (! in_array($imagePrintType, ['color', 'black_white', 'personal'], true)) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'اختر نوع تصوير صحيح',
+                    ], 422);
+                }
+
+                if (($imagePrintType === 'personal' && ! in_array($imageCopies, [5, 8, 16], true))
+                    || ($imagePrintType !== 'personal' && ($imageCopies < 1 || $imageCopies > 999))) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $imagePrintType === 'personal'
+                            ? 'اختر 5 أو 8 أو 16 نسخة للصورة الشخصية'
+                            : 'حدد عدد النسخ من 1 إلى 999',
+                    ], 422);
+                }
+            }
+
             if (in_array($service, ['notes', 'books', 'color_printing'], true) && $type !== 'pdf') {
                 return response()->json([
                     'success' => false,
@@ -184,9 +208,10 @@ class FileUploadController extends Controller
                 'relative_path' => $type === 'image'
                     ? $this->normalizeRelativeImagePath((string) $request->input('relative_path'), $file->getClientOriginalName())
                     : null,
+                'image_print_type' => $imagePrintType,
                 'size' => $fileSize,
                 'pages' => $pageCount,
-                'copies' => 1,
+                'copies' => $service === 'images' ? $imageCopies : 1,
                 'print_sides' => $service === 'color_printing' ? 'one_side' : 'two_sides',
                 'paper_color' => 'white',
                 'thesis_project_type' => null,
@@ -208,28 +233,26 @@ class FileUploadController extends Controller
 
             $orderFile = OrderFile::query()->create($filePayload);
 
-            $prices = $service === 'images'
-                ? [
-                    'print_price' => 0,
-                    'binding_price' => 0,
-                    'cd_price' => 0,
-                    'total_price' => 0,
-                ]
-                : $this->calculatePrices(
-                    $service,
-                    $pageCount,
-                    $orderFile->copies,
-                    $orderFile->binding_type,
-                    $orderFile->writing_color,
-                    $orderFile->file_type,
-                    $orderFile->paper_color,
-                    $orderFile->page_size,
-                    $orderFile->print_sides,
-                    $orderFile->cd_type,
-                    $orderFile->cd_copies
-                );
+            $prices = $this->calculatePrices(
+                $service,
+                $pageCount,
+                $orderFile->copies,
+                $orderFile->binding_type,
+                $orderFile->writing_color,
+                $orderFile->file_type,
+                $orderFile->paper_color,
+                $orderFile->page_size,
+                $orderFile->print_sides,
+                $orderFile->cd_type,
+                $orderFile->cd_copies,
+                $orderFile->image_print_type
+            );
 
             $orderFile->fill($prices)->save();
+            if ($service === 'images') {
+                $this->repriceImageOrderFiles($order);
+                $orderFile->refresh();
+            }
             $this->refreshOrderTotals($order);
 
             if ($path) {
@@ -241,6 +264,7 @@ class FileUploadController extends Controller
                     'filename' => $filename,
                     'original_name' => $orderFile->original_name,
                     'relative_path' => $orderFile->relative_path,
+                    'image_print_type' => $orderFile->image_print_type,
                     'path' => $path,
                     'size' => $fileSize,
                     'pages' => $pageCount,
@@ -297,13 +321,29 @@ class FileUploadController extends Controller
             'writing_color' => ['nullable', 'in:gold,black'],
             'cd_type' => ['nullable', 'in:none,plain,printed'],
             'cd_copies' => ['nullable', 'integer', 'min:0', 'max:999'],
+            'image_print_type' => ['nullable', 'in:color,black_white,personal'],
         ]);
+
+        if ($file->order->service_type === 'images') {
+            $imagePrintType = $data['image_print_type'] ?? $file->image_print_type ?? 'color';
+            $imageCopies = (int) ($data['copies'] ?? $file->copies ?? 1);
+
+            if ($imagePrintType === 'personal' && ! in_array($imageCopies, [5, 8, 16], true)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'اختر 5 أو 8 أو 16 نسخة للصورة الشخصية',
+                ], 422);
+            }
+
+            $file->image_print_type = $imagePrintType;
+            $file->copies = $imageCopies;
+        }
 
         if (array_key_exists('binding_type', $data)) {
             $file->binding_type = $data['binding_type'];
         }
 
-        if (array_key_exists('copies', $data)) {
+        if (array_key_exists('copies', $data) && $file->order->service_type !== 'images') {
             $file->copies = $data['copies'];
         }
 
@@ -377,10 +417,15 @@ class FileUploadController extends Controller
             $file->page_size,
             $file->print_sides,
             $file->cd_type,
-            $file->cd_copies
+            $file->cd_copies,
+            $file->image_print_type
         );
 
         $file->fill($prices)->save();
+        if ($file->order->service_type === 'images') {
+            $this->repriceImageOrderFiles($file->order);
+            $file->refresh();
+        }
         $this->refreshOrderTotals($file->order);
 
         return response()->json([
@@ -398,6 +443,8 @@ class FileUploadController extends Controller
             'cd_type' => $file->cd_type,
             'cd_copies' => $file->cd_copies,
             'cd_price' => $file->cd_price,
+            'image_print_type' => $file->image_print_type,
+            'copies' => $file->copies,
             'order_totals' => $this->orderTotalsPayload($file->order->fresh()),
         ]);
     }
@@ -544,6 +591,9 @@ class FileUploadController extends Controller
         if ($orderDeleted) {
             $order->delete();
         } else {
+            if ($order->service_type === 'images') {
+                $this->repriceImageOrderFiles($order);
+            }
             $this->refreshOrderTotals($order);
         }
 
@@ -607,7 +657,7 @@ class FileUploadController extends Controller
         }
     }
 
-    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null, ?string $printSides = null, ?string $cdType = 'none', int $cdCopies = 0): array
+    private function calculatePrices(string $service, int $pages, int $copies, ?string $binding, ?string $writingColor = null, ?string $fileType = null, ?string $paperColor = null, ?string $pageSize = null, ?string $printSides = null, ?string $cdType = 'none', int $cdCopies = 0, ?string $imagePrintType = null): array
     {
         $cdCount = $cdType === 'none' ? 0 : max(1, $cdCopies);
         $cdPrice = in_array($service, ['thesis', 'phd'], true) && $fileType === 'pdf'
@@ -638,6 +688,17 @@ class FileUploadController extends Controller
                 'binding_price' => $servicePrice,
                 'cd_price' => 0,
                 'total_price' => $servicePrice,
+            ]);
+        }
+
+        if ($service === 'images') {
+            $imagePrice = $this->pricing->imagePrintPrice($imagePrintType ?: 'color', $copies);
+
+            return $this->normalizePrices([
+                'print_price' => $imagePrice,
+                'binding_price' => 0,
+                'cd_price' => 0,
+                'total_price' => $imagePrice,
             ]);
         }
 
@@ -778,7 +839,9 @@ class FileUploadController extends Controller
     {
         $order->load(['files', 'serviceDefinition']);
         $printTotal = 0;
-        if (! in_array($order->service_type, ['formatting', 'research', 'images'], true)) {
+        if ($order->service_type === 'images') {
+            $printTotal = (float) $order->files->sum('print_price');
+        } elseif (! in_array($order->service_type, ['formatting', 'research'], true)) {
             if (in_array($order->service_type, ['notes', 'books'], true)) {
                 $printTotal = $this->printProductPrintTotal($order);
             } elseif ($order->service_type === 'color_printing') {
@@ -811,6 +874,24 @@ class FileUploadController extends Controller
             'delivery_fee' => $deliveryFee,
             'grand_total' => $subtotal + $deliveryFee,
         ]);
+    }
+
+    private function repriceImageOrderFiles(Order $order): void
+    {
+        $order->load('files');
+        $pricing = $this->pricing->imageOrderPricing($order->files);
+
+        foreach ($order->files->values() as $index => $file) {
+            $price = (float) ($pricing['allocations'][$index] ?? 0);
+            $file->forceFill([
+                'print_price' => $price,
+                'binding_price' => 0,
+                'cd_price' => 0,
+                'total_price' => $price,
+            ])->save();
+        }
+
+        $order->load('files');
     }
 
     private function printProductPrintTotal(Order $order): float
