@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $isImage ? 'عرض الصورة' : 'عرض الملف' }} - الورّاق</title>
+    @include('shared.tab-brand')
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; font-family: Tahoma, Arial, sans-serif; background: #f3f6fb; color: #0f172a; }

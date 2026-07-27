@@ -96,7 +96,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $pageTitle }}</title>
+    @include('shared.tab-brand')
     <meta name="description" content="{{ $pageDescription }}">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
@@ -104,8 +104,6 @@
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <link rel="canonical" href="{{ $pageUrl }}">
     <link rel="sitemap" type="application/xml" title="Sitemap" href="{{ route('sitemap') }}">
-    <link rel="icon" type="image/jpeg" href="{{ $logoUrl }}">
-    <link rel="apple-touch-icon" href="{{ $logoUrl }}">
     <link rel="preload" as="image" href="{{ $logoUrl }}" fetchpriority="high">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="{{ $isEnglish ? 'en_US' : 'ar_SA' }}">

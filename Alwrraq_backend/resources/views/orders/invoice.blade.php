@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>فاتورة الطلب #{{ $order->id }}</title>
+    @include('shared.tab-brand')
     <style>
         * { box-sizing: border-box; }
         body { margin: 0; padding: 16px; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
