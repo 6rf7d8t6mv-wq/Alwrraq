@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
         <meta name="csrf-token" content="{{ csrf_token() }}">
-        <title>خدمات الطباعة والتجليد</title>
+        <title>خدمات النسخ والتصوير</title>
         <style>
             :root { --sidebar-width: clamp(180px, 20vw, 240px); --page-gap: clamp(14px, 3vw, 40px); }
             * { box-sizing: border-box; }
@@ -660,7 +660,7 @@
                 <div class="header-brand">
                     <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                     <div class="brand">الورّاق</div>
-                    <p class="brand-subtitle">خدمات الطباعة والتجليد</p>
+                    <p class="brand-subtitle">خدمات النسخ والتصوير</p>
                 </div>
                 <div class="header-identity">
                     <strong>{{ auth()->user()->name }}</strong>
