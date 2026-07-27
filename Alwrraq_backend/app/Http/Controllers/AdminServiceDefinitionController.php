@@ -6,11 +6,25 @@ use App\Models\ServiceDefinition;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AdminServiceDefinitionController extends Controller
 {
+    public function image(string $filename)
+    {
+        abort_unless($filename === basename($filename), 404);
+
+        $path = 'service-images/'.$filename;
+        abort_unless(Storage::disk('public')->exists($path), 404);
+
+        return Storage::disk('public')->response($path, null, [
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+    }
+
     public function index()
     {
         $this->ensureAdmin();
@@ -25,13 +39,26 @@ class AdminServiceDefinitionController extends Controller
     {
         $this->ensureAdmin();
         $data = $this->validated($request);
+        $image = $data['image'] ?? null;
+        unset($data['image']);
         $data['code'] = $this->uniqueCode($data['title']);
         $data['requires_file'] = $this->workflowRequiresFile($data['workflow_type']);
         $data['is_active'] = true;
         $data['is_system'] = false;
         $data['sort_order'] = ((int) ServiceDefinition::query()->max('sort_order')) + 10;
+        if ($image) {
+            $data['image_path'] = $image->store('service-images', 'public');
+        }
 
-        $service = ServiceDefinition::query()->create($data);
+        try {
+            $service = ServiceDefinition::query()->create($data);
+        } catch (\Throwable $error) {
+            if (isset($data['image_path'])) {
+                Storage::disk('public')->delete($data['image_path']);
+            }
+
+            throw $error;
+        }
         $pricing->ensureCustomServicePrice($service, (int) Auth::id());
 
         return back()->with('status', 'تمت إضافة الخدمة وتفعيل سعرها الافتراضي بنجاح.');
@@ -41,8 +68,27 @@ class AdminServiceDefinitionController extends Controller
     {
         $this->ensureAdmin();
         $data = $this->validated($request, $service);
+        $image = $data['image'] ?? null;
+        unset($data['image']);
         $data['requires_file'] = $this->workflowRequiresFile($data['workflow_type']);
-        $service->update($data);
+        $previousImagePath = $service->image_path;
+        if ($image) {
+            $data['image_path'] = $image->store('service-images', 'public');
+        }
+
+        try {
+            $service->update($data);
+        } catch (\Throwable $error) {
+            if (isset($data['image_path'])) {
+                Storage::disk('public')->delete($data['image_path']);
+            }
+
+            throw $error;
+        }
+
+        if ($image && $previousImagePath) {
+            Storage::disk('public')->delete($previousImagePath);
+        }
 
         return back()->with('status', 'تم تعديل الخدمة بنجاح.');
     }
@@ -53,6 +99,7 @@ class AdminServiceDefinitionController extends Controller
             'title' => ['required', 'string', 'max:255'],
             'description' => ['required', 'string', 'max:1000'],
             'icon' => ['nullable', 'string', 'max:20'],
+            'image' => ['nullable', 'file', 'mimes:jpg,jpeg,png,webp,gif,bmp,heic,heif', 'max:10240'],
             'workflow_type' => [
                 'required',
                 'string',

@@ -37,6 +37,8 @@
             .service-card { min-height: 250px; display: flex; flex-direction: column; align-items: stretch; gap: 13px; padding: clamp(18px, 2.6vw, 26px); background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 18px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; }
             .service-card:hover { transform: translateY(-4px); border-color: #cbd5e1; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.13); }
             .service-icon { width: 56px; height: 56px; display: inline-flex; align-items: center; justify-content: center; border-radius: 16px; background: #eef2ff; color: #0f172a; font-size: 28px; box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.04); }
+            .service-icon.has-image { margin-inline: auto; overflow: hidden; background: #ffffff; }
+            .service-icon-image { width: 100%; height: 100%; display: block; object-fit: contain; border-radius: inherit; }
             .service-title { margin: 0; color: #0f172a; font-size: clamp(17px, 1.8vw, 21px); font-weight: 900; line-height: 1.5; white-space: normal; overflow-wrap: break-word; }
             .service-description { margin: 0; color: #64748b; font-size: 14px; line-height: 1.8; flex: 1; }
             .service-entry { width: 100%; align-self: stretch; min-width: 0; padding: 13px 16px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 900; transition: all 0.25s ease; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18); }
@@ -704,7 +706,18 @@
 
                 @foreach ($serviceDefinitions as $serviceDefinition)
                     <article class="service-card">
-                        <div class="service-icon">{{ $serviceDefinition->icon ?: '🧩' }}</div>
+                        @if ($serviceDefinition->image_path)
+                            <div class="service-icon has-image">
+                                <img
+                                    class="service-icon-image"
+                                    src="{{ route('services.image', ['filename' => basename($serviceDefinition->image_path)], false) }}"
+                                    alt="صورة {{ $serviceDefinition->title }}"
+                                    loading="lazy"
+                                >
+                            </div>
+                        @else
+                            <div class="service-icon">{{ $serviceDefinition->icon ?: '🧩' }}</div>
+                        @endif
                         <h3 class="service-title">{{ $serviceDefinition->title }}</h3>
                         <p class="service-description">{{ $serviceDefinition->description }}</p>
                         @if ($serviceDefinition->workflow_type === 'stationery')

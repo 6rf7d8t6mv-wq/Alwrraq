@@ -3,6 +3,13 @@
 @section('title', 'إدارة الخدمات - لوحة المدير')
 
 @section('content')
+    <style>
+        .service-image-field { display: grid; gap: 7px; }
+        .service-image-preview { width: 84px; height: 84px; overflow: hidden; display: grid; place-items: center; border: 1px solid #dbe3ef; border-radius: 12px; background: #f8fafc; }
+        .service-image-preview img { width: 100%; height: 100%; display: block; object-fit: contain; background: #ffffff; }
+        .service-image-preview span { padding: 8px; color: #94a3b8; font-size: 9px; font-weight: 900; line-height: 1.4; text-align: center; }
+    </style>
+
     <div class="page-title compact-page-title">
         <div>
             <h1>إدارة الخدمات</h1>
@@ -40,6 +47,9 @@
                                         'title' => $service->title,
                                         'description' => $service->description,
                                         'icon' => $service->icon,
+                                        'image_url' => $service->image_path
+                                            ? route('services.image', ['filename' => basename($service->image_path)], false)
+                                            : null,
                                         'workflow_type' => $service->workflow_type,
                                     ], JSON_UNESCAPED_UNICODE) }}"
                                     onclick="openServiceEditor(JSON.parse(this.dataset.service))"
@@ -59,7 +69,7 @@
                 <button class="modal-close" type="button" onclick="hideServiceModal()">إغلاق</button>
             </div>
             <div class="modal-body">
-                <form method="post" action="{{ route('admin.services.store') }}">
+                <form method="post" action="{{ route('admin.services.store') }}" enctype="multipart/form-data">
                     @csrf
                     @include('admin.partials.service-fields')
                     <button class="save" type="submit">إضافة الخدمة</button>
@@ -75,7 +85,7 @@
                 <button class="modal-close" type="button" onclick="hideServiceModal()">إغلاق</button>
             </div>
             <div class="modal-body">
-                <form id="editServiceForm" method="post" action="">
+                <form id="editServiceForm" method="post" action="" enctype="multipart/form-data">
                     @csrf
                     @method('patch')
                     @include('admin.partials.service-fields', ['fieldPrefix' => 'edit_'])
@@ -104,7 +114,51 @@
             document.getElementById('edit_service_description').value = service.description || '';
             document.getElementById('edit_service_icon').value = service.icon || '';
             document.getElementById('edit_service_workflow').value = service.workflow_type || '';
+            const imageInput = document.getElementById('edit_service_image');
+            if (imageInput) imageInput.value = '';
+            showServiceImagePreview('edit_', service.image_url || '', service.image_url ? 'الصورة الحالية' : 'لا توجد صورة حالية');
             showServiceModal('editServiceModal');
         }
+
+        function showServiceImagePreview(prefix, source, placeholderText = 'لم يتم اختيار صورة') {
+            const preview = document.getElementById(`${prefix}service_image_preview`);
+            const placeholder = document.getElementById(`${prefix}service_image_placeholder`);
+            if (!preview || !placeholder) return;
+
+            if (!source) {
+                preview.hidden = true;
+                preview.removeAttribute('src');
+                placeholder.hidden = false;
+                placeholder.textContent = placeholderText;
+                return;
+            }
+
+            preview.onload = () => {
+                preview.hidden = false;
+                placeholder.hidden = true;
+            };
+            preview.onerror = () => {
+                preview.hidden = true;
+                placeholder.hidden = false;
+                placeholder.textContent = 'تعذر عرض الصورة';
+            };
+            preview.src = source;
+        }
+
+        document.addEventListener('change', (event) => {
+            const input = event.target.closest('[data-service-image-input]');
+            const file = input?.files?.[0];
+            if (!input || !file) return;
+
+            const prefix = input.id.startsWith('edit_') ? 'edit_' : 'add_';
+            const objectUrl = URL.createObjectURL(file);
+            const preview = document.getElementById(`${prefix}service_image_preview`);
+            if (preview) {
+                const releaseObjectUrl = () => URL.revokeObjectURL(objectUrl);
+                preview.addEventListener('load', releaseObjectUrl, { once: true });
+                preview.addEventListener('error', releaseObjectUrl, { once: true });
+            }
+            showServiceImagePreview(prefix, objectUrl, 'تعذر معاينة الصورة المختارة');
+        });
     </script>
 @endsection

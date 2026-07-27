@@ -24,6 +24,7 @@ class ServiceDefinition extends Model
         'title',
         'description',
         'icon',
+        'image_path',
         'workflow_type',
         'requires_file',
         'is_active',

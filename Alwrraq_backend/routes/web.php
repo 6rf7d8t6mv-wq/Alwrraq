@@ -66,6 +66,10 @@ Route::get('/stationery-images/{filename}', [StationeryController::class, 'image
     ->where('filename', '[A-Za-z0-9._-]+')
     ->name('stationery.image');
 
+Route::get('/service-images/{filename}', [AdminServiceDefinitionController::class, 'image'])
+    ->where('filename', '[A-Za-z0-9._-]+')
+    ->name('services.image');
+
 Route::get('/showcase-images/{device}', [PublicAssetController::class, 'showcase'])
     ->where('device', 'desktop|mobile')
     ->name('public.showcase-image');

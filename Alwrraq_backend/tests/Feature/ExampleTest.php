@@ -54,6 +54,20 @@ class ExampleTest extends TestCase
         $this->get('/stationery-images/missing-product.png')->assertNotFound();
     }
 
+    public function test_service_images_are_served_without_a_public_storage_symlink(): void
+    {
+        Storage::fake('public');
+        Storage::disk('public')->put('service-images/test-service.png', 'service-image-content');
+
+        $response = $this->get('/service-images/test-service.png');
+
+        $response->assertStatus(200);
+        $this->assertSame('service-image-content', $response->streamedContent());
+        $this->assertStringContainsString('max-age=31536000', (string) $response->headers->get('Cache-Control'));
+
+        $this->get('/service-images/missing-service.png')->assertNotFound();
+    }
+
     public function test_public_showcase_images_have_a_reliable_laravel_url(): void
     {
         $this->get('/showcase-images/mobile')

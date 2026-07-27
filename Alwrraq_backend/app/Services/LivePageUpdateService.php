@@ -24,7 +24,7 @@ class LivePageUpdateService
         $catalogRevision = Schema::hasTable('service_definitions')
             ? hash('sha256', ServiceDefinition::query()
                 ->orderBy('id')
-                ->get(['id', 'title', 'description', 'icon', 'workflow_type', 'requires_file', 'is_active', 'sort_order', 'updated_at'])
+                ->get(['id', 'title', 'description', 'icon', 'image_path', 'workflow_type', 'requires_file', 'is_active', 'sort_order', 'updated_at'])
                 ->toJson())
             : hash('sha256', 'defaults');
         $applicationRevision = $this->applicationRevision();
