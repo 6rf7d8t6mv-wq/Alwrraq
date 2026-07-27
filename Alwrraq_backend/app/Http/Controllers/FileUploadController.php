@@ -51,27 +51,6 @@ class FileUploadController extends Controller
 
             $imagePrintType = null;
             $imageCopies = 1;
-            if ($service === 'images') {
-                $imagePrintType = (string) $request->input('image_print_type', 'color');
-                $imageCopies = (int) $request->input('copies', $imagePrintType === 'personal' ? 5 : 1);
-
-                if (! in_array($imagePrintType, ['color', 'black_white', 'personal'], true)) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'اختر نوع تصوير صحيح',
-                    ], 422);
-                }
-
-                if (($imagePrintType === 'personal' && ! in_array($imageCopies, [5, 8, 16], true))
-                    || ($imagePrintType !== 'personal' && ($imageCopies < 1 || $imageCopies > 999))) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => $imagePrintType === 'personal'
-                            ? 'اختر 5 أو 8 أو 16 نسخة للصورة الشخصية'
-                            : 'حدد عدد النسخ من 1 إلى 999',
-                    ], 422);
-                }
-            }
 
             if (in_array($service, ['notes', 'books', 'color_printing'], true) && $type !== 'pdf') {
                 return response()->json([
@@ -692,7 +671,9 @@ class FileUploadController extends Controller
         }
 
         if ($service === 'images') {
-            $imagePrice = $this->pricing->imagePrintPrice($imagePrintType ?: 'color', $copies);
+            $imagePrice = in_array($imagePrintType, ['color', 'black_white', 'personal'], true)
+                ? $this->pricing->imagePrintPrice($imagePrintType, $copies)
+                : 0;
 
             return $this->normalizePrices([
                 'print_price' => $imagePrice,

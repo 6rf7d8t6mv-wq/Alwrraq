@@ -987,33 +987,7 @@
                     <span class="service-notice-icon">i</span>
                     <div class="service-notice-content">
                         <p class="service-notice-title">رفع صور أو مجلد كامل</p>
-                        <p class="service-notice-text">يمكنك اختيار صور متعددة أو اختيار مجلد كامل يحتوي على الصور.</p>
-                    </div>
-                </div>
-
-                <div class="binding-section">
-                    <h3>خيارات تصوير الصور</h3>
-                    <div class="research-form-grid">
-                        <div class="research-field">
-                            <label for="imagesPrintType">نوع التصوير</label>
-                            <select id="imagesPrintType" class="binding-select" onchange="updateImageUploadOptions()">
-                                <option value="color">تصوير ملون</option>
-                                <option value="black_white">تصوير أبيض وأسود</option>
-                                <option value="personal">صورة شخصية</option>
-                            </select>
-                        </div>
-                        <div id="imagesStandardCopiesField" class="research-field">
-                            <label for="imagesStandardCopies">عدد النسخ من كل صورة</label>
-                            <input id="imagesStandardCopies" class="copies-input" type="number" inputmode="numeric" min="1" max="999" step="1" value="1">
-                        </div>
-                        <div id="imagesPersonalCopiesField" class="research-field" hidden>
-                            <label for="imagesPersonalCopies">عدد نسخ الصورة الشخصية</label>
-                            <select id="imagesPersonalCopies" class="binding-select">
-                                <option value="5">5 نسخ</option>
-                                <option value="8">8 نسخ</option>
-                                <option value="16">16 نسخة</option>
-                            </select>
-                        </div>
+                        <p class="service-notice-text">يمكنك اختيار صور متعددة أو مجلد كامل، وبعد الرفع حدد نوع التصوير وعدد النسخ لكل صورة.</p>
                     </div>
                 </div>
 
@@ -1639,22 +1613,6 @@
                     types,
                     total: allocations.reduce((sum, price) => sum + price, 0)
                 };
-            }
-
-            function updateImageUploadOptions() {
-                const type = document.getElementById('imagesPrintType')?.value || 'color';
-                const personal = type === 'personal';
-                document.getElementById('imagesStandardCopiesField').hidden = personal;
-                document.getElementById('imagesPersonalCopiesField').hidden = !personal;
-            }
-
-            function currentImageUploadOptions() {
-                const type = document.getElementById('imagesPrintType')?.value || 'color';
-                const copies = type === 'personal'
-                    ? Number(document.getElementById('imagesPersonalCopies')?.value || 5)
-                    : Math.min(999, Math.max(1, Number(document.getElementById('imagesStandardCopies')?.value || 1)));
-
-                return { type, copies };
             }
 
             function getAllNotesFiles() {
@@ -3001,9 +2959,6 @@
                     formData.append('service', config.service);
                     if (config.type === 'image') {
                         formData.append('relative_path', file.webkitRelativePath || file.name);
-                        const imageOptions = currentImageUploadOptions();
-                        formData.append('image_print_type', imageOptions.type);
-                        formData.append('copies', imageOptions.copies);
                     }
                     if (activeServiceDefinitionId) {
                         formData.append('service_definition_id', activeServiceDefinitionId);
@@ -3042,7 +2997,7 @@
                                     cdType: response.cd_type || 'none',
                                     cdCopies: Number(response.cd_copies || 0),
                                     cdPrice: Number(response.cd_price || 0),
-                                    imagePrintType: response.image_print_type || 'color',
+                                    imagePrintType: response.image_print_type || '',
                                     copies: Number(response.copies || 1)
                                 });
                                 updateFilesList(configKey);
@@ -3144,7 +3099,6 @@
             }
 
             bindEnglishNumberWarnings();
-            updateImageUploadOptions();
 
             const editOrderPayload = @json($editOrderPayload ?? null);
             const requestedService = new URLSearchParams(window.location.search).get('service') || editOrderPayload?.service_type;
