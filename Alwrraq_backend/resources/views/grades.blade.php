@@ -552,6 +552,106 @@
                 .service-description { font-size: 13px; line-height: 1.55; }
                 .service-entry { padding: 8px 9px; border-radius: 8px; font-size: 13px; }
             }
+            #imagesFilesList .image-file-card {
+                direction: rtl;
+                min-width: 0;
+                display: grid;
+                grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(110px, .9fr);
+                grid-template-rows: auto minmax(66px, 1fr) minmax(66px, 1fr);
+                gap: 6px;
+                padding: 8px;
+                overflow: hidden;
+            }
+            #imagesFilesList .image-file-card > div {
+                width: 100%;
+                min-width: 0;
+                margin: 0;
+                padding: 7px;
+                overflow: hidden;
+                border: 1px solid #e2e8f0;
+                border-radius: 9px;
+                background: #f8fafc;
+            }
+            #imagesFilesList .image-file-card > div::before { font-size: 9px; line-height: 1.2; }
+            #imagesFilesList .image-file-preview {
+                grid-column: 3;
+                grid-row: 1 / 4;
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 0;
+                padding: 0;
+                background: #eef6ff;
+            }
+            #imagesFilesList .image-file-preview::before { display: none; }
+            #imagesFilesList .image-file-preview img {
+                display: block;
+                width: 100%;
+                height: 100%;
+                min-height: 100%;
+                object-fit: cover;
+            }
+            #imagesFilesList .image-preview-fallback {
+                display: none;
+                padding: 8px;
+                color: #64748b;
+                font-size: 10px;
+                font-weight: 900;
+                line-height: 1.4;
+                text-align: center;
+            }
+            #imagesFilesList .image-file-name {
+                grid-column: 1 / 3;
+                grid-row: 1;
+                min-height: 44px;
+                padding: 5px 7px;
+                background: #eff6ff;
+                font-size: 10px;
+                line-height: 1.25;
+            }
+            #imagesFilesList .image-file-name::before { margin-bottom: 2px; }
+            #imagesFilesList .image-file-name .file-name-text {
+                display: block;
+                overflow: hidden;
+                font-size: 11px;
+                line-height: 1.25;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+            #imagesFilesList .image-type-cell { grid-column: 1; grid-row: 2; }
+            #imagesFilesList .image-copies-cell { grid-column: 2; grid-row: 2; }
+            #imagesFilesList .image-price-cell { grid-column: 1; grid-row: 3; }
+            #imagesFilesList .image-action-cell { grid-column: 2; grid-row: 3; }
+            #imagesFilesList .image-file-card .binding-select { min-width: 0; }
+            #imagesFilesList .image-file-card .copies-stepper { width: 100%; min-width: 0; }
+            #imagesFilesList .image-action-cell {
+                align-items: center;
+                justify-content: center;
+                color: #dc2626;
+                font-weight: 900;
+            }
+            #imagesPricingSummary .checkout-summary-line {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+                gap: 6px;
+            }
+            #imagesPricingSummary .image-type-metric { grid-column: span 2; min-height: 58px; padding: 9px 7px; }
+            #imagesPricingSummary .image-total-metric { grid-column: 1 / 3; min-height: 48px; }
+            #imagesPricingSummary .checkout-row { grid-column: 3 / 5; min-height: 48px; }
+            #imagesPricingSummary .image-type-metric .checkout-summary-label { font-size: 10px; white-space: normal; }
+            #imagesPricingSummary .image-type-metric .checkout-summary-value { font-size: 12px; }
+            @media (max-width: 420px) {
+                #imagesFilesList .image-file-card {
+                    grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(92px, .82fr);
+                    gap: 5px;
+                    padding: 6px;
+                }
+                #imagesFilesList .image-file-card > div { padding: 6px 4px; }
+                #imagesFilesList .image-file-card .copies-stepper { grid-template-columns: 22px minmax(24px, 1fr) 22px; gap: 2px; }
+                #imagesFilesList .image-file-card .copies-stepper-button { width: 22px; height: 27px; }
+                #imagesFilesList .image-file-card .copies-input { height: 27px; }
+                #imagesPricingSummary .image-type-metric { min-height: 55px; padding-inline: 4px; }
+            }
         </style>
     </head>
     <body class="customer-app-page">
@@ -986,8 +1086,8 @@
                 <div class="service-notice">
                     <span class="service-notice-icon">i</span>
                     <div class="service-notice-content">
-                        <p class="service-notice-title">رفع صور أو مجلد كامل</p>
-                        <p class="service-notice-text">يمكنك اختيار صور متعددة أو مجلد كامل، وبعد الرفع حدد نوع التصوير وعدد النسخ لكل صورة.</p>
+                        <p class="service-notice-title">رفع صورة أو صور متعددة</p>
+                        <p class="service-notice-text">بعد الرفع حدد نوع التصوير وعدد النسخ لكل صورة.</p>
                     </div>
                 </div>
 
@@ -997,12 +1097,10 @@
                         <h3>تحميل الصور</h3>
                         <input type="file" id="imagesFile" accept="image/*" multiple />
                         <input type="file" id="imagesFilesPicker" multiple />
-                        <input type="file" id="imagesFolderFile" multiple webkitdirectory directory />
                         <p class="file-info">جميع صيغ الصور مدعومة</p>
                         <div class="image-upload-actions">
                             <label class="upload-button" id="imagesUploadBtn" for="imagesFile">اختيار من الاستديو</label>
                             <label class="upload-button" for="imagesFilesPicker">اختيار صور من الملفات</label>
-                            <label class="upload-button" for="imagesFolderFile">اختر مجلد صور</label>
                         </div>
                         <div class="progress-bar" id="imagesProgress"><div class="progress-bar-fill"></div></div>
                         <div id="imagesError" class="error-msg" style="display: none;"></div>
@@ -1262,7 +1360,7 @@
                 phdWord: { inputId: 'phdWordFile', boxId: 'phdWordBox', progressId: 'phdWordProgress', errorId: 'phdWordError', listId: 'phdWordFilesList', service: 'phd', type: 'word' },
                 phdPdf: { inputId: 'phdPdfFile', boxId: 'phdPdfBox', progressId: 'phdPdfProgress', errorId: 'phdPdfError', listId: 'phdPdfFilesList', service: 'phd', type: 'pdf' },
                 formattingWord: { inputId: 'formattingWordFile', boxId: 'formattingWordBox', progressId: 'formattingWordProgress', errorId: 'formattingWordError', listId: 'formattingWordFilesList', service: 'formatting', type: 'word' },
-                imagesFile: { inputId: 'imagesFile', additionalInputIds: ['imagesFilesPicker', 'imagesFolderFile'], boxId: 'imagesBox', progressId: 'imagesProgress', errorId: 'imagesError', listId: 'imagesFilesList', service: 'images', type: 'image' }
+                imagesFile: { inputId: 'imagesFile', additionalInputIds: ['imagesFilesPicker'], boxId: 'imagesBox', progressId: 'imagesProgress', errorId: 'imagesError', listId: 'imagesFilesList', service: 'images', type: 'image' }
             };
 
             const fileTypes = {
@@ -1654,8 +1752,7 @@
 
                 const noPrintServiceLabels = {
                     formatting: 'سعر التنسيق',
-                    research: 'سعر إنشاء البحوث',
-                    images: 'سعر تصوير الصور'
+                    research: 'سعر إنشاء البحوث'
                 };
                 const productBindingLabel = service === 'books'
                     ? 'سعر التجليد'
@@ -1665,13 +1762,18 @@
                     : '';
                 const imageMetrics = service === 'images' && totals.types
                     ? `
-                        <span class="checkout-summary-metric"><span class="checkout-summary-label">ملون (${totals.types.color.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.color.price)} ريال</strong></span>
-                        <span class="checkout-summary-metric"><span class="checkout-summary-label">أبيض وأسود (${totals.types.black_white.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.black_white.price)} ريال</strong></span>
-                        <span class="checkout-summary-metric"><span class="checkout-summary-label">صور شخصية (${totals.types.personal.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.personal.price)} ريال</strong></span>
+                        <span class="checkout-summary-metric image-type-metric"><span class="checkout-summary-label">ملون (${totals.types.color.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.color.price)} ريال</strong></span>
+                        <span class="checkout-summary-metric image-type-metric"><span class="checkout-summary-label">أبيض وأسود (${totals.types.black_white.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.black_white.price)} ريال</strong></span>
+                        <span class="checkout-summary-metric image-type-metric"><span class="checkout-summary-label">صور شخصية (${totals.types.personal.copies} نسخة)</span><strong class="checkout-summary-value">${formatMoney(totals.types.personal.price)} ريال</strong></span>
                     `
                     : '';
 
-                const totalsHtml = noPrintServiceLabels[service]
+                const totalsHtml = service === 'images'
+                    ? `
+                        ${imageMetrics}
+                        <span class="checkout-summary-metric image-total-metric"><span class="checkout-summary-label">الإجمالي</span><strong class="checkout-summary-value">${formatMoney(totals.total)} ريال</strong></span>
+                    `
+                    : noPrintServiceLabels[service]
                     ? `
                         ${imageMetrics}
                         <span class="checkout-summary-metric"><span class="checkout-summary-label">${noPrintServiceLabels[service]}</span><strong class="checkout-summary-value">${formatMoney(totals.binding)} ريال</strong></span>
@@ -2052,14 +2154,22 @@
                         const imageType = fileData.imagePrintType || '';
                         const copies = Number(fileData.copies || (imageType === 'personal' ? 5 : 1));
                         const imagePrice = imageOrderPricing.allocations[index] || 0;
+                        const orderId = currentOrders.images;
+                        const previewUrl = fileData.id && orderId
+                            ? `/my-orders/${encodeURIComponent(orderId)}/files/${encodeURIComponent(fileData.id)}?raw=1`
+                            : '';
 
                         return `
-                        <div class="files-list-item has-formatting-price">
-                            <div class="file-name-cell" data-label="اسم الصورة">
+                        <div class="files-list-item image-file-card">
+                            <div class="image-file-preview">
+                                ${previewUrl
+                                    ? `<img src="${previewUrl}" alt="${escapeHtml(fileData.filename)}" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"><span class="image-preview-fallback">تعذر عرض هذه الصيغة</span>`
+                                    : '<span class="image-preview-fallback" style="display:block">معاينة الصورة</span>'}
+                            </div>
+                            <div class="file-name-cell image-file-name" data-label="اسم الصورة">
                                 <span class="file-name-text">${escapeHtml(fileData.relativePath || fileData.filename)}</span>
                             </div>
-                            <div class="file-size" data-label="الحجم">${escapeHtml(fileData.size)}</div>
-                            <div data-label="نوع التصوير">
+                            <div class="image-type-cell" data-label="نوع التصوير">
                                 <select class="binding-select" onchange="setImageFileType(${index}, this.value)">
                                     <option value="" ${!imageType ? 'selected' : ''} disabled>اختر نوع التصوير</option>
                                     <option value="color" ${imageType === 'color' ? 'selected' : ''}>ملون</option>
@@ -2067,7 +2177,7 @@
                                     <option value="personal" ${imageType === 'personal' ? 'selected' : ''}>صورة شخصية</option>
                                 </select>
                             </div>
-                            <div data-label="عدد النسخ">
+                            <div class="image-copies-cell" data-label="عدد النسخ">
                                 <div class="copies-stepper">
                                     <button class="copies-stepper-button" type="button" ${!imageType || copies <= (imageType === 'personal' ? 5 : 1) ? 'disabled' : ''} onclick="changeImageFileCopies(${index}, -1)">-</button>
                                     <input
@@ -2084,9 +2194,8 @@
                                     <button class="copies-stepper-button" type="button" ${!imageType || copies >= (imageType === 'personal' ? 16 : 999) ? 'disabled' : ''} onclick="changeImageFileCopies(${index}, 1)">+</button>
                                 </div>
                             </div>
-                            <div class="file-price" data-label="السعر">${formatMoney(imagePrice)} ريال</div>
-                            <div data-label="الحالة" style="color: #047857; font-weight: 600;">✓ مرفوعة</div>
-                            <div class="file-remove" data-label="الإجراء" onclick="removeFile('images', 'image', ${index})">حذف</div>
+                            <div class="file-price image-price-cell" data-label="السعر">${formatMoney(imagePrice)} ريال</div>
+                            <div class="file-remove image-action-cell" data-label="الإجراء" onclick="removeFile('images', 'image', ${index})">حذف</div>
                         </div>
                     `;
                     }).join('');
