@@ -70,7 +70,7 @@
             <div class="brand">
                 <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                 <h1>الورّاق</h1>
-                <p>خدمات الطباعة والتجليد</p>
+                <p>خدمات النسخ والتصوير</p>
             </div>
 
             @if ($errors->any())
