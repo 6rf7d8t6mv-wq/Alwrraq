@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('shared.tab-brand')
+    @if ($paymentPage ?? false)
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.10/dist/moyasar.css">
+        <script src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.10/dist/moyasar.umd.min.js"></script>
+    @endif
     <style>
         * { box-sizing: border-box; }
         :root { --sidebar-width: clamp(180px, 20vw, 240px); --page-gap: clamp(14px, 3vw, 40px); }
@@ -145,6 +149,10 @@
         .cart-selection-actions .cart-pay-link { min-width: 150px; border: 0; cursor: pointer; font-family: inherit; }
         .cart-selection-actions .cart-pay-link:disabled { background: #94a3b8; cursor: not-allowed; opacity: .8; }
         .payment-inline-alert { flex: 0 0 100%; width: 100%; margin-top: 8px; padding: 10px 12px; border: 1px solid #93c5fd; border-radius: 9px; background: #eff6ff; color: #1e3a8a; font-size: 12px; font-weight: 900; line-height: 1.6; text-align: right; }
+        .moyasar-payment-card { width: 100%; }
+        .moyasar-payment-card .mysr-form { width: 100%; max-width: none; }
+        .moyasar-loading { padding: 16px; border: 1px dashed #cbd5e1; border-radius: 10px; background: #f8fafc; color: #475569; font-size: 13px; font-weight: 800; text-align: center; }
+        .moyasar-error { padding: 12px; border: 1px solid #fecaca; border-radius: 10px; background: #fef2f2; color: #b91c1c; font-size: 13px; font-weight: 900; line-height: 1.7; text-align: center; }
         .cart-order-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
         .cart-section-box { padding: 12px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
         .cart-section-box h3 { margin: 0 0 10px; color: #0f172a; font-size: 15px; font-weight: 900; }
@@ -880,60 +888,12 @@
             @elseif ($missingRequirements->isNotEmpty())
                 <div class="missing-info">أكمل المعلومات المطلوبة من صفحة الخدمة قبل الدفع. الطلب محفوظ وسيظهر في صفحة طلباتي.</div>
             @else
-                <div class="payment-options">
-                    <div class="pay-card">
-                        <div class="wallet-heading-row">
-                            <h2>المحافظ الرقمية</h2>
-                            <div class="wallet-buttons">
-                                <form method="post" action="{{ route('cart.pay-all') }}" data-payment-submit-form>
-                                    @csrf
-                                    @foreach ($selectedOrderIds as $selectedOrderId)
-                                        <input type="hidden" name="order_ids[]" value="{{ $selectedOrderId }}">
-                                    @endforeach
-                                    <input type="hidden" name="payment_method" value="apple_pay">
-                                    <button class="apple-pay" type="submit">Apple Pay</button>
-                                </form>
-                                <form method="post" action="{{ route('cart.pay-all') }}" data-payment-submit-form>
-                                    @csrf
-                                    @foreach ($selectedOrderIds as $selectedOrderId)
-                                        <input type="hidden" name="order_ids[]" value="{{ $selectedOrderId }}">
-                                    @endforeach
-                                    <input type="hidden" name="payment_method" value="google_pay">
-                                    <button class="google-pay" type="submit">Google Pay</button>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="pay-card">
-                        <h2>بطاقة بنكية</h2>
-                        <form method="post" action="{{ route('cart.pay-all') }}" data-payment-submit-form>
-                            @csrf
-                            @foreach ($selectedOrderIds as $selectedOrderId)
-                                <input type="hidden" name="order_ids[]" value="{{ $selectedOrderId }}">
-                            @endforeach
-                            <input type="hidden" name="payment_method" value="mada">
-                            <div class="form-grid">
-                                <div class="full">
-                                    <label>اسم حامل البطاقة</label>
-                                    <input name="card_name" autocomplete="cc-name" required>
-                                </div>
-                                <div class="full">
-                                    <label>رقم البطاقة</label>
-                                    <input name="card_number" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" required>
-                                </div>
-                                <div>
-                                    <label>تاريخ الانتهاء</label>
-                                    <input name="card_expiry" inputmode="numeric" placeholder="MM/YY" autocomplete="cc-exp" required>
-                                </div>
-                                <div>
-                                    <label>CVV</label>
-                                    <input name="card_cvc" inputmode="numeric" autocomplete="cc-csc" required>
-                                </div>
-                            </div>
-                            <button class="submit-card" type="submit">دفع واعتماد الطلب</button>
-                        </form>
-                    </div>
+                <div class="pay-card moyasar-payment-card">
+                    <h2>الدفع الآمن عبر ميسر</h2>
+                    <p>اختر البطاقة البنكية أو Apple Pay أو STC Pay أو Google Pay حسب دعم جهازك وتفعيلها في حساب ميسر.</p>
+                    <div id="moyasarPaymentStatus" class="moyasar-loading">جاري تجهيز بوابة الدفع الآمنة...</div>
+                    <div id="moyasarPaymentForm" class="mysr-form" hidden></div>
+                    <noscript><div class="moyasar-error">يجب تفعيل JavaScript لإتمام الدفع عبر ميسر.</div></noscript>
                 </div>
                 <div class="payment-inline-alert" data-delivery-payment-alert hidden></div>
             @endif
@@ -1264,34 +1224,88 @@
             updateDeliveryFields();
         });
 
-        const paymentRules = [
-            { selector: 'input[name="card_number"]', pattern: /^[0-9 ]+$/, message: 'تنبيه: رقم البطاقة يقبل الأرقام الإنجليزية والمسافات فقط.' },
-            { selector: 'input[name="card_expiry"]', pattern: /^(0[1-9]|1[0-2])\/[0-9]{2}$/, message: 'تنبيه: اكتب تاريخ الانتهاء بالأرقام الإنجليزية بصيغة MM/YY.' },
-            { selector: 'input[name="card_cvc"]', pattern: /^[0-9]+$/, message: 'تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.' },
-        ];
-
-        document.querySelectorAll(paymentRules.map((rule) => rule.selector).join(', ')).forEach((input) => {
-            const showWarning = () => {
-                const rule = paymentRules.find((item) => input.matches(item.selector));
-                if (!rule) return;
-
-                let warning = input.nextElementSibling;
-                if (!warning || !warning.classList.contains('english-number-warning')) {
-                    warning = document.createElement('div');
-                    warning.className = 'english-number-warning';
-                    input.insertAdjacentElement('afterend', warning);
-                }
-
-                const invalid = input.value !== '' && !rule.pattern.test(input.value);
-                warning.textContent = rule.message;
-                warning.classList.toggle('active', invalid);
-                input.setCustomValidity(invalid ? rule.message : '');
-            };
-
-            input.addEventListener('input', showWarning);
-            showWarning();
-        });
     </script>
+    @if (($paymentPage ?? false) && $cartOrders->isNotEmpty() && $missingRequirements->isEmpty())
+        <script>
+            (() => {
+                const formElement = document.getElementById('moyasarPaymentForm');
+                const statusElement = document.getElementById('moyasarPaymentStatus');
+                if (!formElement || !statusElement) return;
+
+                const showError = (message) => {
+                    statusElement.className = 'moyasar-error';
+                    statusElement.textContent = message || 'تعذر تجهيز بوابة ميسر. حاول مرة أخرى.';
+                    statusElement.hidden = false;
+                    formElement.hidden = true;
+                };
+
+                const prepare = async () => {
+                    if (!window.Moyasar) {
+                        showError('تعذر تحميل نموذج ميسر. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.');
+                        return;
+                    }
+
+                    try {
+                        const response = await fetch(@json(route('cart.moyasar.prepare')), {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': @json(csrf_token()),
+                            },
+                            body: JSON.stringify({ order_ids: @json($selectedOrderIds->values()) }),
+                        });
+                        const payload = await response.json();
+                        if (!response.ok) throw new Error(payload.message || 'تعذر تجهيز عملية الدفع.');
+
+                        const options = {
+                            element: formElement,
+                            language: document.documentElement.lang === 'en' ? 'en' : 'ar',
+                            amount: payload.amount,
+                            currency: payload.currency,
+                            description: payload.description,
+                            publishable_api_key: payload.publishable_api_key,
+                            callback_url: payload.callback_url,
+                            methods: payload.methods,
+                            supported_networks: payload.supported_networks,
+                            metadata: payload.metadata,
+                            fixed_width: false,
+                            apple_pay: payload.apple_pay,
+                            google_pay: payload.google_pay,
+                            on_completed: async (payment) => {
+                                try {
+                                    await fetch(payload.remember_url, {
+                                        method: 'POST',
+                                        credentials: 'same-origin',
+                                        headers: {
+                                            'Accept': 'application/json',
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': @json(csrf_token()),
+                                        },
+                                        body: JSON.stringify(payment),
+                                    });
+                                } catch (_) {
+                                    // The callback and webhook still verify the payment.
+                                }
+                            },
+                            on_failure: async (error) => {
+                                showError(typeof error === 'string' ? error : 'لم تكتمل عملية الدفع في ميسر.');
+                            },
+                        };
+
+                        statusElement.hidden = true;
+                        formElement.hidden = false;
+                        window.Moyasar.init(options);
+                    } catch (error) {
+                        showError(error instanceof Error ? error.message : '');
+                    }
+                };
+
+                prepare();
+            })();
+        </script>
+    @endif
     @include('shared.language-tools')
 </body>
 </html>

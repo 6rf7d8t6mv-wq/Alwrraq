@@ -269,11 +269,8 @@ class ApiClient {
     String? cardCvc,
   }) async {
     try {
+      // Cardholder data must go directly to Moyasar and must never be sent to Laravel.
       final payload = <String, dynamic>{'payment_method': paymentMethod};
-      if (cardName != null) payload['card_name'] = cardName;
-      if (cardNumber != null) payload['card_number'] = cardNumber;
-      if (cardExpiry != null) payload['card_expiry'] = cardExpiry;
-      if (cardCvc != null) payload['card_cvc'] = cardCvc;
 
       final response = await http.post(
         Uri.parse('$baseUrl/cart/$orderId/pay'),

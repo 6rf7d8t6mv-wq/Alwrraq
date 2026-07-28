@@ -1364,7 +1364,22 @@
             'كتاب': 'Book',
             'زيبرا': 'Zebra',
             'احمر': 'Red',
-            'أحمر': 'Red'
+            'أحمر': 'Red',
+            'الدفع الآمن عبر ميسر': 'Secure Payment with Moyasar',
+            'اختر البطاقة البنكية أو Apple Pay أو STC Pay أو Google Pay حسب دعم جهازك وتفعيلها في حساب ميسر.': 'Choose a bank card, Apple Pay, STC Pay, or Google Pay based on device support and activation in your Moyasar account.',
+            'جاري تجهيز بوابة الدفع الآمنة...': 'Preparing the secure payment gateway...',
+            'يجب تفعيل JavaScript لإتمام الدفع عبر ميسر.': 'JavaScript must be enabled to complete payment through Moyasar.',
+            'تعذر تجهيز بوابة ميسر. حاول مرة أخرى.': 'The Moyasar gateway could not be prepared. Please try again.',
+            'تعذر تحميل نموذج ميسر. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.': 'The Moyasar form could not be loaded. Check your internet connection and try again.',
+            'تعذر تجهيز عملية الدفع.': 'The payment could not be prepared.',
+            'لم تكتمل عملية الدفع في ميسر.': 'The payment was not completed in Moyasar.',
+            'مفاتيح ميسر غير مضافة إلى إعدادات الخادم بعد.': 'Moyasar API keys have not been added to the server configuration yet.',
+            'استخدم نموذج ميسر الآمن لإتمام الدفع.': 'Use the secure Moyasar form to complete payment.',
+            'انتقل إلى صفحة الدفع الآمنة في الموقع أو التطبيق لإتمام الدفع عبر ميسر.': 'Open the secure payment page on the website or app to complete payment through Moyasar.',
+            'لم يصل رقم عملية الدفع من ميسر.': 'The Moyasar payment ID was not received.',
+            'تعذر التحقق من عملية الدفع. لم يتم اعتماد الطلب كمدفوع.': 'The payment could not be verified. The order was not marked as paid.',
+            'تم الدفع عبر ميسر واعتماد الطلب بنجاح.': 'Payment through Moyasar was successful and the order was confirmed.',
+            'اختر نوع التصوير لكل صورة قبل الدفع.': 'Select the imaging type for each photo before payment.'
         }));
 
         const dictionary = new Map(dictionaryEntries);

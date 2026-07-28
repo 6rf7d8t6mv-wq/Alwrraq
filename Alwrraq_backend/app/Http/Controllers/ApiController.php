@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\User;
 use App\Services\CartPricingService;
-use App\Services\Payments\PaymentGatewayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
@@ -112,65 +111,15 @@ class ApiController extends Controller
         ]);
     }
 
-    public function pay(Request $request, Order $order, PaymentGatewayService $payments)
+    public function pay(Request $request, Order $order)
     {
         $this->authorizeOrder($order);
 
-        $order->load('files');
-
-        if ($order->payment_status === 'paid') {
-            return response()->json([
-                'success' => false,
-                'message' => 'تم دفع هذا الطلب مسبقًا.',
-            ], 422);
-        }
-
-        if ($order->files->isEmpty() || $order->grand_total <= 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'لا يمكن إتمام طلب بدون ملفات أو إجمالي.',
-            ], 422);
-        }
-
-        if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true) && $order->files->contains(fn ($file) => blank($file->binding_type))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'اختر نوع التغليف لكل ملف قبل الدفع.',
-            ], 422);
-        }
-
-        if ($order->service_type === 'books' && $order->files->contains(fn ($file) => blank($file->cover_color))) {
-            return response()->json([
-                'success' => false,
-                'message' => 'اختر لون الجلد لكل ملف قبل الدفع.',
-            ], 422);
-        }
-
-        $data = $request->validate([
-            'payment_method' => ['required', Rule::in(PaymentGatewayService::METHODS)],
-            'card_name' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'max:255'],
-            'card_number' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'regex:/^[0-9 ]{12,23}$/'],
-            'card_expiry' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'regex:/^(0[1-9]|1[0-2])\/[0-9]{2}$/'],
-            'card_cvc' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'regex:/^[0-9]{3,4}$/'],
-        ]);
-
-        $payment = $payments->createPayment($order, $data['payment_method']);
-        $payments->markOrderFromPayment($order, $payment);
-
-        if ($payment->payment_status !== 'paid') {
-            return response()->json([
-                'success' => false,
-                'message' => 'تعذر إتمام عملية الدفع. تأكد من طريقة الدفع وحاول مرة أخرى.',
-                'payment' => $payment,
-            ], 422);
-        }
-
         return response()->json([
-            'success' => true,
-            'message' => 'تم الدفع واعتماد الطلب بنجاح.',
-            'payment' => $payment,
-            'order' => $order->fresh('files'),
-        ]);
+            'success' => false,
+            'message' => 'انتقل إلى صفحة الدفع الآمنة في الموقع أو التطبيق لإتمام الدفع عبر ميسر.',
+            'checkout_url' => route('cart.payment', ['order_ids' => [$order->id]]),
+        ], 410);
     }
 
     public function updateProfile(Request $request)

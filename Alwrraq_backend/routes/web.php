@@ -13,6 +13,7 @@ use App\Http\Controllers\CustomerOrderController;
 use App\Http\Controllers\EducationalInstitutionController;
 use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\LivePageUpdateController;
+use App\Http\Controllers\MoyasarPaymentController;
 use App\Http\Controllers\PublicAssetController;
 use App\Http\Controllers\StationeryController;
 use App\Models\Order;
@@ -48,6 +49,11 @@ Route::post('/language', function (Request $request) {
 Route::post('/language/translate', AutomaticTranslationController::class)
     ->middleware('throttle:30,1')
     ->name('language.translate');
+
+Route::get('/payments/moyasar/callback/{attempt}', [MoyasarPaymentController::class, 'callback'])
+    ->name('moyasar.callback');
+Route::post('/payments/moyasar/webhook', [MoyasarPaymentController::class, 'webhook'])
+    ->name('moyasar.webhook');
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
@@ -198,12 +204,17 @@ Route::middleware('auth')->prefix('stationery')->name('stationery.')->group(func
 Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'showAll'])->name('index');
     Route::get('/payment', [CartController::class, 'payment'])->name('payment');
+    Route::post('/payment/moyasar/prepare', [CartController::class, 'prepareMoyasar'])->name('moyasar.prepare');
     Route::post('/pay', [CartController::class, 'payAll'])->name('pay-all');
     Route::get('/{order}', [CartController::class, 'show'])->name('show');
     Route::patch('/{order}/delivery', [CartController::class, 'updateDelivery'])->name('delivery.update');
     Route::patch('/{order}/discount', [CartController::class, 'applyDiscount'])->name('discount.apply');
     Route::post('/{order}/pay', [CartController::class, 'pay'])->name('pay');
 });
+
+Route::post('/payments/moyasar/attempts/{attempt}', [MoyasarPaymentController::class, 'remember'])
+    ->middleware('auth')
+    ->name('moyasar.remember');
 
 Route::get('/my-orders', [CustomerOrderController::class, 'index'])
     ->middleware('auth')

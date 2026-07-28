@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\DiscountCode;
 use App\Models\Order;
 use App\Services\CartPricingService;
-use App\Services\Payments\PaymentGatewayService;
+use App\Services\Payments\MoyasarPaymentService;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use RuntimeException;
 
 class CartController extends Controller
 {
@@ -70,7 +71,7 @@ class CartController extends Controller
         return redirect()->route('cart.index');
     }
 
-    public function payAll(Request $request, PaymentGatewayService $payments, CartPricingService $cartPricing)
+    public function prepareMoyasar(Request $request, MoyasarPaymentService $moyasar, CartPricingService $cartPricing)
     {
         $selectedOrderIds = $this->selectedOrderIds($request);
         $allCartOrders = $this->cartOrders();
@@ -79,9 +80,7 @@ class CartController extends Controller
             ->values();
 
         if ($selectedOrderIds->isEmpty() || $cartOrders->count() !== $selectedOrderIds->count()) {
-            return redirect()->route('cart.index')->withErrors([
-                'order' => 'حدد طلبًا واحدًا على الأقل للدفع.',
-            ]);
+            return response()->json(['message' => 'حدد طلبًا واحدًا على الأقل للدفع.'], 422);
         }
 
         $cartPricing->refreshCartTotals($cartOrders);
@@ -90,69 +89,76 @@ class CartController extends Controller
             ->values();
 
         foreach ($cartOrders as $order) {
-            if ($message = $this->orderPaymentBlockMessage($order, true)) {
-                return redirect()->route('orders.index')->withErrors([
-                    'order' => 'خدمة '.$order->service_type.': '.$message,
-                ]);
+            if ($message = $this->orderPaymentBlockMessage($order)) {
+                return response()->json(['message' => 'خدمة '.$order->service_type.': '.$message], 422);
             }
         }
 
-        $data = $this->validatePayment($request);
-
-        $failedPayment = null;
-        foreach ($cartOrders as $order) {
-            $payment = $payments->createPayment($order, $data['payment_method']);
-            $payments->markOrderFromPayment($order, $payment);
-
-            if ($payment->payment_status !== 'paid') {
-                $failedPayment = $payment;
-            }
+        if (! $moyasar->isConfigured()) {
+            return response()->json([
+                'message' => 'مفاتيح ميسر غير مضافة إلى إعدادات الخادم بعد.',
+            ], 503);
         }
 
-        if ($failedPayment) {
-            return redirect()
-                ->route('cart.index')
-                ->withErrors(['payment' => 'تعذر إتمام عملية الدفع. تأكد من طريقة الدفع وحاول مرة أخرى.']);
+        try {
+            $attempt = $moyasar->createAttempt($request->user(), $cartOrders);
+        } catch (RuntimeException $exception) {
+            return response()->json([
+                'message' => $exception->getMessage(),
+            ], 422);
+        }
+        $methods = ['creditcard'];
+
+        if (config('payments.moyasar.apple_pay_enabled')) {
+            $methods[] = 'applepay';
+        }
+        if (config('payments.moyasar.stc_pay_enabled')) {
+            $methods[] = 'stcpay';
+        }
+        if (config('payments.moyasar.google_pay_enabled') && filled(config('payments.moyasar.google_pay_merchant_id'))) {
+            $methods[] = 'googlepay';
         }
 
-        if ($this->cartOrders()->isNotEmpty()) {
-            return redirect()->route('cart.index')->with('status', 'تم دفع الطلبات المحددة، وبقيت الطلبات الأخرى محفوظة في السلة.');
-        }
-
-        return redirect()->route('orders.index')->with('status', 'تم الدفع واعتماد جميع الطلبات المحددة بنجاح.');
+        return response()->json([
+            'attempt_reference' => $attempt->reference,
+            'amount' => $attempt->amount_minor,
+            'currency' => $attempt->currency,
+            'description' => 'Alwrraq orders: '.implode(', ', $attempt->order_ids),
+            'publishable_api_key' => config('payments.moyasar.publishable_key'),
+            'callback_url' => route('moyasar.callback', $attempt),
+            'remember_url' => route('moyasar.remember', $attempt),
+            'methods' => $methods,
+            'supported_networks' => ['mada', 'visa', 'mastercard', 'amex', 'unionpay'],
+            'metadata' => [
+                'attempt_reference' => $attempt->reference,
+                'customer_id' => (string) $request->user()->id,
+            ],
+            'apple_pay' => [
+                'country' => config('payments.moyasar.apple_pay_country', 'SA'),
+                'label' => config('payments.moyasar.merchant_label', 'Alwrraq'),
+                'validate_merchant_url' => config('payments.moyasar.apple_pay_validation_url'),
+            ],
+            'google_pay' => [
+                'merchant_id' => config('payments.moyasar.google_pay_merchant_id'),
+                'country' => config('payments.moyasar.google_pay_country', 'SA'),
+                'label' => config('payments.moyasar.merchant_label', 'Alwrraq'),
+                'environment' => config('payments.moyasar.google_pay_environment', 'TEST'),
+            ],
+        ]);
     }
 
-    public function pay(Request $request, Order $order, PaymentGatewayService $payments, CartPricingService $cartPricing)
+    public function payAll()
     {
-        $this->authorizeOrder($order);
+        return redirect()->route('cart.index')->withErrors([
+            'payment' => 'استخدم نموذج ميسر الآمن لإتمام الدفع.',
+        ]);
+    }
 
-        $order->load('files');
-        $cartPricing->refreshOrderTotals($order);
-        $order->refresh()->load('files');
-        if ($message = $this->orderPaymentBlockMessage($order)) {
-            return back()->withErrors([
-                'order' => $message,
-            ]);
-        }
-
-        $data = $this->validatePayment($request);
-
-        $payment = $payments->createPayment($order, $data['payment_method']);
-        $payments->markOrderFromPayment($order, $payment);
-
-        if ($payment->payment_status !== 'paid') {
-            return redirect()
-                ->route('cart.payment', ['order' => $order->id])
-                ->withErrors(['payment' => 'تعذر إتمام عملية الدفع. تأكد من طريقة الدفع وحاول مرة أخرى.']);
-        }
-
-        $hasRemainingCartOrders = $this->cartOrders()->isNotEmpty();
-
-        if ($hasRemainingCartOrders) {
-            return redirect()->route('cart.index')->with('status', 'تم دفع الطلب المحدد، وبقيت الطلبات الأخرى محفوظة في السلة.');
-        }
-
-        return redirect()->route('orders.index')->with('status', 'تم الدفع واعتماد الطلب بنجاح.');
+    public function pay()
+    {
+        return redirect()->route('cart.index')->withErrors([
+            'payment' => 'استخدم نموذج ميسر الآمن لإتمام الدفع.',
+        ]);
     }
 
     public function updateDelivery(Request $request, Order $order, CartPricingService $cartPricing)
@@ -230,17 +236,6 @@ class CartController extends Controller
             ->withCount('files')
             ->latest()
             ->get();
-    }
-
-    private function validatePayment(Request $request): array
-    {
-        return $request->validate([
-            'payment_method' => ['required', Rule::in(PaymentGatewayService::METHODS)],
-            'card_name' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'max:255'],
-            'card_number' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'regex:/^[0-9 ]{12,23}$/'],
-            'card_expiry' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'regex:/^(0[1-9]|1[0-2])\/[0-9]{2}$/'],
-            'card_cvc' => ['required_if:payment_method,mada,visa,mastercard', 'nullable', 'string', 'regex:/^[0-9]{3,4}$/'],
-        ]);
     }
 
     private function selectedOrderIds(Request $request)
@@ -373,6 +368,10 @@ class CartController extends Controller
 
         if ($order->service_type === 'books' && $order->files->contains(fn ($file) => blank($file->cover_color))) {
             return 'اختر لون الجلد لكل ملف قبل الدفع.';
+        }
+
+        if ($order->service_type === 'images' && $order->files->contains(fn ($file) => blank($file->image_print_type))) {
+            return 'اختر نوع التصوير لكل صورة قبل الدفع.';
         }
 
         if (in_array($order->service_type, ['thesis', 'phd'], true)) {
