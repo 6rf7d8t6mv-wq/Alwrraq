@@ -155,11 +155,24 @@ Route::get('/home', function (Request $request) {
     }
 
     $servicePricing = app(ServicePricingService::class)->all();
+    $serviceDisplayOrder = array_flip([
+        'notes',
+        'color_printing',
+        'research',
+        'formatting',
+        'thesis',
+        'phd',
+        'books',
+        'stationery',
+        'images',
+    ]);
     $serviceDefinitions = ServiceDefinition::query()
         ->where('is_active', true)
         ->orderBy('sort_order')
         ->orderBy('id')
-        ->get();
+        ->get()
+        ->sortBy(fn (ServiceDefinition $service) => $serviceDisplayOrder[$service->workflow_type] ?? PHP_INT_MAX)
+        ->values();
     $customServicePrices = app(ServicePricingService::class)->customServicePrices($serviceDefinitions);
 
     return view('grades', compact('students', 'editOrderPayload', 'servicePricing', 'serviceDefinitions', 'customServicePrices'));
