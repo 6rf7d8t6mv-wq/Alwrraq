@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceDefinitionController;
 use App\Http\Controllers\AdminStationeryProductController;
 use App\Http\Controllers\AdminServicePricingController;
+use App\Http\Controllers\AutomaticTranslationController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
@@ -43,6 +44,10 @@ Route::post('/language', function (Request $request) {
 
     return back();
 })->name('language.switch');
+
+Route::post('/language/translate', AutomaticTranslationController::class)
+    ->middleware('throttle:30,1')
+    ->name('language.translate');
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 

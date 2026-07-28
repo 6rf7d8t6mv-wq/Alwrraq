@@ -1582,8 +1582,100 @@
         ].sort((a, b) => b[0].length - a[0].length);
 
         const ignoredTags = new Set(['SCRIPT', 'STYLE', 'TEXTAREA']);
+        const automaticTranslations = new Map();
+        const pendingAutomaticTranslations = new Set();
+        const attemptedAutomaticTranslations = new Set();
+        const automaticTranslationEndpoint = @json(route('language.translate'));
+        const automaticTranslationToken = @json(csrf_token());
+        const privateContentSelector = [
+            '[data-no-auto-translate]',
+            '[contenteditable="true"]',
+            '.header-identity',
+            '.admin-name',
+            '.dashboard-pill',
+            '.dashboard-order-value',
+            '.support-chat-widget',
+            '.support-message',
+            '.chat-message',
+            '.invoice-grid strong',
+            '.invoice-number strong',
+            'td'
+        ].join(',');
+        let automaticTranslationTimer = null;
+        let automaticTranslationAvailable = true;
 
-        function translateString(value) {
+        function canAutomaticallyTranslate(element) {
+            return element instanceof Element
+                && !ignoredTags.has(element.tagName)
+                && !element.closest(privateContentSelector);
+        }
+
+        function queueAutomaticTranslation(value, element) {
+            const text = value.trim();
+            if (
+                !automaticTranslationAvailable
+                || !canAutomaticallyTranslate(element)
+                || text.length > 1000
+                || !/[\u0600-\u06FF]/.test(text)
+                || attemptedAutomaticTranslations.has(text)
+            ) {
+                return;
+            }
+
+            pendingAutomaticTranslations.add(text);
+            if (automaticTranslationTimer !== null) return;
+
+            automaticTranslationTimer = window.setTimeout(flushAutomaticTranslations, 120);
+        }
+
+        async function flushAutomaticTranslations() {
+            automaticTranslationTimer = null;
+            const texts = Array.from(pendingAutomaticTranslations).slice(0, 50);
+            texts.forEach((text) => {
+                pendingAutomaticTranslations.delete(text);
+                attemptedAutomaticTranslations.add(text);
+            });
+
+            if (!texts.length) return;
+
+            try {
+                const response = await fetch(automaticTranslationEndpoint, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': automaticTranslationToken,
+                    },
+                    body: JSON.stringify({ texts }),
+                });
+
+                if (!response.ok) throw new Error(`Translation request failed with ${response.status}`);
+
+                const payload = await response.json();
+                if (payload.configured === false) {
+                    automaticTranslationAvailable = false;
+                }
+
+                Object.entries(payload.translations || {}).forEach(([arabic, english]) => {
+                    if (typeof english !== 'string' || !english.trim()) return;
+                    automaticTranslations.set(arabic, english.trim());
+                });
+
+                if (automaticTranslations.size) {
+                    walk(document.body);
+                    translateAttributes(document.body);
+                }
+            } catch (_) {
+                // Keep the Arabic source intact if the external translator is unavailable.
+            }
+
+            if (pendingAutomaticTranslations.size && automaticTranslationAvailable) {
+                automaticTranslationTimer = window.setTimeout(flushAutomaticTranslations, 120);
+            }
+        }
+
+        function translateString(value, sourceElement = null) {
             if (!value) return value;
 
             const leading = value.match(/^\s*/)?.[0] ?? '';
@@ -1600,6 +1692,9 @@
             if (!/[\u0600-\u06FF]/.test(core)) {
                 return core === originalCore ? value : `${leading}${core}${trailing}`;
             }
+            if (automaticTranslations.has(core)) {
+                return `${leading}${automaticTranslations.get(core)}${trailing}`;
+            }
             if (dictionary.has(core)) return `${leading}${dictionary.get(core)}${trailing}`;
 
             let translated = core;
@@ -1613,11 +1708,14 @@
                     translated = translated.split(arabic).join(english);
                 }
             });
+            if (/[\u0600-\u06FF]/.test(translated)) {
+                queueAutomaticTranslation(translated, sourceElement);
+            }
             return translated === core ? value : `${leading}${translated}${trailing}`;
         }
 
         function translateTextNode(node) {
-            const translated = translateString(node.nodeValue);
+            const translated = translateString(node.nodeValue, node.parentElement);
             if (translated !== node.nodeValue) {
                 node.nodeValue = translated;
             }
@@ -1650,7 +1748,7 @@
                         if (!isButtonValue) return;
                     }
 
-                    const translated = translateString(value);
+                    const translated = translateString(value, element);
                     if (translated !== value) {
                         element.setAttribute(attribute, translated);
                         if (attribute === 'value' && 'value' in element && element.value === value) {
