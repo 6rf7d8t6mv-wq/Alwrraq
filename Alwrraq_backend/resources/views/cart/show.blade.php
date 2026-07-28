@@ -952,7 +952,8 @@
             if (Number.isNaN(date.getTime())) return;
 
             const compactMobileDate = window.matchMedia('(max-width: 640px)').matches;
-            element.textContent = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
+            const isEnglish = document.documentElement.lang === 'en';
+            element.textContent = new Intl.DateTimeFormat(isEnglish ? 'en-US' : 'ar-SA-u-ca-gregory', {
                 weekday: compactMobileDate ? undefined : 'long',
                 year: compactMobileDate ? '2-digit' : 'numeric',
                 month: '2-digit',

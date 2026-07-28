@@ -34,6 +34,10 @@
         document.documentElement.dir = isEnglish ? 'ltr' : 'rtl';
         document.body?.classList.toggle('ui-ltr', isEnglish);
 
+        if (window.AlwrraqLocale && typeof window.AlwrraqLocale.postMessage === 'function') {
+            window.AlwrraqLocale.postMessage(locale);
+        }
+
         if (!isEnglish) return;
 
         document.title = 'Copying and Imaging Services';
@@ -1345,7 +1349,22 @@
             'منطقة جازان': 'Jazan Region',
             'منطقة نجران': 'Najran Region',
             'منطقة الباحة': 'Al-Baha Region',
-            'منطقة الجوف': 'Al-Jawf Region'
+            'منطقة الجوف': 'Al-Jawf Region',
+            'طباعة أبيض وأسود بدون ألوان للمذكرات وملفات ال PDF بجميع أحجامها وتغليفها.': 'Black-and-white imaging for notes and PDF files in all supported sizes, including binding.',
+            'طباعة ملفات PDF ملونة مع اختيار حجم الصفحة وعدد النسخ والتغليف.': 'Color imaging for PDF files with page size, copy count, and binding options.',
+            'طباعة ملفات PDF والكتب بجميع أحجامها والتغليف وتجليد كعب جلد طبيعي.': 'Imaging PDF files and books in all supported sizes, with binding and natural leather spine binding.',
+            'خدمة مخصصة للرسائل العلمية والبحث التكميلي وبحث التخرج مع احتساب النسخ والتجليد.': 'A dedicated service for academic theses, supplementary research, and graduation projects, including copy and binding pricing.',
+            'تجهيز ملفات الدكتوراه للطباعة والتجليد مع عرض كامل للتكاليف قبل الإضافة للسلة.': 'Prepare doctoral thesis files for imaging and binding, with a complete cost breakdown before adding them to the cart.',
+            'رفع ملف Word فقط واحتساب سعر التنسيق تلقائيًا حسب عدد الصفحات.': 'Upload a Word file and automatically calculate the formatting price based on the number of pages.',
+            'اكتب اسم البحث وعدد الصفحات المطلوبة، ويتم احتساب سعر الخدمة تلقائيًا.': 'Enter the research title and required page count, and the service price will be calculated automatically.',
+            'تصفح منتجات القرطاسية وابحث عنها وأضف ما تحتاجه إلى السلة.': 'Browse and search stationery products, then add what you need to the cart.',
+            'تصوير صور': 'Photo Imaging',
+            'تصوير صور ملون و ابيض واسود وصور شخصية': 'Color and black-and-white photo imaging, including personal photos.',
+            'قلم': 'Pen',
+            'كتاب': 'Book',
+            'زيبرا': 'Zebra',
+            'احمر': 'Red',
+            'أحمر': 'Red'
         }));
 
         const dictionary = new Map(dictionaryEntries);

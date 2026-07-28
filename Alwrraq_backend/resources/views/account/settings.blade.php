@@ -390,19 +390,43 @@
         }
 
         document.querySelectorAll('input[name="phone"]').forEach((input) => {
-            bindInputRule(input, /^05[0-9]{8}$/, 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.');
+            bindInputRule(
+                input,
+                /^05[0-9]{8}$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: The phone number must start with 05 and contain exactly 10 digits.'
+                    : 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.'
+            );
         });
 
         document.querySelectorAll('input[name="email"]').forEach((input) => {
-            bindInputRule(input, /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.');
+            bindInputRule(
+                input,
+                /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: Enter a valid email address, such as name@example.com.'
+                    : 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.'
+            );
         });
 
         document.querySelectorAll('input[name="postal_code"]').forEach((input) => {
-            bindInputRule(input, /^[0-9]+$/, 'تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.');
+            bindInputRule(
+                input,
+                /^[0-9]+$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: This field accepts digits from 0 to 9 only.'
+                    : 'تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.'
+            );
         });
 
         document.querySelectorAll('input[name="password"], input[name="password_confirmation"]').forEach((input) => {
-            bindInputRule(input, /^[A-Za-z0-9]+$/, 'تنبيه: كلمة المرور تقبل حروف وأرقام إنجليزية فقط.');
+            bindInputRule(
+                input,
+                /^[A-Za-z0-9]+$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: The password accepts English letters and numbers only.'
+                    : 'تنبيه: كلمة المرور تقبل حروف وأرقام إنجليزية فقط.'
+            );
         });
 
         const accountInstitutionField = document.getElementById('accountInstitutionField');

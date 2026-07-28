@@ -14,7 +14,7 @@ class AlwrraqApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'الورّاق',
+      title: 'Alwrraq',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0F4C81)),
         useMaterial3: true,
@@ -48,6 +48,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
 
   late final WebViewController _controller;
   var _isLoading = true;
+  var _isEnglish = false;
   String? _errorMessage;
 
   @override
@@ -56,6 +57,16 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF3F4F6))
+      ..addJavaScriptChannel(
+        'AlwrraqLocale',
+        onMessageReceived: (message) {
+          if (!mounted) return;
+          final isEnglish = message.message == 'en';
+          if (_isEnglish == isEnglish) return;
+
+          setState(() => _isEnglish = isEnglish);
+        },
+      )
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) async {
@@ -83,14 +94,26 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
               });
 
               if (mounted) {
-                ScaffoldMessenger.of(
-                  context,
-                ).showSnackBar(SnackBar(content: Text('بدأ تحميل $fileName')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      _isEnglish
+                          ? 'Downloading $fileName has started'
+                          : 'بدأ تحميل $fileName',
+                    ),
+                  ),
+                );
               }
             } on PlatformException {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('تعذر بدء تحميل الملف')),
+                  SnackBar(
+                    content: Text(
+                      _isEnglish
+                          ? 'The file download could not be started'
+                          : 'تعذر بدء تحميل الملف',
+                    ),
+                  ),
                 );
               }
             }
@@ -104,16 +127,26 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
               _errorMessage = null;
             });
           },
-          onPageFinished: (_) {
+          onPageFinished: (_) async {
             if (!mounted) return;
             setState(() => _isLoading = false);
+            final pageLanguage = await _controller.runJavaScriptReturningResult(
+              'document.documentElement.lang || "ar"',
+            );
+            if (!mounted) return;
+            final isEnglish =
+                pageLanguage.toString().replaceAll('"', '') == 'en';
+            if (_isEnglish != isEnglish) {
+              setState(() => _isEnglish = isEnglish);
+            }
           },
           onWebResourceError: (error) {
             if (!mounted || error.isForMainFrame != true) return;
             setState(() {
               _isLoading = false;
-              _errorMessage =
-                  'تعذر فتح تطبيق الورّاق. تأكد أن السيرفر يعمل على 127.0.0.1:8000.';
+              _errorMessage = _isEnglish
+                  ? 'Alwrraq could not be opened. Make sure the server is running at 127.0.0.1:8000.'
+                  : 'تعذر فتح تطبيق الورّاق. تأكد أن السيرفر يعمل على 127.0.0.1:8000.';
             });
           },
         ),
@@ -140,7 +173,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: _isEnglish ? TextDirection.ltr : TextDirection.rtl,
       child: Scaffold(
         backgroundColor: const Color(0xFFF3F4F6),
         body: SafeArea(
@@ -149,7 +182,11 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
               WebViewWidget(controller: _controller),
               if (_isLoading) const LinearProgressIndicator(minHeight: 3),
               if (_errorMessage != null)
-                _ConnectionError(message: _errorMessage!, onRetry: _reload),
+                _ConnectionError(
+                  message: _errorMessage!,
+                  onRetry: _reload,
+                  isEnglish: _isEnglish,
+                ),
             ],
           ),
         ),
@@ -159,10 +196,15 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
 }
 
 class _ConnectionError extends StatelessWidget {
-  const _ConnectionError({required this.message, required this.onRetry});
+  const _ConnectionError({
+    required this.message,
+    required this.onRetry,
+    required this.isEnglish,
+  });
 
   final String message;
   final VoidCallback onRetry;
+  final bool isEnglish;
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +262,7 @@ class _ConnectionError extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  child: const Text('Retry'),
+                  child: Text(isEnglish ? 'Retry' : 'إعادة المحاولة'),
                 ),
               ],
             ),

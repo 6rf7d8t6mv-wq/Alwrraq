@@ -404,9 +404,11 @@
                                     $missingRequirements->push('اختيار نوع مشروع الرسالة لكل ملف PDF.');
                                 }
                                 $serviceDetail = $order->service_type === 'thesis' && $projectTypes->isNotEmpty()
-                                    ? $projectTypes->implode('، ')
+                                    ? $projectTypes->implode(session('ui_locale', 'ar') === 'en' ? ', ' : '، ')
                                     : 'اضغط عرض الطلب للتفاصيل';
-                                $dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+                                $dayNames = session('ui_locale', 'ar') === 'en'
+                                    ? ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+                                    : ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
                                 $createdAtText = $dayNames[$order->created_at->dayOfWeek] . ' - ' . $order->created_at->format('Y-m-d H:i');
                             @endphp
                             <tr id="order-{{ $order->id }}">
@@ -938,7 +940,8 @@
     </main>
     <script>
         function localizeDateTimes(root = document) {
-            const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
+            const isEnglish = document.documentElement.lang === 'en';
+            const formatter = new Intl.DateTimeFormat(isEnglish ? 'en-US' : 'ar-SA-u-ca-gregory', {
                 weekday: 'long',
                 year: 'numeric',
                 month: '2-digit',

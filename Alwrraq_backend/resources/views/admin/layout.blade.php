@@ -513,7 +513,8 @@
         }
 
         function localizeDateTimes(root = document) {
-            const formatter = new Intl.DateTimeFormat('ar-SA-u-ca-gregory', {
+            const isEnglish = document.documentElement.lang === 'en';
+            const formatter = new Intl.DateTimeFormat(isEnglish ? 'en-US' : 'ar-SA-u-ca-gregory', {
                 weekday: 'long',
                 year: 'numeric',
                 month: '2-digit',
@@ -692,14 +693,16 @@
         }
 
         function bindEnglishNumberWarnings(root = document) {
+            const isEnglish = document.documentElement.lang === 'en';
+            const message = (arabic, english) => isEnglish ? english : arabic;
             const rules = [
-                { selector: 'input[name="phone"]', pattern: /^05[0-9]{8}$/, message: 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.' },
-                { selector: 'input[name="password"], input[name="password_confirmation"]', pattern: /^[A-Za-z0-9]+$/, message: 'تنبيه: كلمة المرور تقبل حروف وأرقام إنجليزية فقط.' },
-                { selector: 'input[name="postal_code"], input[name="card_cvc"], input[name="pages"], input[name="discount_amount"], #researchPages, .copies-input', pattern: /^[0-9]+$/, message: 'تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.' },
-                { selector: 'input[name="card_number"]', pattern: /^[0-9 ]+$/, message: 'تنبيه: رقم البطاقة يقبل الأرقام الإنجليزية والمسافات فقط.' },
-                { selector: 'input[name="card_expiry"]', pattern: /^(0[1-9]|1[0-2])\/[0-9]{2}$/, message: 'تنبيه: اكتب تاريخ الانتهاء بالأرقام الإنجليزية بصيغة MM/YY.' },
-                { selector: 'input[name="email"]', pattern: /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, message: 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.' },
-                { selector: 'input[name="discount_code"]', pattern: /^[A-Za-z0-9_-]+$/, message: 'تنبيه: كود الخصم يقبل حروف وأرقام إنجليزية فقط.' },
+                { selector: 'input[name="phone"]', pattern: /^05[0-9]{8}$/, message: message('تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.', 'Notice: The phone number must start with 05 and contain exactly 10 digits.') },
+                { selector: 'input[name="password"], input[name="password_confirmation"]', pattern: /^[A-Za-z0-9]+$/, message: message('تنبيه: كلمة المرور تقبل حروف وأرقام إنجليزية فقط.', 'Notice: The password accepts English letters and numbers only.') },
+                { selector: 'input[name="postal_code"], input[name="card_cvc"], input[name="pages"], input[name="discount_amount"], #researchPages, .copies-input', pattern: /^[0-9]+$/, message: message('تنبيه: لا يقبل هذا الحقل إلا الأرقام الإنجليزية فقط 0-9.', 'Notice: This field accepts digits from 0 to 9 only.') },
+                { selector: 'input[name="card_number"]', pattern: /^[0-9 ]+$/, message: message('تنبيه: رقم البطاقة يقبل الأرقام الإنجليزية والمسافات فقط.', 'Notice: The card number accepts digits and spaces only.') },
+                { selector: 'input[name="card_expiry"]', pattern: /^(0[1-9]|1[0-2])\/[0-9]{2}$/, message: message('تنبيه: اكتب تاريخ الانتهاء بالأرقام الإنجليزية بصيغة MM/YY.', 'Notice: Enter the expiry date in MM/YY format using digits.') },
+                { selector: 'input[name="email"]', pattern: /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, message: message('تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.', 'Notice: Enter a valid email address, such as name@example.com.') },
+                { selector: 'input[name="discount_code"]', pattern: /^[A-Za-z0-9_-]+$/, message: message('تنبيه: كود الخصم يقبل حروف وأرقام إنجليزية فقط.', 'Notice: The discount code accepts English letters and numbers only.') },
             ];
             const selector = rules.map((rule) => rule.selector).join(', ');
             root.querySelectorAll(selector).forEach((input) => {

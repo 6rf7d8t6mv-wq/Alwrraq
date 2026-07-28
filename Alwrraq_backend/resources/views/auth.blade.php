@@ -227,21 +227,48 @@
             bindInputRule(
                 input,
                 isAppMode ? /^[0-9]+$/ : /^[\x21-\x7E]+$/,
-                isAppMode ? 'تنبيه: اكتب رقم الجوال المسجل بالأرقام.' : 'تنبيه: تسجيل الدخول يقبل الحروف الإنجليزية والأرقام والرموز فقط.',
+                document.documentElement.lang === 'en'
+                    ? (isAppMode
+                        ? 'Notice: Enter your registered phone number using digits.'
+                        : 'Notice: Login accepts English letters, numbers, and symbols only.')
+                    : (isAppMode
+                        ? 'تنبيه: اكتب رقم الجوال المسجل بالأرقام.'
+                        : 'تنبيه: تسجيل الدخول يقبل الحروف الإنجليزية والأرقام والرموز فقط.'),
                 isAppMode ? legacyPhoneOnly : asciiPrintable
             );
         });
 
         document.querySelectorAll('#registerPanel input[name="phone"]').forEach((input) => {
-            bindInputRule(input, /^05[0-9]{8}$/, 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.', phoneOnly);
+            bindInputRule(
+                input,
+                /^05[0-9]{8}$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: The phone number must start with 05 and contain exactly 10 digits.'
+                    : 'تنبيه: رقم الجوال يجب أن يبدأ بـ 05 ويتكون من 10 أرقام إنجليزية فقط.',
+                phoneOnly
+            );
         });
 
         document.querySelectorAll('#registerPanel input[name="email"]').forEach((input) => {
-            bindInputRule(input, /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/, 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.', emailOnly);
+            bindInputRule(
+                input,
+                /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: Enter a valid email address, such as name@example.com.'
+                    : 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.',
+                emailOnly
+            );
         });
 
         document.querySelectorAll('input[name="password"], input[name="password_confirmation"]').forEach((input) => {
-            bindInputRule(input, /^[\x21-\x7E]+$/, 'تنبيه: كلمة المرور تقبل الحروف الإنجليزية والأرقام والرموز فقط.', asciiPrintable);
+            bindInputRule(
+                input,
+                /^[\x21-\x7E]+$/,
+                document.documentElement.lang === 'en'
+                    ? 'Notice: The password accepts English letters, numbers, and symbols only.'
+                    : 'تنبيه: كلمة المرور تقبل الحروف الإنجليزية والأرقام والرموز فقط.',
+                asciiPrintable
+            );
         });
 
         const institutionCheckbox = document.getElementById('institutionNotInterested');
