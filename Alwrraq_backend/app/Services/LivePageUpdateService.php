@@ -81,7 +81,7 @@ class LivePageUpdateService
         ];
     }
 
-    private function applicationRevision(): string
+    public function applicationRevision(): string
     {
         foreach (['APP_REVISION', 'SOURCE_VERSION', 'RENDER_GIT_COMMIT', 'VERCEL_GIT_COMMIT_SHA', 'HEROKU_SLUG_COMMIT'] as $key) {
             $value = $_SERVER[$key] ?? $_ENV[$key] ?? null;

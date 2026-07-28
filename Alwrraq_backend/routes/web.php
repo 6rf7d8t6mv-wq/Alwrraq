@@ -50,6 +50,12 @@ Route::get('/live-status', LivePageUpdateController::class)
     ->middleware('auth')
     ->name('live-status');
 
+Route::get('/app-revision', function (\App\Services\LivePageUpdateService $updates) {
+    return response()
+        ->json(['revision' => $updates->applicationRevision()])
+        ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
+})->name('app.revision');
+
 Route::get('/sitemap.xml', function () {
     $homeView = resource_path('views/public/home.blade.php');
     $lastModified = date('c', filemtime($homeView));

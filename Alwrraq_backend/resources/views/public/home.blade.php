@@ -618,5 +618,6 @@
         </div>
     </footer>
     @include('shared.language-tools')
+    @include('shared.guest-live-updates')
 </body>
 </html>

@@ -32,7 +32,16 @@ class AlwrraqWebApp extends StatefulWidget {
 }
 
 class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
-  static final Uri _siteUri = Uri.parse('http://127.0.0.1:8000/app');
+  static const String _configuredSiteUrl = String.fromEnvironment(
+    'ALWRRAQ_SITE_URL',
+  );
+  static final Uri _siteUri = Uri.parse(
+    _configuredSiteUrl.isNotEmpty
+        ? '${_configuredSiteUrl.replaceFirst(RegExp(r'/$'), '')}/app'
+        : kReleaseMode
+        ? 'https://alwrraq.com/app'
+        : 'http://127.0.0.1:8000/app',
+  );
   static const MethodChannel _downloadsChannel = MethodChannel(
     'alwrraq/downloads',
   );
@@ -108,8 +117,16 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
             });
           },
         ),
-      )
-      ..loadRequest(_siteUri);
+      );
+    _loadFreshSite();
+  }
+
+  Future<void> _loadFreshSite() async {
+    await _controller.clearCache();
+    await _controller.loadRequest(
+      _siteUri,
+      headers: const {'Cache-Control': 'no-cache'},
+    );
   }
 
   Future<void> _reload() async {
@@ -117,7 +134,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
       _isLoading = true;
       _errorMessage = null;
     });
-    await _controller.loadRequest(_siteUri);
+    await _loadFreshSite();
   }
 
   @override

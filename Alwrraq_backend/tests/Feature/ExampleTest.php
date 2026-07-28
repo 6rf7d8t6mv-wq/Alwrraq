@@ -86,6 +86,16 @@ class ExampleTest extends TestCase
         $this->get('/live-status')->assertRedirect('/login');
     }
 
+    public function test_public_app_revision_is_available_without_cache(): void
+    {
+        $response = $this->get('/app-revision');
+
+        $response
+            ->assertOk()
+            ->assertJsonStructure(['revision']);
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+    }
+
     public function test_cart_view_renders_with_service_pricing(): void
     {
         $this->actingAs(User::factory()->make());

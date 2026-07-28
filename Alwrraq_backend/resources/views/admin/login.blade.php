@@ -55,5 +55,6 @@
             </form>
         </section>
     </main>
+    @include('shared.guest-live-updates')
 </body>
 </html>
