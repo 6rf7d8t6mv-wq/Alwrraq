@@ -133,17 +133,17 @@ class CartController extends Controller
                 'attempt_reference' => $attempt->reference,
                 'customer_id' => (string) $request->user()->id,
             ],
-            'apple_pay' => [
+            'apple_pay' => in_array('applepay', $methods, true) ? [
                 'country' => config('payments.moyasar.apple_pay_country', 'SA'),
                 'label' => config('payments.moyasar.merchant_label', 'Alwrraq'),
                 'validate_merchant_url' => config('payments.moyasar.apple_pay_validation_url'),
-            ],
-            'google_pay' => [
+            ] : null,
+            'google_pay' => in_array('googlepay', $methods, true) ? [
                 'merchant_id' => config('payments.moyasar.google_pay_merchant_id'),
                 'country' => config('payments.moyasar.google_pay_country', 'SA'),
                 'label' => config('payments.moyasar.merchant_label', 'Alwrraq'),
                 'environment' => config('payments.moyasar.google_pay_environment', 'TEST'),
-            ],
+            ] : null,
         ]);
     }
 

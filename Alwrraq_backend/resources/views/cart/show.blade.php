@@ -1258,6 +1258,13 @@
                         });
                         const payload = await response.json();
                         if (!response.ok) throw new Error(payload.message || 'تعذر تجهيز عملية الدفع.');
+                        if (
+                            window.location.protocol === 'http:'
+                            && String(payload.publishable_api_key || '').startsWith('pk_live_')
+                        ) {
+                            showError('مفتاح ميسر الفعلي يحتاج اتصال HTTPS. استخدم رابط الموقع الآمن أو مفاتيح الاختبار محليًا.');
+                            return;
+                        }
 
                         const options = {
                             element: formElement,
@@ -1271,8 +1278,6 @@
                             supported_networks: payload.supported_networks,
                             metadata: payload.metadata,
                             fixed_width: false,
-                            apple_pay: payload.apple_pay,
-                            google_pay: payload.google_pay,
                             on_completed: async (payment) => {
                                 try {
                                     await fetch(payload.remember_url, {
@@ -1293,6 +1298,17 @@
                                 showError(typeof error === 'string' ? error : 'لم تكتمل عملية الدفع في ميسر.');
                             },
                         };
+
+                        if (payload.methods.includes('applepay') && payload.apple_pay) {
+                            options.apple_pay = payload.apple_pay;
+                        }
+                        if (
+                            payload.methods.includes('googlepay')
+                            && payload.google_pay
+                            && payload.google_pay.merchant_id
+                        ) {
+                            options.google_pay = payload.google_pay;
+                        }
 
                         statusElement.hidden = true;
                         formElement.hidden = false;
