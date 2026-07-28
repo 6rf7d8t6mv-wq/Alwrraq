@@ -106,5 +106,6 @@
             });
         @endif
     </script>
+    @include('shared.language-tools')
 </body>
 </html>

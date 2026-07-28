@@ -437,10 +437,13 @@
                         accountInstitutionResults.appendChild(empty);
                     } else {
                         payload.data.forEach((institution) => {
+                            const institutionDisplayName = document.documentElement.lang === 'en' && institution.name_en
+                                ? institution.name_en
+                                : institution.name_ar;
                             const result = document.createElement('button');
                             result.type = 'button';
                             result.className = 'institution-result';
-                            result.textContent = institution.name_ar;
+                            result.textContent = institutionDisplayName;
 
                             const meta = document.createElement('span');
                             meta.className = 'institution-meta';
@@ -448,7 +451,7 @@
                             result.appendChild(meta);
 
                             result.addEventListener('click', () => {
-                                accountInstitutionInput.value = institution.name_ar;
+                                accountInstitutionInput.value = institutionDisplayName;
                                 accountInstitutionResults.classList.remove('active');
                             });
 

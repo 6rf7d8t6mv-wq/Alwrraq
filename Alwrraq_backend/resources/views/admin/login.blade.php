@@ -56,5 +56,6 @@
         </section>
     </main>
     @include('shared.guest-live-updates')
+    @include('shared.language-tools')
 </body>
 </html>
