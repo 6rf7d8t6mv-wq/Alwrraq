@@ -8,10 +8,13 @@ use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use RuntimeException;
+use Throwable;
 
 class MoyasarPaymentService
 {
@@ -188,6 +191,94 @@ class MoyasarPaymentService
                 default => 'visa',
             },
         };
+    }
+
+    public function reconcilePendingAttempts(?User $user = null): int
+    {
+        if (! $this->isConfigured()) {
+            return 0;
+        }
+
+        $scope = $user ? 'user-'.$user->id : 'all';
+        if (! Cache::add('moyasar:reconcile:'.$scope, now()->timestamp, 30)) {
+            return 0;
+        }
+
+        $attempts = MoyasarPaymentAttempt::query()
+            ->where('status', '!=', 'paid')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->when($user, fn ($query) => $query->where('user_id', $user->id))
+            ->oldest()
+            ->limit(100)
+            ->get()
+            ->keyBy('reference');
+
+        if ($attempts->isEmpty()) {
+            return 0;
+        }
+
+        $completed = 0;
+        $seenReferences = [];
+
+        try {
+            $page = 1;
+            do {
+                $response = $this->api()
+                    ->get('/payments', ['page' => $page])
+                    ->throw()
+                    ->json();
+
+                foreach ((array) data_get($response, 'payments', []) as $remotePayment) {
+                    if ((string) data_get($remotePayment, 'status') !== 'paid') {
+                        continue;
+                    }
+
+                    $reference = trim((string) data_get(
+                        $remotePayment,
+                        'metadata.attempt_reference'
+                    ));
+                    $attempt = $attempts->get($reference);
+                    if (! $attempt) {
+                        continue;
+                    }
+
+                    $seenReferences[$reference] = true;
+                    if ($this->verifyAndComplete($attempt, $remotePayment)) {
+                        $completed++;
+                    }
+                }
+
+                $totalPages = min(10, (int) data_get($response, 'meta.total_pages', 1));
+                $page++;
+            } while ($page <= $totalPages && $completed < $attempts->count());
+        } catch (Throwable $exception) {
+            Log::warning('Moyasar payment list reconciliation failed.', [
+                'scope' => $scope,
+                'exception' => $exception::class,
+            ]);
+        }
+
+        foreach ($attempts as $reference => $attempt) {
+            if (isset($seenReferences[$reference]) || blank($attempt->moyasar_payment_id)) {
+                continue;
+            }
+
+            try {
+                if ($this->verifyAndComplete(
+                    $attempt,
+                    $this->fetchPayment($attempt->moyasar_payment_id)
+                )) {
+                    $completed++;
+                }
+            } catch (Throwable $exception) {
+                Log::warning('Moyasar individual payment reconciliation failed.', [
+                    'attempt_id' => $attempt->id,
+                    'exception' => $exception::class,
+                ]);
+            }
+        }
+
+        return $completed;
     }
 
     private function api(): PendingRequest

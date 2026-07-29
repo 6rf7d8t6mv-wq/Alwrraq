@@ -8,6 +8,7 @@ use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
 use App\Models\User;
 use App\Services\AdminLiveUpdateService;
+use App\Services\Payments\MoyasarPaymentService;
 use App\Services\ServicePricingService;
 use App\Services\WordPreviewService;
 use Illuminate\Http\Request;
@@ -138,10 +139,11 @@ class AdminController extends Controller
         return back()->with('status', 'تم حذف كود الخصم بنجاح.');
     }
 
-    public function orders(Request $request)
+    public function orders(Request $request, MoyasarPaymentService $moyasar)
     {
         $this->ensureAdmin();
         $this->ensurePermission('orders_view');
+        $moyasar->reconcilePendingAttempts();
 
         $paymentView = $request->routeIs('admin.orders.unpaid') ? 'unpaid' : 'paid';
         $pageRouteName = $paymentView === 'unpaid' ? 'admin.orders.unpaid' : 'admin.orders';
@@ -219,10 +221,14 @@ class AdminController extends Controller
         ));
     }
 
-    public function liveStatus(AdminLiveUpdateService $liveUpdates)
+    public function liveStatus(
+        AdminLiveUpdateService $liveUpdates,
+        MoyasarPaymentService $moyasar
+    )
     {
         $this->ensureAdmin();
         $this->ensurePermission('orders_view');
+        $moyasar->reconcilePendingAttempts();
 
         return response()
             ->json($liveUpdates->snapshot())

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
+use App\Services\Payments\MoyasarPaymentService;
 use App\Services\WordPreviewService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
@@ -12,8 +13,10 @@ use Illuminate\Support\Facades\Response;
 
 class CustomerOrderController extends Controller
 {
-    public function index()
+    public function index(MoyasarPaymentService $moyasar)
     {
+        $moyasar->reconcilePendingAttempts(Auth::user());
+
         $orders = Order::query()
             ->where('user_id', Auth::id())
             ->where('payment_status', 'paid')
