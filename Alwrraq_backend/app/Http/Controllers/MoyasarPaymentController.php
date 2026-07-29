@@ -30,7 +30,28 @@ class MoyasarPaymentController extends Controller
 
         $moyasar->rememberCreatedPayment($attempt, $payment);
 
-        return response()->json(['saved' => true]);
+        try {
+            $paid = $moyasar->verifyAndComplete(
+                $attempt,
+                $moyasar->fetchPayment($payment['id'])
+            );
+        } catch (Throwable $exception) {
+            Log::warning('Moyasar completed payment could not be verified immediately.', [
+                'attempt_id' => $attempt->id,
+                'exception' => $exception::class,
+            ]);
+
+            return response()->json([
+                'saved' => true,
+                'paid' => false,
+            ], 202);
+        }
+
+        return response()->json([
+            'saved' => true,
+            'paid' => $paid,
+            'redirect_url' => $paid ? route('orders.index') : null,
+        ]);
     }
 
     public function callback(
@@ -62,9 +83,15 @@ class MoyasarPaymentController extends Controller
     public function webhook(Request $request, MoyasarPaymentService $moyasar): JsonResponse
     {
         $expectedSecret = (string) config('payments.moyasar.webhook_secret');
+        $expectedSecretHash = (string) config('payments.moyasar.webhook_secret_hash');
         $providedSecret = (string) $request->input('secret_token');
 
-        if ($expectedSecret === '' || ! hash_equals($expectedSecret, $providedSecret)) {
+        $matchesPlainSecret = $expectedSecret !== ''
+            && hash_equals($expectedSecret, $providedSecret);
+        $matchesSecretHash = $expectedSecretHash !== ''
+            && hash_equals($expectedSecretHash, hash('sha256', $providedSecret));
+
+        if (! $matchesPlainSecret && ! $matchesSecretHash) {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
 

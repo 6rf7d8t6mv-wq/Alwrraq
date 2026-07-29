@@ -1280,7 +1280,7 @@
                             fixed_width: false,
                             on_completed: async (payment) => {
                                 try {
-                                    await fetch(payload.remember_url, {
+                                    const saveResponse = await fetch(payload.remember_url, {
                                         method: 'POST',
                                         credentials: 'same-origin',
                                         headers: {
@@ -1290,6 +1290,11 @@
                                         },
                                         body: JSON.stringify(payment),
                                     });
+
+                                    const savedPayment = await saveResponse.json();
+                                    if (savedPayment.paid && savedPayment.redirect_url) {
+                                        window.location.assign(savedPayment.redirect_url);
+                                    }
                                 } catch (_) {
                                     // The callback and webhook still verify the payment.
                                 }

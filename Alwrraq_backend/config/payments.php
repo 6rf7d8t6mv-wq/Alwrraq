@@ -15,6 +15,10 @@ return [
         'publishable_key' => env('MOYASAR_PUBLISHABLE_KEY', env('MOYASAR_API_KEY')),
         'secret_key' => env('MOYASAR_SECRET_KEY'),
         'webhook_secret' => env('MOYASAR_WEBHOOK_SECRET'),
+        'webhook_secret_hash' => env(
+            'MOYASAR_WEBHOOK_SECRET_HASH',
+            '405d05a15ddf731834f49edda39eade180a5c159d6efc843d3dbc0818f826611'
+        ),
         'api_url' => env('MOYASAR_API_URL', 'https://api.moyasar.com/v1'),
         'timeout' => env('MOYASAR_TIMEOUT', 10),
         'merchant_label' => env('MOYASAR_MERCHANT_LABEL', 'Alwrraq'),
