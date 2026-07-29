@@ -135,6 +135,11 @@
         </div>
     </div>
 
+    <div class="invoice-barcode" style="width:min(320px,100%);margin:0 auto 12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:9px;background:#fff;text-align:center;line-height:0;">
+        <div style="margin-bottom:5px;color:#64748b;font-size:9px;font-weight:900;line-height:1.2;">باركود الفاتورة</div>
+        <div style="height:58px;">{!! app(\App\Services\InvoiceBarcodeService::class)->svg((int) $order->id) !!}</div>
+    </div>
+
     <div class="invoice-section-title">بيانات الفاتورة</div>
     <div class="invoice-grid">
         <div><span>العميل</span><strong>{{ $order->user->name }}</strong></div>

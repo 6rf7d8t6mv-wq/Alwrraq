@@ -101,6 +101,8 @@
         .delivery-option-content { display: flex; flex: 1 1 auto; align-items: center; justify-content: space-between; gap: 6px; min-width: 0; }
         .delivery-option-content strong { min-width: 0; color: #334155; font-size: inherit; line-height: inherit; overflow-wrap: normal; word-break: normal; }
         .delivery-option small { display: block; color: #64748b; font-size: 11px; font-weight: 700; margin-top: 2px; overflow-wrap: anywhere; }
+        .delivery-details { display: grid; gap: 2px; min-width: 0; }
+        .delivery-option .delivery-time { color: #0369a1; font-size: 10px; font-weight: 900; line-height: 1.35; }
         .delivery-fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
         .delivery-fields.address-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         .delivery-note { margin-top: 8px; padding: 8px 10px; border-radius: 9px; background: #ecfdf5; color: #047857; font-size: 12px; font-weight: 900; line-height: 1.5; }
@@ -187,6 +189,24 @@
         .edit-file-button:hover { background: #1d4ed8; }
         .view-file-button { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: auto; min-width: 74px; padding: 6px 9px; border-radius: 8px; background: #38bdf8; color: #ffffff; text-decoration: none; font-size: 12px; font-weight: 900; }
         .view-file-button:hover { background: #0ea5e9; }
+        .cart-image-files { display: grid; gap: 12px; }
+        .cart-image-file { direction: ltr; display: grid; grid-template-columns: minmax(145px, 30%) minmax(0, 1fr); gap: 14px; min-height: 240px; padding: 14px; border: 1px solid #dbe3ef; border-radius: 14px; background: #ffffff; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
+        .cart-image-preview { min-width: 0; min-height: 210px; overflow: hidden; border: 1px solid #dbe3ef; border-radius: 12px; background: #eef2f7; }
+        .cart-image-preview a { display: block; width: 100%; height: 100%; }
+        .cart-image-preview img { display: block; width: 100%; height: 100%; min-height: 210px; object-fit: contain; background: #f8fafc; }
+        .cart-image-content { direction: rtl; display: grid; grid-template-rows: auto 1fr; gap: 12px; min-width: 0; }
+        .cart-image-name { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 9px; min-width: 0; padding: 12px; border: 1px solid #bfdbfe; border-radius: 11px; background: #eff6ff; }
+        .cart-image-name-copy { min-width: 0; }
+        .cart-image-name-copy span { display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; font-weight: 900; }
+        .cart-image-name-copy strong { display: block; overflow-wrap: anywhere; color: #0f172a; font-size: 14px; line-height: 1.45; }
+        .cart-image-name-actions { display: inline-flex; align-items: center; gap: 6px; }
+        .cart-image-details { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-content: stretch; }
+        .cart-image-detail { display: grid; place-content: center; min-width: 0; padding: 10px; border: 1px solid #e2e8f0; border-radius: 11px; background: #f8fafc; text-align: center; }
+        .cart-image-detail span { display: block; margin-bottom: 4px; color: #64748b; font-size: 11px; font-weight: 900; }
+        .cart-image-detail strong { color: #0f172a; font-size: 14px; line-height: 1.45; }
+        .cart-image-detail form { margin: 0; }
+        .cart-image-detail .delete-file-button { color: #dc2626; background: transparent; font-size: 14px; }
+        .cart-image-detail .delete-file-button:hover { background: #fee2e2; }
         @media (min-width: 0px) {
             .detail-table-wrap { border: 0; background: transparent; overflow: visible; }
             .detail-table-wrap table { min-width: 0; display: block; }
@@ -271,6 +291,21 @@
             .stationery-product-actions .edit-file-button,
             .stationery-product-actions .delete-file-button { width: auto; min-width: 38px; padding: 4px 5px; font-size: 8px; }
             .file-format-badge { padding: 2px 6px; font-size: 10px; }
+            .cart-image-file { grid-template-columns: minmax(98px, 34%) minmax(0, 1fr); gap: 8px; min-height: 205px; padding: 8px; border-radius: 11px; }
+            .cart-image-preview { min-height: 187px; border-radius: 9px; }
+            .cart-image-preview img { min-height: 187px; }
+            .cart-image-content { gap: 7px; }
+            .cart-image-name { grid-template-columns: minmax(0, 1fr); gap: 6px; padding: 8px; border-radius: 9px; }
+            .cart-image-name-copy span { font-size: 8.5px; }
+            .cart-image-name-copy strong { font-size: 10px; line-height: 1.35; }
+            .cart-image-name-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; }
+            .cart-image-name-actions .edit-file-button,
+            .cart-image-name-actions .view-file-button { width: 100%; min-width: 0; padding: 5px 3px; font-size: 8.5px; }
+            .cart-image-details { gap: 6px; }
+            .cart-image-detail { padding: 6px 4px; border-radius: 8px; }
+            .cart-image-detail span { margin-bottom: 2px; font-size: 8.5px; }
+            .cart-image-detail strong,
+            .cart-image-detail .delete-file-button { font-size: 10px; line-height: 1.3; }
             .payment-summary,
             .cart-page-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
             .cart-page-actions.cart-selection-actions { display: flex; }
@@ -639,6 +674,52 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                    @elseif ($cartOrder->service_type === 'images')
+                                        <div class="cart-image-files">
+                                            @foreach ($cartOrder->files as $file)
+                                                <article class="cart-image-file">
+                                                    <div class="cart-image-preview">
+                                                        <a href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}" aria-label="عرض الصورة {{ $file->original_name }}">
+                                                            <img src="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'raw' => 1, 'v' => $file->updated_at?->timestamp]) }}" alt="{{ $file->original_name }}" loading="lazy">
+                                                        </a>
+                                                    </div>
+                                                    <div class="cart-image-content">
+                                                        <div class="cart-image-name">
+                                                            <div class="cart-image-name-copy">
+                                                                <span>اسم الصورة</span>
+                                                                <strong>{{ $file->original_name }}</strong>
+                                                            </div>
+                                                            <div class="cart-image-name-actions">
+                                                                <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>
+                                                                <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}">عرض الصورة</a>
+                                                            </div>
+                                                        </div>
+                                                        <div class="cart-image-details">
+                                                            <div class="cart-image-detail">
+                                                                <span>نوع التصوير</span>
+                                                                <strong>{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</strong>
+                                                            </div>
+                                                            <div class="cart-image-detail">
+                                                                <span>عدد النسخ</span>
+                                                                <strong>{{ $file->copies }}</strong>
+                                                            </div>
+                                                            <div class="cart-image-detail">
+                                                                <span>السعر</span>
+                                                                <strong>{{ $file->total_price }} ريال</strong>
+                                                            </div>
+                                                            <div class="cart-image-detail">
+                                                                <span>الإجراء</span>
+                                                                <form method="post" action="{{ url('/order-files/' . $file->id) }}">
+                                                                    @csrf
+                                                                    @method('delete')
+                                                                    <button class="delete-file-button" type="submit">حذف الصورة</button>
+                                                                </form>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </article>
+                                            @endforeach
+                                        </div>
                                     @else
                                     <div class="detail-table-wrap">
                                         <table>
@@ -798,9 +879,9 @@
                                         @method('patch')
                                         <div class="delivery-options">
                                             <label class="delivery-option"><input type="radio" name="delivery_method" value="branch_pickup" @checked($cartDeliveryOrder->delivery_method === 'branch_pickup')><span class="delivery-option-content"><strong>استلام من الفرع</strong><small>مجاني</small></span></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="islamic_university_delivery" @checked($cartDeliveryOrder->delivery_method === 'islamic_university_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="الجامعة الإسلامية">داخل الجامعة الإسلامية</strong><small class="mobile-compact-value" data-mobile-value="{{ $servicePricing['delivery_university_fee'] }} ريال / مجانًا فوق {{ $servicePricing['delivery_university_free_from'] }}">{{ $servicePricing['delivery_university_fee'] }} ريال، ومجاني إذا الطلب بلغ {{ $servicePricing['delivery_university_free_from'] }} ريال</small></span></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="madinah_delivery" @checked($cartDeliveryOrder->delivery_method === 'madinah_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="داخل المدينة">داخل المدينة المنورة</strong><small>{{ $servicePricing['delivery_madinah_fee'] }} ريال</small></span></label>
-                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="redbox_delivery" @checked($cartDeliveryOrder->delivery_method === 'redbox_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="خارج المدينة">خارج المدينة المنورة</strong><small>{{ $servicePricing['delivery_redbox_fee'] }} ريال عبر RedBox</small></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="islamic_university_delivery" @checked($cartDeliveryOrder->delivery_method === 'islamic_university_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="الجامعة الإسلامية">داخل الجامعة الإسلامية</strong><span class="delivery-details"><small class="mobile-compact-value" data-mobile-value="{{ $servicePricing['delivery_university_fee'] }} ريال / مجانًا فوق {{ $servicePricing['delivery_university_free_from'] }}">{{ $servicePricing['delivery_university_fee'] }} ريال، ومجاني إذا الطلب بلغ {{ $servicePricing['delivery_university_free_from'] }} ريال</small><small class="delivery-time">خلال ساعة عمل</small></span></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="madinah_delivery" @checked($cartDeliveryOrder->delivery_method === 'madinah_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="داخل المدينة">داخل المدينة المنورة</strong><span class="delivery-details"><small>{{ $servicePricing['delivery_madinah_fee'] }} ريال</small><small class="delivery-time">من ساعة إلى 3 ساعات عمل</small></span></span></label>
+                                            <label class="delivery-option"><input type="radio" name="delivery_method" value="redbox_delivery" @checked($cartDeliveryOrder->delivery_method === 'redbox_delivery')><span class="delivery-option-content"><strong class="mobile-compact-value" data-mobile-value="خارج المدينة">خارج المدينة المنورة</strong><span class="delivery-details"><small>{{ $servicePricing['delivery_redbox_fee'] }} ريال عبر RedBox</small><small class="delivery-time">حسب المنطقة وخدمة الشحن: من 3 إلى 8 أيام عمل</small></span></span></label>
                                         </div>
                                         <div class="cart-form-grid" data-delivery-fields="islamic_university_delivery">
                                             <div><label>رقم الوحدة</label><input name="delivery_unit" value="{{ $cartDeliveryOrder->delivery_unit }}"></div>

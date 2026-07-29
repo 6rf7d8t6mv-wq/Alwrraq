@@ -167,6 +167,19 @@
         .hero-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
         .hero-list li { display: flex; gap: 10px; padding: 13px; border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0; font-weight: 800; color: #334155; }
         .check { width: 24px; height: 24px; display: inline-grid; place-items: center; flex: 0 0 auto; border-radius: 999px; background: #dcfce7; color: #166534; font-size: 14px; }
+        .delivery-showcase { padding-top: 18px; }
+        .delivery-showcase-box { position: relative; overflow: hidden; padding: clamp(26px, 5vw, 44px); border: 1px solid rgba(147, 197, 253, 0.24); border-radius: 28px; background: radial-gradient(circle at 12% 15%, rgba(96, 165, 250, 0.28), transparent 27%), radial-gradient(circle at 88% 82%, rgba(14, 165, 233, 0.18), transparent 30%), linear-gradient(135deg, #081426 0%, #102f52 52%, #0f4c81 100%); color: #ffffff; box-shadow: 0 28px 75px rgba(15, 23, 42, 0.2); }
+        .delivery-showcase-box::after { content: ""; position: absolute; inset: auto 8% -55px 8%; height: 110px; border-radius: 999px; background: rgba(255, 255, 255, 0.13); filter: blur(26px); }
+        .delivery-showcase-head { position: relative; z-index: 1; margin-bottom: 22px; text-align: center; }
+        .delivery-showcase-badge { display: inline-flex; align-items: center; gap: 7px; margin-bottom: 8px; padding: 6px 12px; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 999px; background: rgba(255, 255, 255, 0.1); color: #bfdbfe; font-size: 12px; font-weight: 900; }
+        .delivery-showcase-head h2 { margin: 0 0 7px; color: #ffffff; font-size: clamp(25px, 4vw, 36px); line-height: 1.35; }
+        .delivery-showcase-head p { margin: 0; color: #dbeafe; font-size: 14px; font-weight: 800; }
+        .delivery-times { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .delivery-time-card { min-width: 0; padding: 18px; border: 1px solid rgba(255, 255, 255, 0.17); border-radius: 18px; background: rgba(255, 255, 255, 0.1); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.13), 0 15px 32px rgba(2, 8, 23, 0.12); backdrop-filter: blur(8px); text-align: center; }
+        .delivery-time-icon { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 10px; border-radius: 13px; background: linear-gradient(145deg, #ffffff, #dbeafe); color: #0f4c81; font-size: 20px; box-shadow: 0 10px 22px rgba(2, 8, 23, 0.2); }
+        .delivery-time-card h3 { margin: 0 0 5px; color: #ffffff; font-size: 17px; line-height: 1.45; }
+        .delivery-time-card strong { display: block; color: #fef08a; font-size: 19px; line-height: 1.45; }
+        .delivery-time-card p { margin: 4px 0 0; color: #dbeafe; font-size: 12px; line-height: 1.5; }
         section { padding: 48px 0; }
         .about-box { display: grid; grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr); gap: 22px; align-items: stretch; background: rgba(255, 255, 255, 0.94); border: 1px solid #dbe3ef; border-radius: 24px; padding: clamp(22px, 4vw, 34px); box-shadow: 0 22px 58px rgba(15, 23, 42, 0.08); }
         .about-badge { display: inline-flex; width: fit-content; padding: 7px 13px; border-radius: 999px; background: #ecfdf5; color: #166534; border: 1px solid #bbf7d0; font-size: 13px; font-weight: 900; margin-bottom: 12px; }
@@ -305,6 +318,18 @@
             .hero-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; }
             .hero-list li { align-items: flex-start; gap: 4px; min-width: 0; padding: 6px; border-radius: 7px; font-size: 8.5px; line-height: 1.45; }
             .check { width: 17px; height: 17px; font-size: 10px; }
+            .delivery-showcase { padding-top: 5px; }
+            .delivery-showcase-box { padding: 12px 9px; border-radius: 14px; box-shadow: 0 12px 28px rgba(15, 23, 42, 0.14); }
+            .delivery-showcase-head { margin-bottom: 9px; }
+            .delivery-showcase-badge { margin-bottom: 4px; padding: 3px 7px; font-size: 8px; }
+            .delivery-showcase-head h2 { margin-bottom: 3px; font-size: 17px; }
+            .delivery-showcase-head p { font-size: 8.5px; line-height: 1.4; }
+            .delivery-times { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
+            .delivery-time-card { padding: 8px 5px; border-radius: 9px; box-shadow: none; }
+            .delivery-time-icon { width: 25px; height: 25px; margin-bottom: 5px; border-radius: 7px; font-size: 12px; box-shadow: none; }
+            .delivery-time-card h3 { margin-bottom: 2px; font-size: 8px; line-height: 1.35; }
+            .delivery-time-card strong { font-size: 9px; line-height: 1.4; }
+            .delivery-time-card p { margin-top: 2px; font-size: 6.8px; line-height: 1.4; }
             section { padding: 13px 0; }
             .about-box { gap: 8px; padding: 9px; border-radius: 12px; box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06); }
             .about-badge { margin-bottom: 5px; padding: 3px 7px; font-size: 9px; }
@@ -488,6 +513,36 @@
                         <li><span class="check">✓</span><span>تصفح منتجات القرطاسية وإضافتها للسلة بسهولة.</span></li>
                         <li><span class="check">✓</span><span>متابعة الطلب والفواتير والملفات المستلمة.</span></li>
                     </ul>
+                </div>
+            </div>
+        </section>
+
+        <section class="delivery-showcase" aria-labelledby="delivery-times-title">
+            <div class="container">
+                <div class="delivery-showcase-box">
+                    <div class="delivery-showcase-head">
+                        <span class="delivery-showcase-badge">✦ توصيل سريع ومنظم</span>
+                        <h2 id="delivery-times-title">طلبك يصلك في الوقت المناسب</h2>
+                        <p>مدد توصيل واضحة حسب موقع الاستلام بعد تجهيز الطلب.</p>
+                    </div>
+                    <div class="delivery-times">
+                        <article class="delivery-time-card">
+                            <span class="delivery-time-icon" aria-hidden="true">🎓</span>
+                            <h3>داخل الجامعة الإسلامية</h3>
+                            <strong>خلال ساعة عمل</strong>
+                        </article>
+                        <article class="delivery-time-card">
+                            <span class="delivery-time-icon" aria-hidden="true">📍</span>
+                            <h3>داخل المدينة المنورة</h3>
+                            <strong>من ساعة إلى 3 ساعات عمل</strong>
+                        </article>
+                        <article class="delivery-time-card">
+                            <span class="delivery-time-icon" aria-hidden="true">🚚</span>
+                            <h3>خارج المدينة المنورة</h3>
+                            <strong>من 3 إلى 8 أيام عمل</strong>
+                            <p>حسب المنطقة وخدمة الشحن</p>
+                        </article>
+                    </div>
                 </div>
             </div>
         </section>

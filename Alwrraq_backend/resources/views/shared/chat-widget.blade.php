@@ -360,7 +360,10 @@
                 updateUnread();
             };
 
+            let refreshing = false;
             const refresh = async () => {
+                if (document.hidden || refreshing) return;
+                refreshing = true;
                 try {
                     await loadConversations();
                     if (panel.classList.contains('active') && currentConversationId) {
@@ -368,6 +371,8 @@
                     }
                 } catch (error) {
                     console.warn(error);
+                } finally {
+                    refreshing = false;
                 }
             };
 
@@ -433,7 +438,7 @@
 
             refresh();
             requestAnimationFrame(scanOrderAlerts);
-            pollTimer = setInterval(refresh, 1000);
+            pollTimer = setInterval(refresh, 3000);
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollTimer);
                 if (viewportFrame) cancelAnimationFrame(viewportFrame);

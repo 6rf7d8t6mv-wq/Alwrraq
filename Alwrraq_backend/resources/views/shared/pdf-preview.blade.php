@@ -14,16 +14,12 @@
             // through "127.0.0.1", which browsers correctly treat as two origins.
             const configuredPdfUrl = new URL(@json($pdfUrl), window.location.href);
             const sameOriginPdfUrl = `${configuredPdfUrl.pathname}${configuredPdfUrl.search}${configuredPdfUrl.hash}`;
-            const usesMobileViewer = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
-                || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-
-            if (!usesMobileViewer) {
+            if (typeof window.pdfjsLib === 'undefined') {
                 const nativeViewer = document.createElement('iframe');
                 nativeViewer.src = sameOriginPdfUrl;
                 nativeViewer.title = 'معاينة ملف PDF';
                 nativeViewer.style.width = '100%';
                 nativeViewer.style.minHeight = 'calc(100vh - 120px)';
-                nativeViewer.style.flex = '1';
                 nativeViewer.style.border = '0';
                 preview.replaceChildren(nativeViewer);
                 return;
@@ -46,31 +42,63 @@
 
             status.remove();
 
-            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-                const page = await pdf.getPage(pageNumber);
+            const renderPage = async (canvas) => {
+                if (canvas.dataset.rendering === '1' || canvas.dataset.rendered === '1') return;
+                canvas.dataset.rendering = '1';
+                const page = await pdf.getPage(Number(canvas.dataset.page));
                 const baseViewport = page.getViewport({ scale: 1 });
                 const viewport = page.getViewport({ scale: availableWidth / baseViewport.width });
-                const canvas = document.createElement('canvas');
                 const context = canvas.getContext('2d');
 
-                canvas.className = 'pdf-page';
                 canvas.width = Math.floor(viewport.width * pixelRatio);
                 canvas.height = Math.floor(viewport.height * pixelRatio);
                 canvas.style.width = `${Math.floor(viewport.width)}px`;
                 canvas.style.height = `${Math.floor(viewport.height)}px`;
-                preview.appendChild(canvas);
 
                 await page.render({
                     canvasContext: context,
                     viewport,
                     transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0],
                 }).promise;
+                canvas.dataset.rendered = '1';
+                delete canvas.dataset.rendering;
+            };
+
+            const observer = 'IntersectionObserver' in window
+                ? new IntersectionObserver((entries) => {
+                    entries.forEach((entry) => {
+                        if (!entry.isIntersecting) return;
+                        observer.unobserve(entry.target);
+                        renderPage(entry.target);
+                    });
+                }, { root: preview, rootMargin: '700px 0px' })
+                : null;
+
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page';
+                canvas.dataset.page = String(pageNumber);
+                canvas.style.width = `${availableWidth}px`;
+                canvas.style.height = `${Math.round(availableWidth * 1.414)}px`;
+                preview.appendChild(canvas);
+
+                if (observer) {
+                    observer.observe(canvas);
+                } else {
+                    renderPage(canvas);
+                }
             }
+
+            await renderPage(preview.querySelector('.pdf-page'));
         } catch (error) {
-            if (!status.isConnected) {
-                preview.replaceChildren(status);
-            }
-            status.textContent = @json($pdfErrorMessage ?? 'تعذر عرض ملف PDF. حاول مرة أخرى.');
+            const fallback = document.createElement('iframe');
+            fallback.src = new URL(@json($pdfUrl), window.location.href).pathname
+                + new URL(@json($pdfUrl), window.location.href).search;
+            fallback.title = 'معاينة ملف PDF';
+            fallback.style.width = '100%';
+            fallback.style.minHeight = 'calc(100vh - 120px)';
+            fallback.style.border = '0';
+            preview.replaceChildren(fallback);
         }
     });
 </script>

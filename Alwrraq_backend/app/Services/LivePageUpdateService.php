@@ -9,6 +9,7 @@ use App\Models\ServiceDefinition;
 use App\Models\ServicePriceSetting;
 use App\Models\StationeryProduct;
 use App\Models\User;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 
 class LivePageUpdateService
@@ -16,18 +17,28 @@ class LivePageUpdateService
     public function snapshot(User $user): array
     {
         $pricingRevision = Schema::hasTable('service_price_settings')
-            ? hash('sha256', ServicePriceSetting::query()
-                ->orderBy('key')
-                ->get(['key', 'value', 'updated_at'])
-                ->toJson())
+            ? Cache::remember('live:pricing-revision', 2, fn () => hash(
+                'sha256',
+                ServicePriceSetting::query()
+                    ->orderBy('key')
+                    ->get(['key', 'value', 'updated_at'])
+                    ->toJson()
+            ))
             : hash('sha256', 'defaults');
         $catalogRevision = Schema::hasTable('service_definitions')
-            ? hash('sha256', ServiceDefinition::query()
-                ->orderBy('id')
-                ->get(['id', 'title', 'description', 'icon', 'image_path', 'workflow_type', 'requires_file', 'is_active', 'sort_order', 'updated_at'])
-                ->toJson())
+            ? Cache::remember('live:catalog-revision', 2, fn () => hash(
+                'sha256',
+                ServiceDefinition::query()
+                    ->orderBy('id')
+                    ->get(['id', 'title', 'description', 'icon', 'image_path', 'workflow_type', 'requires_file', 'is_active', 'sort_order', 'updated_at'])
+                    ->toJson()
+            ))
             : hash('sha256', 'defaults');
-        $applicationRevision = $this->applicationRevision();
+        $applicationRevision = Cache::remember(
+            'live:application-revision',
+            app()->environment('local') ? 5 : 15,
+            fn () => $this->applicationRevision()
+        );
 
         if ($user->role === 'admin') {
             $orders = Order::query();

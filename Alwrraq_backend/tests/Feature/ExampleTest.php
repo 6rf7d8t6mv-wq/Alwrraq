@@ -26,7 +26,10 @@ class ExampleTest extends TestCase
             ->assertSee('application/ld+json', false)
             ->assertSee('max-image-preview:large', false)
             ->assertSee('جميع مناطق المملكة', false)
-            ->assertSee('RedBox', false);
+            ->assertSee('RedBox', false)
+            ->assertSee('داخل الجامعة الإسلامية', false)
+            ->assertSee('من ساعة إلى 3 ساعات عمل', false)
+            ->assertSee('من 3 إلى 8 أيام عمل', false);
     }
 
     public function test_the_public_sitemap_is_available(): void

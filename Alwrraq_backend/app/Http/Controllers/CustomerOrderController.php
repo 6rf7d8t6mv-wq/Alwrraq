@@ -101,19 +101,33 @@ class CustomerOrderController extends Controller
             return Response::download($absolutePath, $file->original_name);
         }
 
+        $extension = strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION));
+        $detectedMime = File::mimeType($absolutePath) ?: 'application/octet-stream';
+
         if (request()->boolean('raw')) {
-            $inlineMime = strtolower(pathinfo($file->original_name, PATHINFO_EXTENSION)) === 'pdf'
+            $inlineMime = $extension === 'pdf'
                 ? 'application/pdf'
-                : (File::mimeType($absolutePath) ?: 'application/octet-stream');
+                : $detectedMime;
 
             return response()->file($absolutePath, [
                 'Content-Type' => $inlineMime,
+                'X-Content-Type-Options' => 'nosniff',
+                'Cache-Control' => 'private, max-age=300',
             ]);
         }
 
-        $isPdf = strtolower($file->file_type) === 'pdf';
-        $isImage = strtolower($file->file_type) === 'image';
-        $wordPreviewHtml = strtolower($file->file_type) === 'word'
+        $isPdf = $extension === 'pdf'
+            || strtolower($file->file_type) === 'pdf'
+            || $detectedMime === 'application/pdf';
+        $isImage = strtolower($file->file_type) === 'image'
+            || str_starts_with($detectedMime, 'image/');
+        $isWord = in_array($extension, ['doc', 'docx'], true)
+            || strtolower($file->file_type) === 'word'
+            || in_array($detectedMime, [
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            ], true);
+        $wordPreviewHtml = $isWord && $extension === 'docx'
             ? $wordPreview->toHtml($absolutePath)
             : null;
         $isPreviewable = $isPdf || $isImage || filled($wordPreviewHtml);
