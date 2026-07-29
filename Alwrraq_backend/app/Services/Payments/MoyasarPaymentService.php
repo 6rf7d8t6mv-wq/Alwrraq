@@ -200,7 +200,7 @@ class MoyasarPaymentService
         }
 
         $scope = $user ? 'user-'.$user->id : 'all';
-        if (! Cache::add('moyasar:reconcile:'.$scope, now()->timestamp, 30)) {
+        if (! Cache::add('moyasar:reconcile:lock', now()->timestamp, 30)) {
             return 0;
         }
 

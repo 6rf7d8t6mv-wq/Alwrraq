@@ -107,7 +107,7 @@ class MoyasarPaymentController extends Controller
         }
 
         try {
-            $moyasar->verifyAndComplete($attempt, $moyasar->fetchPayment($paymentId));
+            $moyasar->verifyAndComplete($attempt, (array) $request->input('data'));
         } catch (Throwable $exception) {
             Log::error('Moyasar webhook verification failed.', [
                 'attempt_id' => $attempt->id,
