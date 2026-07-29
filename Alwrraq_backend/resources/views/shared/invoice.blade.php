@@ -103,6 +103,7 @@
         'madinah_delivery' => 'توصيل داخل المدينة المنورة',
         'redbox_delivery' => 'خارج المدينة المنورة عبر RedBox',
     ];
+    $sellerName = \App\Services\ZatcaQrCodeService::SELLER_NAME;
     $taxNumber = '٣١٤٤١٧١٦٩٦٠٠٠٠٣';
     $vatRate = 15;
     $vatAmount = round(((float) $order->grand_total * $vatRate) / (100 + $vatRate), 2);
@@ -124,7 +125,7 @@
         <div class="invoice-brand">
             <div class="invoice-logo"><img src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق"></div>
             <div>
-                <h2>شركة مسير المدينة</h2>
+                <h2>{{ $sellerName }}</h2>
                 <p>فاتورة ضريبية مبسطة</p>
             </div>
         </div>
@@ -133,11 +134,6 @@
             <strong>#{{ $order->id }}</strong>
             <small>{{ $order->payment_status === 'paid' ? 'مدفوعة' : 'غير مدفوعة' }}</small>
         </div>
-    </div>
-
-    <div class="invoice-barcode" style="width:min(320px,100%);margin:0 auto 12px;padding:7px 10px;border:1px solid #e2e8f0;border-radius:9px;background:#fff;text-align:center;line-height:0;">
-        <div style="margin-bottom:5px;color:#64748b;font-size:9px;font-weight:900;line-height:1.2;">باركود الفاتورة</div>
-        <div style="height:58px;">{!! app(\App\Services\InvoiceBarcodeService::class)->svg((int) $order->id) !!}</div>
     </div>
 
     <div class="invoice-section-title">بيانات الفاتورة</div>
@@ -305,4 +301,10 @@
     </div>
 
     <p class="invoice-note">الأسعار والإجمالي تشمل ضريبة القيمة المضافة بنسبة ١٥٪، ولا تضاف الضريبة مرة أخرى على المبلغ المستحق.</p>
+
+    <div class="invoice-zatca-qr" style="width:170px;max-width:100%;margin:12px auto 0;padding:9px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;text-align:center;break-inside:avoid;page-break-inside:avoid;">
+        <div style="margin-bottom:6px;color:#334155;font-size:9px;font-weight:900;line-height:1.3;">رمز الفاتورة الإلكترونية</div>
+        <div style="width:150px;height:150px;max-width:100%;margin:auto;line-height:0;">{!! app(\App\Services\ZatcaQrCodeService::class)->svg($order) !!}</div>
+        <div style="margin-top:5px;color:#64748b;font-size:8px;font-weight:800;line-height:1.3;">متوافق مع حقول QR الأساسية لهيئة الزكاة والضريبة والجمارك</div>
+    </div>
 </section>
