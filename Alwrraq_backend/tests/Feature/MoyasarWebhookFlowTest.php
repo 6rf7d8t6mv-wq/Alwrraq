@@ -6,7 +6,10 @@ use App\Models\MoyasarPaymentAttempt;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\Payments\MoyasarPaymentService;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Tests\TestCase;
 
@@ -72,7 +75,7 @@ class MoyasarWebhookFlowTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_paid_apple_pay_webhook_completes_the_order_exactly_once(): void
+    public function test_paid_apple_pay_webhook_repairs_a_previously_paid_attempt_exactly_once(): void
     {
         config()->set('payments.moyasar.webhook_secret', 'webhook-test-secret');
         config()->set('payments.moyasar.webhook_secret_hash', null);
@@ -90,11 +93,14 @@ class MoyasarWebhookFlowTest extends TestCase
         $attempt = MoyasarPaymentAttempt::query()->create([
             'reference' => '8a20e280-a13e-4f5d-bdc9-c33854657830',
             'user_id' => $user->id,
+            'moyasar_payment_id' => 'payment-apple-pay-1',
             'order_ids' => [$order->id],
             'order_amounts' => [(string) $order->id => 100],
             'amount_minor' => 100,
             'currency' => 'SAR',
-            'status' => 'pending',
+            'status' => 'paid',
+            'payment_method' => 'apple_pay',
+            'paid_at' => now(),
         ]);
         $payload = [
             'secret_token' => 'webhook-test-secret',
@@ -126,6 +132,64 @@ class MoyasarWebhookFlowTest extends TestCase
         $this->assertSame('payment-apple-pay-1', $order->payment_reference);
         $this->assertSame('paid', $attempt->status);
         $this->assertSame('apple_pay', $attempt->payment_method);
+        $this->assertSame(1, Payment::query()->count());
+    }
+
+    public function test_reconciliation_includes_a_paid_attempt_with_an_unpaid_order(): void
+    {
+        config()->set('payments.moyasar.publishable_key', 'pk_test');
+        config()->set('payments.moyasar.secret_key', 'sk_test');
+        config()->set('payments.moyasar.api_url', 'https://api.moyasar.test/v1');
+        Cache::flush();
+
+        $user = User::query()->create(['name' => 'Reconciliation Test Customer']);
+        $order = Order::query()->create([
+            'user_id' => $user->id,
+            'service_type' => 'notes',
+            'status' => 'new',
+            'payment_status' => 'unpaid',
+            'print_total' => 1,
+            'binding_total' => 0,
+            'grand_total' => 1,
+        ]);
+        $attempt = MoyasarPaymentAttempt::query()->create([
+            'reference' => '48ea3914-70cc-481e-b7f2-87e8f282e50f',
+            'user_id' => $user->id,
+            'moyasar_payment_id' => 'payment-reconciliation-1',
+            'order_ids' => [$order->id],
+            'order_amounts' => [(string) $order->id => 100],
+            'amount_minor' => 100,
+            'currency' => 'SAR',
+            'status' => 'paid',
+            'payment_method' => 'apple_pay',
+            'paid_at' => now(),
+        ]);
+        $remotePayment = [
+            'id' => 'payment-reconciliation-1',
+            'status' => 'paid',
+            'amount' => 100,
+            'currency' => 'SAR',
+            'metadata' => [
+                'attempt_reference' => $attempt->reference,
+            ],
+            'source' => [
+                'type' => 'applepay',
+                'company' => 'mada',
+            ],
+        ];
+
+        Http::fake([
+            'https://api.moyasar.test/v1/payments*' => Http::response([
+                'payments' => [$remotePayment],
+                'meta' => ['total_pages' => 1],
+            ]),
+        ]);
+
+        $completed = app(MoyasarPaymentService::class)->reconcilePendingAttempts();
+
+        $this->assertSame(1, $completed);
+        $this->assertSame('paid', $order->fresh()->payment_status);
+        $this->assertSame('apple_pay', $order->fresh()->payment_method);
         $this->assertSame(1, Payment::query()->count());
     }
 }

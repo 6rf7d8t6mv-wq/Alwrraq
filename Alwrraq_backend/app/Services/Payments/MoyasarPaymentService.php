@@ -122,9 +122,6 @@ class MoyasarPaymentService
 
         DB::transaction(function () use ($attempt, $remotePayment, $paymentId): void {
             $lockedAttempt = MoyasarPaymentAttempt::query()->lockForUpdate()->findOrFail($attempt->id);
-            if ($lockedAttempt->status === 'paid') {
-                return;
-            }
 
             $method = $this->paymentMethod($remotePayment);
             $orders = Order::query()
@@ -204,13 +201,27 @@ class MoyasarPaymentService
             return 0;
         }
 
-        $attempts = MoyasarPaymentAttempt::query()
-            ->where('status', '!=', 'paid')
+        $baseQuery = MoyasarPaymentAttempt::query()
             ->where('created_at', '>=', now()->subDays(30))
-            ->when($user, fn ($query) => $query->where('user_id', $user->id))
+            ->when($user, fn ($query) => $query->where('user_id', $user->id));
+
+        $pendingAttempts = (clone $baseQuery)
+            ->where('status', '!=', 'paid')
             ->oldest()
             ->limit(100)
+            ->get();
+
+        $incompletePaidAttempts = (clone $baseQuery)
+            ->where('status', 'paid')
+            ->latest()
+            ->limit(100)
             ->get()
+            ->filter(fn (MoyasarPaymentAttempt $attempt): bool => $this->attemptNeedsRepair($attempt));
+
+        $attempts = $pendingAttempts
+            ->concat($incompletePaidAttempts)
+            ->unique('id')
+            ->take(100)
             ->keyBy('reference');
 
         if ($attempts->isEmpty()) {
@@ -288,6 +299,40 @@ class MoyasarPaymentService
             ->acceptJson()
             ->timeout((int) config('payments.moyasar.timeout', 10))
             ->retry(1, 250);
+    }
+
+    private function attemptNeedsRepair(MoyasarPaymentAttempt $attempt): bool
+    {
+        $orderIds = array_values(array_filter(array_map(
+            'intval',
+            $attempt->order_ids ?? []
+        )));
+
+        if ($orderIds === []) {
+            return true;
+        }
+
+        $orders = Order::query()
+            ->whereIn('id', $orderIds)
+            ->where('user_id', $attempt->user_id)
+            ->get(['id', 'payment_status']);
+
+        if ($orders->count() !== count($orderIds) || blank($attempt->moyasar_payment_id)) {
+            return true;
+        }
+
+        foreach ($orders as $order) {
+            if (
+                $order->payment_status !== 'paid'
+                || ! Payment::query()
+                    ->where('transaction_id', $attempt->moyasar_payment_id.'-'.$order->id)
+                    ->exists()
+            ) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function toMinorUnits(float $amount): int
