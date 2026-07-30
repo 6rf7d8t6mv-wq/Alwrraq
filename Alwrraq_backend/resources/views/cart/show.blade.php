@@ -683,7 +683,7 @@
                                                 <td data-label="التصميم"><span class="detail-value">{{ $cartOrder->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</span></td>
                                                 <td data-label="الإجراء">
                                                     <a class="edit-file-button" href="{{ $cartOrder->resumeDraft ? route('resume.edit', $cartOrder->resumeDraft) : route('resume.landing') }}">تعديل</a>
-                                                    @if($cartOrder->resumeDraft)<a class="view-file-button" href="{{ route('resume.preview', $cartOrder->resumeDraft) }}" target="_blank">معاينة محمية</a>@endif
+                                                    @if($cartOrder->resumeDraft)<a class="view-file-button" href="{{ route('resume.preview', ['resumeDraft' => $cartOrder->resumeDraft, 'from' => 'cart']) }}">معاينة محمية</a>@endif
                                                 </td>
                                             </tr></tbody></table>
                                         </div>

@@ -10,12 +10,19 @@
         .template-royal_gold .cv-side{background:linear-gradient(160deg,#17120a,#72561b)}.template-royal_gold .cv-main{border-block:12px solid #b89236}.template-royal_gold .cv-main h1,.template-royal_gold .cv-job,.template-royal_gold .cv-section h3{color:#9a741f}.template-midnight_luxury .cv-side{background:#080f24}.template-midnight_luxury .cv-main{background:#f8fafc;border-top:15px solid #c5a35a}.template-midnight_luxury .cv-main h1,.template-midnight_luxury .cv-job,.template-midnight_luxury .cv-section h3{color:#172554}.template-emerald_signature .cv-side{background:linear-gradient(180deg,#064e3b,#022c22)}.template-emerald_signature .cv-main h1,.template-emerald_signature .cv-job,.template-emerald_signature .cv-section h3{color:#047857}.template-emerald_signature .cv-photo{border-color:#a7f3d0}.template-modern_silk .cv-layout{display:block}.template-modern_silk .cv-side{background:#f5f3ff;color:#312e81;padding:28px 38px;border-top:22px solid #7c3aed}.template-modern_silk .cv-main{padding:26px 38px}.template-modern_silk .cv-photo{width:112px;height:112px;float:inline-start;margin:0 20px 16px 0;border-color:#ddd6fe}.template-modern_silk .cv-side .cv-section h3,.template-modern_silk .cv-main h1,.template-modern_silk .cv-job,.template-modern_silk .cv-section h3{color:#6d28d9}.template-modern_silk .cv-side .cv-item small{color:#64748b}
         @media(max-width:850px){.stage{padding:8px;overflow:hidden}.cv-sheet{width:100%;min-height:auto}.cv-layout{min-height:calc((100vw - 16px)*1.414)}.cv-side{padding:4.2vw 2.8vw}.cv-main{padding:4.8vw 4vw}.cv-photo{width:16vw;height:16vw}.cv-main h1{font-size:4vw}.cv-job{font-size:2.4vw}.cv-section h3{font-size:2.2vw}.cv-item strong{font-size:1.8vw}.cv-item small,.cv-body,.cv-contact{font-size:1.55vw}.cv-watermark span{font-size:4vw}.template-modern_silk .cv-side,.template-modern_silk .cv-main{padding:4vw}}@media print{body{display:none!important}}
         @include('resume._document_css')
+        html,body{max-width:100%;overflow-x:hidden}.toolbar,.stage,.cv-sheet,.cv-layout,.cv-side,.cv-main{min-width:0;max-width:100%}
+        @media(max-width:600px){
+            .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;position:sticky}.toolbar a,.toolbar button{width:100%;min-width:0;padding:10px 8px;font-size:13px;text-align:center}.toolbar .notice{grid-column:1/-1;text-align:center;font-size:12px;line-height:1.6}
+            .stage{width:100%;padding:4px;overflow:hidden}.cv-sheet{width:100%;box-shadow:none}
+        }
     </style>
 </head>
 <body>
 <div class="toolbar">
-    <a href="{{ route('home') }}">الرجوع للخدمات</a>
-    <a href="{{ route('resume.edit', $draft) }}">العودة للسيرة الذاتية</a>
+    <a href="{{ $backUrl }}">{{ $backLabel }}</a>
+    @unless($paid)
+        <a href="{{ route('resume.edit', $draft) }}">العودة لتعديل السيرة الذاتية</a>
+    @endunless
     @if($paid)
         <a class="download" href="{{ route('resume.download.pdf', $draft) }}">تحميل السيرة الذاتية PDF</a>
         @if($draft->image_path)

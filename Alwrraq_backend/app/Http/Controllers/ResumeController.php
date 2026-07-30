@@ -56,11 +56,16 @@ class ResumeController extends Controller
     {
         $this->authorizeDraft($request, $resumeDraft);
         $resumeDraft->load('order');
+        if ($resumeDraft->isPaid()) {
+            return redirect()
+                ->route('resume.preview', $resumeDraft)
+                ->with('status', 'تم إقفال التعديل بعد الدفع، وهذه هي النسخة النهائية.');
+        }
 
         return response()
             ->view('resume.editor', [
                 'draft' => $resumeDraft,
-                'paid' => $resumeDraft->isPaid(),
+                'paid' => false,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
@@ -186,9 +191,20 @@ class ResumeController extends Controller
 
         $resumeDraft->load('order');
         $paid = $resumeDraft->isPaid();
+        $source = $request->string('from')->toString();
+        [$backUrl, $backLabel] = match ($source) {
+            'cart' => [route('cart.index'), 'الرجوع للسلة'],
+            'orders' => [route('orders.index'), 'الرجوع للطلبات'],
+            default => [route('home'), 'الرجوع للخدمات'],
+        };
 
         return response()
-            ->view('resume.preview', ['draft' => $resumeDraft, 'paid' => $paid])
+            ->view('resume.preview', [
+                'draft' => $resumeDraft,
+                'paid' => $paid,
+                'backUrl' => $backUrl,
+                'backLabel' => $backLabel,
+            ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('X-Frame-Options', 'SAMEORIGIN');
     }

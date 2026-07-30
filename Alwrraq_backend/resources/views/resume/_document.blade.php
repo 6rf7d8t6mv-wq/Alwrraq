@@ -81,19 +81,23 @@
                 @endif
             </div>
 
-            @if($personalRows)
-                <section class="cv-section cv-personal-section">
-                    <h3>{{ $isArabic ? 'المعلومات الشخصية' : 'Personal Information' }}</h3>
+            <section class="cv-section cv-personal-section">
+                <div class="cv-personal-identity">
+                    <h1>{{ $personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name') }}</h1>
+                    <div class="cv-job">{{ $personal['job_title'] ?? ($isArabic ? 'المسمى الوظيفي' : 'Job title') }}</div>
+                </div>
+                <h3>{{ $isArabic ? 'المعلومات الشخصية' : 'Personal Information' }}</h3>
+                @if($personalRows)
                     <div class="cv-personal-list">
                         @foreach($personalRows as $row)
-                            <div class="cv-personal-row">
+                            <div class="cv-personal-row {{ $row['label'] === $labels['email'] ? 'cv-personal-row-email' : '' }}">
                                 <span class="cv-personal-icon">{{ $row['icon'] }}</span>
                                 <div><strong>{{ $row['label'] }}</strong><span>{{ $row['value'] }}</span></div>
                             </div>
                         @endforeach
                     </div>
-                </section>
-            @endif
+                @endif
+            </section>
 
             @foreach($order as $section)
                 @continue(in_array($section, $hidden, true) || !in_array($section, $sideSections, true))
@@ -127,11 +131,6 @@
         </aside>
 
         <main class="cv-main">
-            <header class="cv-heading">
-                <h1>{{ $personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name') }}</h1>
-                <div class="cv-job">{{ $personal['job_title'] ?? ($isArabic ? 'المسمى الوظيفي' : 'Job title') }}</div>
-            </header>
-
             @if($personal['summary'] ?? null)
                 <section class="cv-section cv-summary">
                     <h3>{{ $labels['summary'] }}</h3>

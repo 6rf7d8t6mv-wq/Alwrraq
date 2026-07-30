@@ -175,6 +175,9 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('الخبرات العملية')
             ->assertSee('الدورات والشهادات')
             ->assertSee('العمل التطوعي')
+            ->assertSee('الحقول المعلّمة بنجمة حمراء إلزامية')
+            ->assertSee('validateCurrentStep')
+            ->assertSee('reportValidity')
             ->assertSee('إضافة إلى السلة — 5 ريالات')
             ->assertSee('الرجوع للخدمات')
             ->assertSee('executive_classic')
@@ -224,6 +227,44 @@ class ResumeServiceFlowTest extends TestCase
         ]);
 
         $this->actingAs($other)->get(route('resume.preview', $draft))->assertForbidden();
+    }
+
+    public function test_resume_can_be_edited_before_payment_but_not_after_payment(): void
+    {
+        [$user, $unpaidDraft] = $this->createDraft('unpaid');
+
+        $this->actingAs($user)
+            ->get(route('resume.edit', $unpaidDraft))
+            ->assertOk()
+            ->assertSee('إضافة إلى السلة — 5 ريالات');
+
+        $unpaidDraft->order->forceFill(['payment_status' => 'paid'])->save();
+
+        $this->actingAs($user)
+            ->get(route('resume.edit', $unpaidDraft))
+            ->assertRedirect(route('resume.preview', $unpaidDraft));
+
+        $this->actingAs($user)
+            ->patchJson(route('resume.update', $unpaidDraft), [
+                'template_id' => 'royal_gold',
+                'language' => 'ar',
+                'content' => $unpaidDraft->content,
+                'section_order' => ResumeDraft::DEFAULT_SECTION_ORDER,
+                'hidden_sections' => [],
+            ])
+            ->assertStatus(409);
+    }
+
+    public function test_resume_preview_opened_from_cart_returns_to_cart_and_hides_editing_after_payment(): void
+    {
+        [$user, $draft] = $this->createDraft('paid');
+
+        $this->actingAs($user)
+            ->get(route('resume.preview', ['resumeDraft' => $draft, 'from' => 'cart']))
+            ->assertOk()
+            ->assertSee('الرجوع للسلة')
+            ->assertSee(route('cart.index'), false)
+            ->assertDontSee('العودة لتعديل السيرة الذاتية');
     }
 
     public function test_customer_can_save_any_available_luxury_template(): void
@@ -313,6 +354,7 @@ class ResumeServiceFlowTest extends TestCase
             ->assertOk()
             ->assertSee('إنشاء سيرة ذاتية احترافية')
             ->assertSee('التنفيذي الفاخر')
+            ->assertSee('from=cart', false)
             ->assertSee('تطبيق الخصم');
 
         $order->forceFill([

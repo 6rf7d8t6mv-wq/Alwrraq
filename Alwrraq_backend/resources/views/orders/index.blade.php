@@ -692,13 +692,13 @@
                                         </div>
                                         @if($order->resumeDraft)
                                             <div class="modal-actions">
-                                                <a class="action ghost" href="{{ route('resume.preview', $order->resumeDraft) }}">معاينة السيرة الذاتية</a>
+                                                <a class="action ghost" href="{{ route('resume.preview', ['resumeDraft' => $order->resumeDraft, 'from' => 'orders']) }}">معاينة السيرة الذاتية</a>
                                                 @if($order->payment_status === 'paid')
                                                     <a class="action secondary" href="{{ route('resume.download.pdf', $order->resumeDraft) }}">تحميل السيرة الذاتية PDF</a>
                                                     @if($order->resumeDraft->image_path)
                                                         <a class="action secondary" href="{{ route('resume.download.image', $order->resumeDraft) }}">تحميل السيرة الذاتية كصورة</a>
                                                     @else
-                                                        <a class="action secondary" href="{{ route('resume.preview', $order->resumeDraft) }}">إنشاء نسخة الصورة</a>
+                                                        <a class="action secondary" href="{{ route('resume.preview', ['resumeDraft' => $order->resumeDraft, 'from' => 'orders']) }}">إنشاء نسخة الصورة</a>
                                                     @endif
                                                 @endif
                                             </div>
