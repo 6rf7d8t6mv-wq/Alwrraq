@@ -277,6 +277,26 @@ class ResumeServiceFlowTest extends TestCase
             ->assertDontSee('العودة لتعديل السيرة الذاتية');
     }
 
+    public function test_admin_resume_preview_stays_in_admin_context_and_is_read_only(): void
+    {
+        [, $draft] = $this->createDraft('paid');
+        $admin = User::query()->create([
+            'name' => 'Resume Admin',
+            'phone' => '0511111111',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $this->actingAs($admin)
+            ->get(route('resume.preview', ['resumeDraft' => $draft, 'from' => 'admin']))
+            ->assertOk()
+            ->assertSee('الرجوع لطلبات الإدارة')
+            ->assertSee(route('admin.orders', ['open_order' => $draft->order_id]), false)
+            ->assertSee('معاينة السيرة الذاتية من لوحة الإدارة')
+            ->assertDontSee('العودة لتعديل السيرة الذاتية')
+            ->assertDontSee('إنشاء وتحميل السيرة كصورة');
+    }
+
     public function test_customer_can_save_any_available_luxury_template(): void
     {
         [$user, $draft] = $this->createDraft('unpaid');

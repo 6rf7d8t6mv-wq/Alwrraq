@@ -20,23 +20,25 @@
 <body>
 <div class="toolbar">
     <a href="{{ $backUrl }}">{{ $backLabel }}</a>
-    @unless($paid)
+    @if(! $paid && ! $isAdminViewer)
         <a href="{{ route('resume.edit', $draft) }}">العودة لتعديل السيرة الذاتية</a>
-    @endunless
-    @if($paid)
+    @endif
+    @if($paid && ! $isAdminViewer)
         <a class="download" href="{{ route('resume.download.pdf', $draft) }}">تحميل السيرة الذاتية PDF</a>
         @if($draft->image_path)
             <a class="download" href="{{ route('resume.download.image', $draft) }}">تحميل السيرة الذاتية كصورة</a>
         @else
             <button class="download" id="imageButton" type="button">إنشاء وتحميل السيرة كصورة</button>
         @endif
-    @else
+    @elseif(! $paid)
         <span class="notice">معاينة محمية — التنزيل والتصوير متاحان بعد الدفع</span>
+    @else
+        <span class="notice">معاينة السيرة الذاتية من لوحة الإدارة</span>
     @endif
 </div>
 <div class="stage" id="stage">@include('resume._document', ['pdfMode' => false])</div>
 <div class="capture-guard">المعاينة محمية حتى إتمام الدفع</div>
-@if($paid)
+@if($paid && ! $isAdminViewer)
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
 document.getElementById('imageButton')?.addEventListener('click',async function(){

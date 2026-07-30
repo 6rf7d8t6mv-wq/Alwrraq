@@ -494,7 +494,7 @@
                                         <div class="order-file-field actions-field">
                                             <span>السيرة الذاتية</span>
                                             <div class="file-action-buttons">
-                                                <a class="file-action-button view" href="{{ route('resume.preview', $order->resumeDraft) }}">معاينة السيرة الذاتية</a>
+                                                <a class="file-action-button view" href="{{ route('resume.preview', ['resumeDraft' => $order->resumeDraft, 'from' => 'admin']) }}">معاينة السيرة الذاتية</a>
                                                 @if ($order->payment_status === 'paid')
                                                     <a class="file-action-button download" href="{{ route('resume.download.pdf', $order->resumeDraft) }}" data-direct-file-download>تحميل PDF</a>
                                                 @endif

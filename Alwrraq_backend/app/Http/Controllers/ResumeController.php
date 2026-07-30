@@ -194,10 +194,16 @@ class ResumeController extends Controller
 
         $resumeDraft->load('order');
         $paid = $resumeDraft->isPaid();
+        $isAdminViewer = (int) $resumeDraft->user_id !== (int) $request->user()->id
+            && $request->user()->role === 'admin';
         $source = $request->string('from')->toString();
-        [$backUrl, $backLabel] = match ($source) {
-            'cart' => [route('cart.index'), 'الرجوع للسلة'],
-            'orders' => [route('orders.index'), 'الرجوع للطلبات'],
+        [$backUrl, $backLabel] = match (true) {
+            $isAdminViewer => [
+                route('admin.orders', ['open_order' => $resumeDraft->order_id]),
+                'الرجوع لطلبات الإدارة',
+            ],
+            $source === 'cart' => [route('cart.index'), 'الرجوع للسلة'],
+            $source === 'orders' => [route('orders.index'), 'الرجوع للطلبات'],
             default => [route('home'), 'الرجوع للخدمات'],
         };
 
@@ -207,6 +213,7 @@ class ResumeController extends Controller
                 'paid' => $paid,
                 'backUrl' => $backUrl,
                 'backLabel' => $backLabel,
+                'isAdminViewer' => $isAdminViewer,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('X-Frame-Options', 'SAMEORIGIN');
