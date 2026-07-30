@@ -78,7 +78,7 @@ class ApiController extends Controller
     {
         $cartOrders = Order::query()
             ->where('user_id', Auth::id())
-            ->where('payment_status', '!=', 'paid')
+            ->where('payment_status', 'unpaid')
             ->withCount('files')
             ->with('files')
             ->latest()

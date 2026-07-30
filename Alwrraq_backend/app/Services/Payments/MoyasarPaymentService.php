@@ -87,6 +87,27 @@ class MoyasarPaymentService
             ->json();
     }
 
+    public function voidPayment(string $paymentId): array
+    {
+        return $this->api()
+            ->post('/payments/'.rawurlencode($paymentId).'/void')
+            ->throw()
+            ->json();
+    }
+
+    public function refundPayment(string $paymentId, ?int $amountMinor = null): array
+    {
+        $request = $this->api();
+
+        return $request
+            ->post(
+                '/payments/'.rawurlencode($paymentId).'/refund',
+                $amountMinor === null ? [] : ['amount' => $amountMinor]
+            )
+            ->throw()
+            ->json();
+    }
+
     public function verifyAndComplete(MoyasarPaymentAttempt $attempt, array $remotePayment): bool
     {
         $paymentId = trim((string) data_get($remotePayment, 'id'));

@@ -8,6 +8,7 @@ use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
 use App\Models\User;
 use App\Services\AdminLiveUpdateService;
+use App\Services\Payments\MoyasarCancellationService;
 use App\Services\Payments\MoyasarPaymentService;
 use App\Services\ServicePricingService;
 use App\Services\WordPreviewService;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use RuntimeException;
 use ZipArchive;
 
 class AdminController extends Controller
@@ -46,6 +48,7 @@ class AdminController extends Controller
         'customers_email_update',
         'customers_verify',
         'orders_view',
+        'orders_cancel',
         'orders_delete',
         'files_download',
         'delivered_files_upload',
@@ -86,10 +89,12 @@ class AdminController extends Controller
             'orders' => $orders->count(),
             'new_orders' => $orders
                 ->whereNull('admin_opened_at')
+                ->where('status', '!=', 'cancelled')
                 ->filter(fn ($order) => ! ($order->payment_status === 'paid' && in_array($order->status, ['completed', 'finished'], true)))
                 ->count(),
             'in_progress_orders' => $orders
                 ->whereNotNull('admin_opened_at')
+                ->where('status', '!=', 'cancelled')
                 ->filter(fn ($order) => ! ($order->payment_status === 'paid' && in_array($order->status, ['completed', 'finished'], true)))
                 ->count(),
             'completed_orders' => $orders
@@ -97,7 +102,7 @@ class AdminController extends Controller
                 ->whereIn('status', ['completed', 'finished'])
                 ->count(),
             'paid_orders' => $orders->where('payment_status', 'paid')->count(),
-            'unpaid_orders' => $orders->where('payment_status', '!=', 'paid')->count(),
+            'unpaid_orders' => $orders->where('payment_status', 'unpaid')->count(),
             'customers' => $users->where('role', 'customer')->count(),
             'admins' => $users->where('role', 'admin')->whereNotNull('admin_permissions')->count(),
             'print_total' => $orders->sum('print_total'),
@@ -150,8 +155,8 @@ class AdminController extends Controller
 
         Order::query()
             ->whereNull('admin_notification_seen_at')
-            ->when($paymentView === 'paid', fn ($query) => $query->where('payment_status', 'paid'))
-            ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', '!=', 'paid'))
+            ->when($paymentView === 'paid', fn ($query) => $query->whereIn('payment_status', ['paid', 'voided', 'refunded']))
+            ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', 'unpaid'))
             ->update(['admin_notification_seen_at' => now()]);
 
         $search = trim((string) $request->query('search', ''));
@@ -164,12 +169,12 @@ class AdminController extends Controller
             $hasNewOrders = Order::query()
                 ->where('payment_status', 'paid')
                 ->whereNull('admin_opened_at')
-                ->whereNotIn('status', ['completed', 'finished'])
+                ->whereNotIn('status', ['completed', 'finished', 'cancelled'])
                 ->exists();
             $hasInProgressOrders = Order::query()
                 ->where('payment_status', 'paid')
                 ->whereNotNull('admin_opened_at')
-                ->whereNotIn('status', ['completed', 'finished'])
+                ->whereNotIn('status', ['completed', 'finished', 'cancelled'])
                 ->exists();
 
             $statusFilter = $hasNewOrders ? 'new' : ($hasInProgressOrders ? 'in_progress' : 'completed');
@@ -181,8 +186,8 @@ class AdminController extends Controller
 
         $orders = Order::query()
             ->with(['user', 'files', 'deliveredFiles', 'serviceDefinition'])
-            ->when($paymentView === 'paid', fn ($query) => $query->where('payment_status', 'paid'))
-            ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', '!=', 'paid'))
+            ->when($paymentView === 'paid', fn ($query) => $query->whereIn('payment_status', ['paid', 'voided', 'refunded']))
+            ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', 'unpaid'))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($searchQuery) use ($search) {
                     $searchQuery->where('id', $search)
@@ -194,11 +199,11 @@ class AdminController extends Controller
             })
             ->when($statusFilter === 'new', function ($query) {
                 $query->whereNull('admin_opened_at')
-                    ->whereNotIn('status', ['completed', 'finished']);
+                    ->whereNotIn('status', ['completed', 'finished', 'cancelled']);
             })
             ->when($statusFilter === 'in_progress', function ($query) {
                 $query->whereNotNull('admin_opened_at')
-                    ->whereNotIn('status', ['completed', 'finished']);
+                    ->whereNotIn('status', ['completed', 'finished', 'cancelled']);
             })
             ->when($statusFilter === 'completed', function ($query) {
                 $query->where('payment_status', 'paid')
@@ -208,7 +213,7 @@ class AdminController extends Controller
             ->get();
 
         $paidOrdersCount = Order::query()->where('payment_status', 'paid')->count();
-        $unpaidOrdersCount = Order::query()->where('payment_status', '!=', 'paid')->count();
+        $unpaidOrdersCount = Order::query()->where('payment_status', 'unpaid')->count();
 
         return view('admin.orders', compact(
             'orders',
@@ -224,8 +229,7 @@ class AdminController extends Controller
     public function liveStatus(
         AdminLiveUpdateService $liveUpdates,
         MoyasarPaymentService $moyasar
-    )
-    {
+    ) {
         $this->ensureAdmin();
         $this->ensurePermission('orders_view');
         $moyasar->reconcilePendingAttempts();
@@ -240,7 +244,7 @@ class AdminController extends Controller
         $this->ensureAdmin();
         $this->ensurePermission('discounts_apply');
 
-        if ($order->payment_status === 'paid') {
+        if ($order->payment_status !== 'unpaid') {
             return back()->withErrors(['discount' => 'لا يمكن إضافة خصم بعد دفع الطلب.']);
         }
 
@@ -599,7 +603,7 @@ class AdminController extends Controller
         $zipPath = tempnam(sys_get_temp_dir(), 'alwrraq-images-');
         abort_if($zipPath === false, 500);
 
-        $zip = new ZipArchive();
+        $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
             @unlink($zipPath);
             abort(500);
@@ -686,6 +690,39 @@ class AdminController extends Controller
         return redirect()
             ->route('admin.orders')
             ->with('status', 'تم إكمال آخر طلب غير مكتمل للعميل بنجاح.');
+    }
+
+    public function cancelOrder(
+        Request $request,
+        Order $order,
+        MoyasarCancellationService $cancellations
+    ) {
+        $this->ensureAdmin();
+        $this->ensurePermission('orders_cancel');
+
+        $data = $request->validate([
+            'cancel_reason' => ['required', 'string', 'min:3', 'max:500'],
+        ]);
+
+        try {
+            $cancelledOrder = $cancellations->cancel(
+                $order,
+                $request->user(),
+                trim($data['cancel_reason'])
+            );
+        } catch (RuntimeException $exception) {
+            return back()->withErrors([
+                'order_cancellation' => $exception->getMessage(),
+            ]);
+        }
+
+        $method = $cancelledOrder->refund_method === 'void'
+            ? 'تم عكس العملية بنجاح.'
+            : 'تم استرداد المبلغ بنجاح.';
+
+        return redirect()
+            ->route('admin.orders', ['open_order' => $cancelledOrder->id])
+            ->with('status', 'تم إلغاء الطلب. '.$method);
     }
 
     public function viewFile(Request $request, OrderFile $file, WordPreviewService $wordPreview)
@@ -842,7 +879,7 @@ class AdminController extends Controller
         }
 
         return redirect()
-            ->route($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid')
+            ->route(in_array($order->payment_status, ['paid', 'voided', 'refunded'], true) ? 'admin.orders' : 'admin.orders.unpaid')
             ->with('status', 'تم فتح الطلب.');
     }
 
@@ -878,7 +915,7 @@ class AdminController extends Controller
                 ? $wordPreview->toHtml($absolutePath)
                 : null;
             $backUrl = route(
-                $order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid',
+                in_array($order->payment_status, ['paid', 'voided', 'refunded'], true) ? 'admin.orders' : 'admin.orders.unpaid',
                 ['open_order' => $order->id]
             );
             $rawUrl = route('admin.delivered-files.raw', $deliveredFile);
@@ -960,7 +997,9 @@ class AdminController extends Controller
             }
         }
 
-        $returnRoute = $order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid';
+        $returnRoute = in_array($order->payment_status, ['paid', 'voided', 'refunded'], true)
+            ? 'admin.orders'
+            : 'admin.orders.unpaid';
         $order->delete();
 
         return redirect()->route($returnRoute)->with('status', 'تم حذف الطلب بنجاح.');
@@ -1011,6 +1050,7 @@ class AdminController extends Controller
             'customers_email_update' => 'العملاء: تغيير البريد الإلكتروني',
             'customers_verify' => 'العملاء: توثيق الحساب',
             'orders_view' => 'الطلبات: مشاهدة جميع الطلبات',
+            'orders_cancel' => 'الطلبات: إلغاء الطلب وإعادة المبلغ',
             'orders_delete' => 'الطلبات: حذف الطلب',
             'files_download' => 'الملفات: تحميل ملفات العملاء',
             'delivered_files_upload' => 'ملفات التسليم: إرفاق ملف للعميل',

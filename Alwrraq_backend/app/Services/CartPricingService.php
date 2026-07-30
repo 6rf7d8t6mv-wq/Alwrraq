@@ -8,9 +8,7 @@ use Illuminate\Support\Collection;
 
 class CartPricingService
 {
-    public function __construct(private readonly ServicePricingService $pricing)
-    {
-    }
+    public function __construct(private readonly ServicePricingService $pricing) {}
 
     public function refreshCartTotals(Collection $orders): array
     {
@@ -38,8 +36,8 @@ class CartPricingService
                 + (float) $order->files->sum('cd_price')];
         })->all();
 
-        $cartBaseTotal = array_sum($baseTotals);
-        $cartDiscount = min((float) $orders->sum('discount_amount'), $cartBaseTotal);
+        $cartBaseTotal = round(max(0, array_sum($baseTotals)), 2);
+        $cartDiscount = round(max(0, min((float) $orders->sum('discount_amount'), $cartBaseTotal)), 2);
         $discountAllocations = $this->allocateAmount(
             $cartDiscount,
             array_filter($baseTotals, fn (float $baseTotal) => $baseTotal > 0)
@@ -81,11 +79,11 @@ class CartPricingService
             $orderDeliveryFee = $deliveryAnchor?->id === $order->id ? $deliveryFee : 0;
 
             $totals = [
-                'print_total' => $printTotal,
-                'binding_total' => $bindingTotal,
-                'discount_amount' => $discountAmount,
-                'delivery_fee' => $orderDeliveryFee,
-                'grand_total' => max(0, $baseTotal - $discountAmount) + $orderDeliveryFee,
+                'print_total' => round(max(0, $printTotal), 2),
+                'binding_total' => round(max(0, $bindingTotal), 2),
+                'discount_amount' => round(max(0, $discountAmount), 2),
+                'delivery_fee' => round(max(0, $orderDeliveryFee), 2),
+                'grand_total' => round(max(0, $baseTotal - $discountAmount) + max(0, $orderDeliveryFee), 2),
             ];
 
             if ($sharedDelivery && in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)) {
@@ -119,12 +117,12 @@ class CartPricingService
             'orders_count' => $orders->count(),
             'files_count' => $orders->sum(fn (Order $order) => $order->files->count()),
             'products_count' => $orders->sum(fn (Order $order) => $order->productItems->sum('quantity')),
-            'print_total' => (float) $orders->sum('print_total'),
-            'binding_total' => (float) $orders->sum('binding_total'),
-            'cd_total' => (float) $orders->sum(fn (Order $order) => $order->files->sum('cd_price')),
-            'discount_amount' => (float) $orders->sum('discount_amount'),
-            'delivery_fee' => (float) $orders->sum('delivery_fee'),
-            'grand_total' => (float) $orders->sum('grand_total'),
+            'print_total' => round(max(0, (float) $orders->sum('print_total')), 2),
+            'binding_total' => round(max(0, (float) $orders->sum('binding_total')), 2),
+            'cd_total' => round(max(0, (float) $orders->sum(fn (Order $order) => $order->files->sum('cd_price'))), 2),
+            'discount_amount' => round(max(0, (float) $orders->sum('discount_amount')), 2),
+            'delivery_fee' => round(max(0, (float) $orders->sum('delivery_fee')), 2),
+            'grand_total' => round(max(0, (float) $orders->sum('grand_total')), 2),
         ];
     }
 

@@ -19,7 +19,7 @@ class CustomerOrderController extends Controller
 
         $orders = Order::query()
             ->where('user_id', Auth::id())
-            ->where('payment_status', 'paid')
+            ->whereIn('payment_status', ['paid', 'voided', 'refunded'])
             ->with(['files', 'productItems', 'deliveredFiles', 'serviceDefinition'])
             ->withCount(['files', 'productItems'])
             ->latest()
@@ -39,7 +39,7 @@ class CustomerOrderController extends Controller
     {
         abort_unless($order->user_id === Auth::id(), 403);
 
-        if ($order->payment_status === 'paid') {
+        if ($order->payment_status !== 'unpaid') {
             return back()->withErrors([
                 'order' => 'لا يمكن حذف الطلب بعد إتمام الدفع.',
             ]);

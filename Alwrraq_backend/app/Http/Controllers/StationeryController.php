@@ -43,7 +43,7 @@ class StationeryController extends Controller
         $cartOrder = Order::query()
             ->where('user_id', Auth::id())
             ->where('service_type', 'stationery')
-            ->where('payment_status', '!=', 'paid')
+            ->where('payment_status', 'unpaid')
             ->with('productItems')
             ->first();
         $cartQuantities = $cartOrder?->productItems
@@ -104,7 +104,7 @@ class StationeryController extends Controller
         $order = Order::query()
             ->where('user_id', Auth::id())
             ->where('service_type', 'stationery')
-            ->where('payment_status', '!=', 'paid')
+            ->where('payment_status', 'unpaid')
             ->with('productItems')
             ->first();
 
@@ -129,7 +129,7 @@ class StationeryController extends Controller
     public function removeItem(Request $request, OrderProductItem $item)
     {
         $order = $item->order;
-        abort_unless($order->user_id === Auth::id() && $order->service_type === 'stationery' && $order->payment_status !== 'paid', 403);
+        abort_unless($order->user_id === Auth::id() && $order->service_type === 'stationery' && $order->payment_status === 'unpaid', 403);
 
         $item->delete();
         if ($order->productItems()->doesntExist()) {

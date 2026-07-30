@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\MoyasarPaymentAttempt;
+use App\Services\Payments\MoyasarCancellationService;
 use App\Services\Payments\MoyasarPaymentService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -80,8 +81,11 @@ class MoyasarPaymentController extends Controller
             : $this->resultRedirect(false, 'لم تكتمل عملية الدفع في ميسر.');
     }
 
-    public function webhook(Request $request, MoyasarPaymentService $moyasar): JsonResponse
-    {
+    public function webhook(
+        Request $request,
+        MoyasarPaymentService $moyasar,
+        ?MoyasarCancellationService $cancellations = null
+    ): JsonResponse {
         $expectedSecret = (string) config('payments.moyasar.webhook_secret');
         $expectedSecretHash = (string) config('payments.moyasar.webhook_secret_hash');
         $providedSecret = (string) $request->input('secret_token');
@@ -96,6 +100,28 @@ class MoyasarPaymentController extends Controller
         }
 
         $paymentId = trim((string) $request->input('data.id'));
+        $eventType = trim((string) $request->input('type'));
+        if (in_array($eventType, ['payment_voided', 'payment_refunded'], true)) {
+            try {
+                $cancellations ??= app(MoyasarCancellationService::class);
+                $cancellations->confirmWebhook(
+                    $eventType,
+                    (array) $request->input('data'),
+                    trim((string) $request->input('id')) ?: null
+                );
+            } catch (Throwable $exception) {
+                Log::error('Moyasar cancellation webhook confirmation failed.', [
+                    'event_id' => $request->input('id'),
+                    'event_type' => $eventType,
+                    'exception' => $exception::class,
+                ]);
+
+                return response()->json(['message' => 'Webhook confirmation failed'], 500);
+            }
+
+            return response()->json(['received' => true]);
+        }
+
         $reference = trim((string) $request->input('data.metadata.attempt_reference'));
         if ($paymentId === '' || $reference === '') {
             return response()->json(['received' => true]);

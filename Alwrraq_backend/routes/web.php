@@ -205,6 +205,7 @@ Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {
     Route::get('/', [CartController::class, 'showAll'])->name('index');
     Route::get('/payment', [CartController::class, 'payment'])->name('payment');
     Route::post('/payment/moyasar/prepare', [CartController::class, 'prepareMoyasar'])->name('moyasar.prepare');
+    Route::post('/payment/free/confirm', [CartController::class, 'confirmFree'])->name('free.confirm');
     Route::post('/pay', [CartController::class, 'payAll'])->name('pay-all');
     Route::get('/{order}', [CartController::class, 'show'])->name('show');
     Route::patch('/{order}/delivery', [CartController::class, 'updateDelivery'])->name('delivery.update');
@@ -272,6 +273,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::delete('/users/{user}', [AdminController::class, 'destroyUser'])->name('users.destroy');
     Route::patch('/orders/{order}/open', [AdminController::class, 'openOrder'])->name('orders.open');
     Route::patch('/orders/{order}/complete', [AdminController::class, 'completeOrder'])->name('orders.complete');
+    Route::patch('/orders/{order}/cancel', [AdminController::class, 'cancelOrder'])->name('orders.cancel');
     Route::patch('/orders/{order}/discount', [AdminController::class, 'applyOrderDiscount'])->name('orders.discount.apply');
     Route::delete('/orders/{order}', [AdminController::class, 'destroyOrder'])->name('orders.destroy');
     Route::get('/settings', [AdminController::class, 'settings'])->name('settings');

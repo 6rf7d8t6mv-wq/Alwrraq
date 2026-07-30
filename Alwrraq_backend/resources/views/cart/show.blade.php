@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('shared.tab-brand')
-    @if ($paymentPage ?? false)
+    @if (($paymentPage ?? false) && ! ($isFullyDiscounted ?? false))
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.10/dist/moyasar.css">
         <script src="https://cdn.jsdelivr.net/npm/moyasar-payment-form@2.2.10/dist/moyasar.umd.min.js"></script>
     @endif
@@ -968,6 +968,18 @@
                 <div class="paid">لا توجد طلبات بانتظار الدفع.</div>
             @elseif ($missingRequirements->isNotEmpty())
                 <div class="missing-info">أكمل المعلومات المطلوبة من صفحة الخدمة قبل الدفع. الطلب محفوظ وسيظهر في صفحة طلباتي.</div>
+            @elseif ($isFullyDiscounted ?? false)
+                <div class="pay-card">
+                    <h2>تأكيد الطلب</h2>
+                    <p>الإجمالي 0 ريال، وتمت تغطية المبلغ بالكامل بواسطة الخصم. لن يتم إنشاء عملية دفع في ميسر.</p>
+                    <form method="post" action="{{ route('cart.free.confirm') }}">
+                        @csrf
+                        @foreach ($selectedOrderIds as $selectedOrderId)
+                            <input type="hidden" name="order_ids[]" value="{{ $selectedOrderId }}">
+                        @endforeach
+                        <button class="submit-card" type="submit">تأكيد الطلب</button>
+                    </form>
+                </div>
             @else
                 <div class="pay-card moyasar-payment-card">
                     <h2>الدفع الآمن عبر ميسر</h2>
@@ -1306,7 +1318,7 @@
         });
 
     </script>
-    @if (($paymentPage ?? false) && $cartOrders->isNotEmpty() && $missingRequirements->isEmpty())
+    @if (($paymentPage ?? false) && ! ($isFullyDiscounted ?? false) && $cartOrders->isNotEmpty() && $missingRequirements->isEmpty())
         <script>
             (() => {
                 const formElement = document.getElementById('moyasarPaymentForm');

@@ -375,6 +375,11 @@
                             'brown' => 'جلد بني',
                         ];
                         $isPaid = $order->payment_status === 'paid';
+                        $amountState = match ($order->payment_status) {
+                            'voided', 'refunded' => 'تمت إعادة المبلغ',
+                            'paid' => 'مدفوع',
+                            default => 'غير مدفوع',
+                        };
                         $isEffectivelyCompleted = $isPaid && in_array($order->status, ['completed', 'finished'], true);
                         $canCompleteOrder = $isPaid && ! in_array($order->status, ['completed', 'finished', 'cancelled'], true);
                         $displayStatus = $isEffectivelyCompleted
@@ -393,7 +398,7 @@
                             <div><span class="label">تاريخ إنشاء الطلب</span><span data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $orderCreatedAtText }}</span></div>
                             <div class="order-service-field"><span class="label">الخدمة</span><strong class="order-service-name">{{ $order->serviceDefinition?->title ?? $serviceFullNames[$order->service_type] ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong></div>
                             <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
-                            <div><span class="label">الدفع</span><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'google_pay' => 'Google Pay', 'mada' => 'Mada', 'visa' => 'Visa', 'mastercard' => 'Mastercard', 'card' => 'بطاقة'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
+                            <div><span class="label">الدفع</span><span class="badge">{{ $amountState }}</span>{{ $order->payment_method ? ' - ' . (['apple_pay' => 'Apple Pay', 'google_pay' => 'Google Pay', 'mada' => 'Mada', 'visa' => 'Visa', 'mastercard' => 'Mastercard', 'card' => 'بطاقة', 'full_discount' => 'مغطى بالكامل بالخصم'][$order->payment_method] ?? $order->payment_method) : '' }}</div>
                             @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))
                                 <div><span class="label">التوصيل</span>
                                     {{ $deliveryMethodNames[$order->delivery_method] ?? '-' }}
@@ -419,7 +424,7 @@
                                     <br><span class="muted">خصم {{ $order->discount_code }}: {{ $order->discount_amount }} ريال</span>
                                 @endif
                             </div>
-                            @if (($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view')) || auth()->user()->hasAdminPermission('orders_delete') || ($canCompleteOrder && auth()->user()->hasAdminPermission('orders_view')))
+                            @if (($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view')) || ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('orders_cancel')) || auth()->user()->hasAdminPermission('orders_delete') || ($canCompleteOrder && auth()->user()->hasAdminPermission('orders_view')))
                                 <div>
                                     <span class="label">الإجراءات</span>
                                     <div class="compact-actions">
@@ -432,6 +437,14 @@
                                         @endif
                                         @if ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view'))
                                             <button class="invoice-admin-button" type="button" onclick="openAdminModal('فاتورة ضريبية مبسطة #{{ $order->id }}', 'invoice-admin-{{ $order->id }}')">الفاتورة</button>
+                                        @endif
+                                        @if ($order->payment_status === 'paid' && $order->status !== 'cancelled' && $order->payment_method !== 'full_discount' && auth()->user()->hasAdminPermission('orders_cancel'))
+                                            <form method="post" action="{{ route('admin.orders.cancel', $order) }}" onsubmit="const english = document.documentElement.lang === 'en'; const reason = window.prompt(english ? 'Enter the cancellation reason:' : 'اكتب سبب إلغاء الطلب:'); if (!reason || reason.trim().length < 3) { return false; } this.elements.cancel_reason.value = reason.trim(); return window.confirm(english ? 'Are you sure you want to cancel the order and return the amount?' : 'هل أنت متأكد من إلغاء الطلب وإعادة المبلغ؟');">
+                                                @csrf
+                                                @method('patch')
+                                                <input type="hidden" name="cancel_reason" value="">
+                                                <button class="danger small-button" type="submit">إلغاء الطلب</button>
+                                            </form>
                                         @endif
                                         @if (auth()->user()->hasAdminPermission('orders_delete'))
                                             <form method="post" action="{{ route('admin.orders.destroy', $order) }}" onsubmit="return confirm('حذف هذا الطلب وجميع ملفاته؟')">

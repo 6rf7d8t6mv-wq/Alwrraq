@@ -372,6 +372,8 @@
                                     'cancelled' => 'ملغي',
                                 ];
                         $isPaid = $order->payment_status === 'paid';
+                        $isAmountReturned = in_array($order->payment_status, ['voided', 'refunded'], true);
+                        $amountState = $isAmountReturned ? 'تمت إعادة المبلغ' : ($isPaid ? 'مدفوع' : 'غير مدفوع');
                         $isCompleted = $isPaid && $order->status === 'completed';
                         $isCancelled = $order->status === 'cancelled';
                         $displayStatus = $isCompleted
@@ -426,8 +428,8 @@
                                 </td>
                                 <td data-label="الملفات/المنتجات">{{ $order->service_type === 'stationery' ? $order->productItems->sum('quantity') : $order->files_count }}</td>
                                 <td data-label="حالة الدفع" data-mobile-label="الدفع">
-                                    <span class="badge {{ $isPaid ? 'paid' : 'unpaid' }}">
-                                        {{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}
+                                    <span class="badge {{ ($isPaid || $isAmountReturned) ? 'paid' : 'unpaid' }}">
+                                        {{ $amountState }}
                                     </span>
                                 </td>
                                 <td data-label="حالة الطلب" data-mobile-label="الطلب">
@@ -438,7 +440,7 @@
                                 <td class="order-total-cell" data-label="الإجمالي">{{ $order->grand_total }} ريال</td>
                                 <td class="order-date-cell" data-label="التاريخ" data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</td>
                                 <td class="order-actions-cell">
-                                    @if (! $isPaid)
+                                    @if ($order->payment_status === 'unpaid')
                                         <div class="order-discount-box">
                                             <div class="order-discount-title">كود الخصم قبل الدفع</div>
                                             <form class="order-discount-form" method="post" action="{{ route('cart.discount.apply', $order) }}">
@@ -631,7 +633,10 @@
                                         <div class="detail-card full"><span>تفصيل مشروع الرسالة</span><strong>{{ $projectTypes->implode('، ') }}</strong></div>
                                     @endif
                                     <div class="detail-card"><span>حالة الطلب</span><strong>{{ $displayStatus }}</strong></div>
-                                    <div class="detail-card"><span>الدفع</span><strong>{{ $order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع' }}</strong></div>
+                                    <div class="detail-card"><span>حالة المبلغ</span><strong>{{ in_array($order->payment_status, ['voided', 'refunded'], true) ? 'تمت إعادة المبلغ' : ($order->payment_status === 'paid' ? 'مدفوع' : 'غير مدفوع') }}</strong></div>
+                                    @if ($order->payment_method === 'full_discount')
+                                        <div class="detail-card full"><span>تغطية المبلغ</span><strong>الإجمالي 0 ريال، وتمت تغطية المبلغ بالكامل بواسطة الخصم.</strong></div>
+                                    @endif
                                     <div class="detail-card"><span>تاريخ إنشاء الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $createdAtText }}</strong></div>
                                     @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true))
                                         <div class="detail-card full"><span>الاستلام والتوصيل</span><strong>
@@ -736,7 +741,7 @@
                                                         <th>{{ $bindingPriceLabel }}</th>
                                                     @endif
                                                     <th>إجمالي الملف</th>
-                                                    @if ($order->payment_status !== 'paid')
+                                                    @if ($order->payment_status === 'unpaid')
                                                         <th>حذف</th>
                                                     @endif
                                                 </tr>
@@ -767,7 +772,7 @@
                                                         @if ($isAcademicWord)
                                                             <td colspan="20" data-label="الاستخدام">
                                                                 ملف Word للعرض فقط، ولا يدخل ضمن الطباعة أو التجليد أو التسعير.
-                                                                @if ($order->payment_status !== 'paid')
+                                                                @if ($order->payment_status === 'unpaid')
                                                                     <form class="inline-form" method="post" action="{{ url('/order-files/' . $file->id) }}">
                                                                         @csrf
                                                                         @method('delete')
@@ -823,7 +828,7 @@
                                                             <td class="price-cell" data-label="{{ $bindingPriceLabel }}">{{ $file->binding_price }} ريال</td>
                                                         @endif
                                                         <td class="price-cell" data-label="إجمالي الملف">{{ $file->total_price }} ريال</td>
-                                                        @if ($order->payment_status !== 'paid')
+                                                        @if ($order->payment_status === 'unpaid')
                                                             <td data-label="حذف">
                                                                 <form class="inline-form" method="post" action="{{ url('/order-files/' . $file->id) }}">
                                                                     @csrf
@@ -860,16 +865,19 @@
                                         <div class="total-card"><span>رسوم التوصيل</span><strong>{{ $order->delivery_fee }} ريال</strong></div>
                                     @endif
                                     <div class="total-card"><span>الإجمالي</span><strong>{{ $order->grand_total }} ريال</strong></div>
+                                    @if ($order->payment_method === 'full_discount')
+                                        <div class="total-card"><span>طريقة الإتمام</span><strong>مغطى بالكامل بالخصم</strong></div>
+                                    @endif
                                 </div>
 
                                 <div class="modal-actions">
-                                    @if ($order->payment_status !== 'paid' && $order->files_count > 0)
+                                    @if ($order->payment_status === 'unpaid' && $order->files_count > 0)
                                         <a class="action secondary" href="{{ route('cart.show', $order) }}">إكمال الدفع</a>
                                     @endif
                                     @if ($order->payment_status === 'paid')
                                         <button class="action invoice-button" type="button" onclick="closeOrderModal(null, 'orderModal{{ $order->id }}'); openOrderModal('invoiceModal{{ $order->id }}')">الفاتورة</button>
                                     @endif
-                                    @if ($order->payment_status !== 'paid')
+                                    @if ($order->payment_status === 'unpaid')
                                         <form class="inline-form" method="post" action="{{ route('orders.destroy', $order) }}" onsubmit="return confirm('هل تريد حذف هذا الطلب وجميع ملفاته؟')">
                                             @csrf
                                             @method('delete')

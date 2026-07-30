@@ -544,7 +544,7 @@ class FileUploadController extends Controller
 
         $order = $file->order;
 
-        if ($order->payment_status === 'paid' && Auth::user()?->role !== 'admin') {
+        if ($order->payment_status !== 'unpaid' && Auth::user()?->role !== 'admin') {
             if (request()->expectsJson()) {
                 return response()->json([
                     'success' => false,
@@ -565,7 +565,7 @@ class FileUploadController extends Controller
             unlink($absolutePath);
         }
 
-        $orderDeleted = $order->payment_status !== 'paid' && $order->files()->doesntExist();
+        $orderDeleted = $order->payment_status === 'unpaid' && $order->files()->doesntExist();
 
         if ($orderDeleted) {
             $order->delete();

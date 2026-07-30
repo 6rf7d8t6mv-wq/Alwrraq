@@ -17,6 +17,13 @@ class Order extends Model
         'payment_method',
         'payment_reference',
         'paid_at',
+        'refund_method',
+        'refunded_amount',
+        'cancelled_by',
+        'cancelled_at',
+        'cancel_reason',
+        'refunded_at',
+        'voided_at',
         'print_total',
         'binding_total',
         'discount_code',
@@ -50,6 +57,9 @@ class Order extends Model
     {
         return [
             'paid_at' => 'datetime',
+            'cancelled_at' => 'datetime',
+            'refunded_at' => 'datetime',
+            'voided_at' => 'datetime',
             'admin_opened_at' => 'datetime',
             'admin_notification_seen_at' => 'datetime',
             'customer_notification_seen_at' => 'datetime',
@@ -60,6 +70,7 @@ class Order extends Model
             'discount_amount' => 'decimal:2',
             'delivery_fee' => 'decimal:2',
             'grand_total' => 'decimal:2',
+            'refunded_amount' => 'decimal:2',
         ];
     }
 
@@ -96,6 +107,11 @@ class Order extends Model
     public function discountApplier(): BelongsTo
     {
         return $this->belongsTo(User::class, 'discount_applied_by');
+    }
+
+    public function canceller(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function baseTotal(): float

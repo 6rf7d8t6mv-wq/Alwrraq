@@ -96,6 +96,7 @@
         'visa' => 'Visa',
         'mastercard' => 'Mastercard',
         'card' => 'بطاقة بنكية',
+        'full_discount' => 'مغطى بالكامل بالخصم',
     ][$order->payment_method] ?? ($order->payment_method ?: '-');
     $deliveryMethodNames = [
         'branch_pickup' => 'استلام من الفرع',

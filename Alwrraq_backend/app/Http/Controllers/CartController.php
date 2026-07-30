@@ -9,6 +9,7 @@ use App\Services\Payments\MoyasarPaymentService;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -21,9 +22,10 @@ class CartController extends Controller
         $cartSummary = $cartPricing->refreshCartTotals($cartOrders);
         $servicePricing = $servicePricingService->all();
         $paymentPage = false;
+        $isFullyDiscounted = false;
 
         return response()
-            ->view('cart.show', compact('cartOrders', 'cartSummary', 'servicePricing', 'paymentPage'))
+            ->view('cart.show', compact('cartOrders', 'cartSummary', 'servicePricing', 'paymentPage', 'isFullyDiscounted'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -56,9 +58,10 @@ class CartController extends Controller
         $cartSummary = $cartPricing->refreshCartTotals($cartOrders);
         $servicePricing = $servicePricingService->all();
         $paymentPage = true;
+        $isFullyDiscounted = $this->isFullyDiscounted($cartSummary);
 
         return response()
-            ->view('cart.show', compact('cartOrders', 'cartSummary', 'servicePricing', 'paymentPage', 'selectedOrderIds'))
+            ->view('cart.show', compact('cartOrders', 'cartSummary', 'servicePricing', 'paymentPage', 'selectedOrderIds', 'isFullyDiscounted'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('Pragma', 'no-cache')
             ->header('Expires', '0');
@@ -87,11 +90,20 @@ class CartController extends Controller
         $cartOrders = $this->cartOrders()
             ->whereIn('id', $selectedOrderIds)
             ->values();
+        $cartSummary = $cartPricing->summary($cartOrders);
+        $isFullyDiscounted = $this->isFullyDiscounted($cartSummary);
 
         foreach ($cartOrders as $order) {
-            if ($message = $this->orderPaymentBlockMessage($order)) {
+            if ($message = $this->orderPaymentBlockMessage($order, $isFullyDiscounted)) {
                 return response()->json(['message' => 'خدمة '.$order->service_type.': '.$message], 422);
             }
+        }
+
+        if ($isFullyDiscounted) {
+            return response()->json([
+                'message' => 'هذا الطلب مغطى بالكامل بالخصم ولا يحتاج إلى بوابة دفع.',
+                'confirm_url' => route('cart.free.confirm'),
+            ], 409);
         }
 
         if (! $moyasar->isConfigured()) {
@@ -145,6 +157,111 @@ class CartController extends Controller
                 'environment' => config('payments.moyasar.google_pay_environment', 'TEST'),
             ] : null,
         ]);
+    }
+
+    public function confirmFree(Request $request, CartPricingService $cartPricing)
+    {
+        $selectedOrderIds = $this->selectedOrderIds($request);
+        if ($selectedOrderIds->isEmpty()) {
+            return redirect()->route('cart.index')->withErrors([
+                'order' => 'حدد طلبًا واحدًا على الأقل للتأكيد.',
+            ]);
+        }
+
+        $result = DB::transaction(function () use ($request, $selectedOrderIds, $cartPricing): array {
+            $orders = Order::query()
+                ->where('user_id', $request->user()->id)
+                ->whereIn('id', $selectedOrderIds)
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get();
+
+            if ($orders->count() !== $selectedOrderIds->count()) {
+                throw ValidationException::withMessages([
+                    'order' => 'تعذر العثور على جميع الطلبات المحددة.',
+                ]);
+            }
+
+            $alreadyConfirmed = $orders->every(fn (Order $order): bool => $order->payment_status === 'paid'
+                && $order->payment_method === 'full_discount'
+                && round(max(0, (float) $order->grand_total), 2) === 0.0);
+
+            if ($alreadyConfirmed) {
+                return [
+                    'confirmed' => true,
+                    'order_id' => $orders->first()->id,
+                ];
+            }
+
+            if ($orders->contains(fn (Order $order): bool => $order->payment_status !== 'unpaid')) {
+                throw ValidationException::withMessages([
+                    'order' => 'تم إتمام أحد الطلبات المحددة مسبقًا.',
+                ]);
+            }
+
+            $orders->load(['files', 'productItems', 'serviceDefinition']);
+            $cartSummary = $cartPricing->refreshCartTotals($orders);
+
+            foreach ($orders as $order) {
+                if ($message = $this->orderPaymentBlockMessage($order, true)) {
+                    throw ValidationException::withMessages([
+                        'order' => 'خدمة '.$order->service_type.': '.$message,
+                    ]);
+                }
+            }
+
+            $finalAmount = round(max(0, (float) $cartSummary['grand_total']), 2);
+            if ($finalAmount > 0) {
+                return [
+                    'confirmed' => false,
+                    'order_ids' => $selectedOrderIds->all(),
+                ];
+            }
+
+            $discountAmount = round(max(0, (float) $cartSummary['discount_amount']), 2);
+            $amountBeforeDiscount = round(max(
+                0,
+                (float) $cartSummary['print_total']
+                    + (float) $cartSummary['binding_total']
+                    + (float) $cartSummary['cd_total']
+                    + (float) $cartSummary['delivery_fee']
+            ), 2);
+
+            if ($amountBeforeDiscount <= 0 || $discountAmount <= 0) {
+                throw ValidationException::withMessages([
+                    'order' => 'لا يمكن تأكيد طلب مجاني بدون خصم يغطي المبلغ بالكامل.',
+                ]);
+            }
+
+            $paidAt = now();
+            foreach ($orders as $order) {
+                $order->forceFill([
+                    'status' => 'processing',
+                    'payment_status' => 'paid',
+                    'payment_method' => 'full_discount',
+                    'payment_reference' => null,
+                    'paid_at' => $paidAt,
+                    'grand_total' => round(max(0, (float) $order->grand_total), 2),
+                ])->save();
+            }
+
+            return [
+                'confirmed' => true,
+                'order_id' => $orders->first()->id,
+            ];
+        }, 3);
+
+        if (! $result['confirmed']) {
+            return redirect()->route('cart.payment', [
+                'order_ids' => $result['order_ids'],
+            ])->withErrors([
+                'payment' => 'أصبح المبلغ أكبر من صفر. أكمل الدفع عبر ميسر.',
+            ]);
+        }
+
+        return redirect()
+            ->route('orders.index', ['open_order' => $result['order_id']])
+            ->with('status', 'تم تأكيد الطلب بنجاح، وتمت تغطية المبلغ بالكامل بواسطة الخصم.');
     }
 
     public function payAll()
@@ -224,7 +341,7 @@ class CartController extends Controller
     {
         $cartQuery = Order::query()
             ->where('user_id', Auth::id())
-            ->where('payment_status', '!=', 'paid');
+            ->where('payment_status', 'unpaid');
 
         (clone $cartQuery)
             ->whereDoesntHave('files')
@@ -251,7 +368,7 @@ class CartController extends Controller
     {
         $this->authorizeOrder($order);
 
-        if ($order->payment_status === 'paid') {
+        if ($order->payment_status !== 'unpaid') {
             return $this->discountError($request, 'لا يمكن تطبيق خصم بعد دفع الطلب.');
         }
 
@@ -348,7 +465,7 @@ class CartController extends Controller
 
     private function orderPaymentBlockMessage(Order $order, bool $allowZeroTotal = false): ?string
     {
-        if ($order->payment_status === 'paid') {
+        if ($order->payment_status !== 'unpaid') {
             return 'تم دفع هذا الطلب مسبقًا.';
         }
 
@@ -403,4 +520,11 @@ class CartController extends Controller
         return null;
     }
 
+    private function isFullyDiscounted(array $cartSummary): bool
+    {
+        $finalAmount = round(max(0, (float) ($cartSummary['grand_total'] ?? 0)), 2);
+        $discountAmount = round(max(0, (float) ($cartSummary['discount_amount'] ?? 0)), 2);
+
+        return $finalAmount === 0.0 && $discountAmount > 0;
+    }
 }
