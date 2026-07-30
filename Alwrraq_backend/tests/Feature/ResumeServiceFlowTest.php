@@ -335,6 +335,9 @@ class ResumeServiceFlowTest extends TestCase
     {
         Storage::fake('local');
         [$user, $draft] = $this->createDraft('paid');
+        $invalidPath = 'private/resumes/final/resume-'.$draft->id.'.pdf';
+        Storage::disk('local')->put($invalidPath, 'invalid cached file');
+        $draft->forceFill(['pdf_path' => $invalidPath])->save();
 
         $response = $this->actingAs($user)->get(route('resume.download.pdf', $draft));
 
