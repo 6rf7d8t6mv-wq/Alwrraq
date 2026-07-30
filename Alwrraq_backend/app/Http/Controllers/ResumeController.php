@@ -69,7 +69,7 @@ class ResumeController extends Controller
     {
         $this->authorizeEditableDraft($request, $resumeDraft);
         $data = $request->validate([
-            'template_id' => ['required', Rule::in(['executive_classic'])],
+            'template_id' => ['required', Rule::in(array_keys(ResumeDraft::TEMPLATES))],
             'language' => ['required', Rule::in(['ar', 'en'])],
             'content' => ['required', 'array'],
             'content.personal.full_name' => ['nullable', 'string', 'max:150'],
@@ -263,7 +263,7 @@ class ResumeController extends Controller
         if (blank($personal['phone'] ?? null) && blank($personal['email'] ?? null)) {
             $errors['contact'] = 'أدخل رقم الجوال أو البريد الإلكتروني على الأقل.';
         }
-        if ($draft->template_id !== 'executive_classic') {
+        if (! array_key_exists($draft->template_id, ResumeDraft::TEMPLATES)) {
             $errors['template_id'] = 'اختر تصميم السيرة الذاتية.';
         }
         if ($errors) {

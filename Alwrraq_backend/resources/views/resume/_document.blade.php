@@ -30,7 +30,7 @@
             : route('resume.preview', [$draft, 'photo' => 1]);
     }
 @endphp
-<div class="cv-sheet" dir="{{ $isArabic ? 'rtl' : 'ltr' }}">
+<div class="cv-sheet template-{{ $draft->template_id }}" dir="{{ $isArabic ? 'rtl' : 'ltr' }}">
     <div class="cv-layout">
         <aside class="cv-side">
             @if($photoSource)<img class="cv-photo" src="{{ $photoSource }}" alt="">@endif

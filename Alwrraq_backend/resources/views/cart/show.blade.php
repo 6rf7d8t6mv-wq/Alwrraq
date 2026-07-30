@@ -680,7 +680,7 @@
                                             <table><tbody><tr>
                                                 <td data-label="الخدمة"><span class="detail-value">إنشاء سيرة ذاتية احترافية</span></td>
                                                 <td data-label="اللغة"><span class="detail-value">{{ $cartOrder->resumeDraft?->language === 'en' ? 'English' : 'العربية' }}</span></td>
-                                                <td data-label="التصميم"><span class="detail-value">التصميم التنفيذي الفاخر</span></td>
+                                                <td data-label="التصميم"><span class="detail-value">{{ $cartOrder->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</span></td>
                                                 <td data-label="الإجراء">
                                                     <a class="edit-file-button" href="{{ $cartOrder->resumeDraft ? route('resume.edit', $cartOrder->resumeDraft) : route('resume.landing') }}">تعديل</a>
                                                     @if($cartOrder->resumeDraft)<a class="view-file-button" href="{{ route('resume.preview', $cartOrder->resumeDraft) }}" target="_blank">معاينة محمية</a>@endif

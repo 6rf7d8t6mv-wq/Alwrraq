@@ -10,13 +10,13 @@
     </style>
 </head>
 <body>
-<header class="top"><div class="top-inner"><div class="brand">الورّاق</div><nav class="nav"><a href="{{ route('home') }}">الرئيسية</a><a href="{{ route('cart.index') }}">السلة</a><a href="{{ route('orders.index') }}">طلباتي</a></nav></div></header>
+<header class="top"><div class="top-inner"><div class="brand">الورّاق</div><nav class="nav"><a href="{{ route('home') }}">الرجوع للخدمات</a><a href="{{ route('cart.index') }}">السلة</a><a href="{{ route('orders.index') }}">طلباتي</a></nav></div></header>
 <main class="page">
     <section class="hero">
         <div class="copy">
             <span class="eyebrow">خدمة رقمية احترافية</span>
             <h1>إنشاء سيرة ذاتية احترافية</h1>
-            <p>أنشئ سيرتك الذاتية بتصميم فاخر واحترافي، أدخل بياناتك وشاهد النتيجة مباشرة، ثم ادفع وحمّل سيرتك الذاتية بصيغة PDF أو صورة عالية الجودة.</p>
+            <p>أنشئ سيرتك الذاتية واختر من مجموعة تصاميم فاخرة، ثم أضفها إلى السلة وطبّق كود الخصم وادفع من خلال نظام السلة المعتاد. بعد إتمام الطلب يمكنك عرضها وتحميلها بصيغة PDF أو صورة عالية الجودة من صفحة طلباتي.</p>
             <div class="price">5 ريالات</div>
             <form method="post" action="{{ route('resume.start') }}">
                 @csrf

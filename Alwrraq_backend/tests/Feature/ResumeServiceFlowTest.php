@@ -89,6 +89,18 @@ class ResumeServiceFlowTest extends TestCase
             $table->decimal('total_price', 10, 2)->default(0);
             $table->timestamps();
         });
+        Schema::create('order_delivered_files', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('order_id');
+            $table->string('original_name');
+            $table->string('stored_name');
+            $table->string('path');
+            $table->string('mime')->nullable();
+            $table->unsignedBigInteger('size')->default(0);
+            $table->unsignedBigInteger('uploaded_by')->nullable();
+            $table->timestamp('customer_downloaded_at')->nullable();
+            $table->timestamps();
+        });
         Schema::create('resume_drafts', function (Blueprint $table): void {
             $table->id();
             $table->unsignedBigInteger('user_id');
@@ -110,6 +122,7 @@ class ResumeServiceFlowTest extends TestCase
     protected function tearDown(): void
     {
         Schema::dropIfExists('resume_drafts');
+        Schema::dropIfExists('order_delivered_files');
         Schema::dropIfExists('order_product_items');
         Schema::dropIfExists('order_files');
         Schema::dropIfExists('orders');
@@ -156,7 +169,13 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('الخبرات العملية')
             ->assertSee('الدورات والشهادات')
             ->assertSee('العمل التطوعي')
-            ->assertSee('متابعة إلى الدفع — 5 ريالات');
+            ->assertSee('إضافة إلى السلة — 5 ريالات')
+            ->assertSee('الرجوع للخدمات')
+            ->assertSee('executive_classic')
+            ->assertSee('royal_gold')
+            ->assertSee('midnight_luxury')
+            ->assertSee('emerald_signature')
+            ->assertSee('modern_silk');
     }
 
     public function test_resume_draft_is_private_to_its_owner(): void
@@ -170,6 +189,25 @@ class ResumeServiceFlowTest extends TestCase
         ]);
 
         $this->actingAs($other)->get(route('resume.preview', $draft))->assertForbidden();
+    }
+
+    public function test_customer_can_save_any_available_luxury_template(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+
+        foreach (array_keys(ResumeDraft::TEMPLATES) as $templateId) {
+            $this->actingAs($user)
+                ->patchJson(route('resume.update', $draft), [
+                    'template_id' => $templateId,
+                    'language' => 'ar',
+                    'content' => $draft->content,
+                    'section_order' => ResumeDraft::DEFAULT_SECTION_ORDER,
+                    'hidden_sections' => [],
+                ])
+                ->assertOk();
+
+            $this->assertSame($templateId, $draft->refresh()->template_id);
+        }
     }
 
     public function test_paid_resume_can_be_generated_as_a_real_pdf(): void
