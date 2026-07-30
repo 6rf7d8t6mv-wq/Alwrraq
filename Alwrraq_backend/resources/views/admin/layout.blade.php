@@ -427,7 +427,7 @@
             <nav>
                 <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>
                 @if ($hasOrdersAccess)
-                    <a class="{{ request()->routeIs('admin.orders', 'admin.orders.unpaid') ? 'active' : '' }}" href="{{ route('admin.orders') }}" data-admin-orders-link>
+                    <a class="{{ request()->routeIs('admin.orders', 'admin.orders.unpaid', 'admin.orders.cancelled') ? 'active' : '' }}" href="{{ route('admin.orders') }}" data-admin-orders-link>
                         <span class="nav-icon" aria-hidden="true">🧾</span>
                         <span class="nav-text">الطلبات</span>
                         @if ($hasUnopenedOrdersForAdmin)

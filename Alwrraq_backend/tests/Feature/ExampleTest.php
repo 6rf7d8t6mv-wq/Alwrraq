@@ -159,9 +159,10 @@ class ExampleTest extends TestCase
         $this->assertSame(0.0, $pricing->customServicePrice($systemService));
     }
 
-    public function test_paid_and_unpaid_admin_order_pages_are_private(): void
+    public function test_admin_order_pages_are_private(): void
     {
         $this->get('/admin/orders')->assertRedirect('/login');
         $this->get('/admin/orders/unpaid')->assertRedirect('/login');
+        $this->get('/admin/orders/cancelled')->assertRedirect('/login');
     }
 }

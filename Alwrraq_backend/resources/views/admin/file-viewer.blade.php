@@ -208,7 +208,7 @@
                         <button class="action yellow" type="button" onclick="printInvoiceThenPreview('adminFileInvoice{{ $order->id }}', '{{ route('admin.files.view', ['file' => $file, 'raw' => 1]) }}')">طباعة الملف مباشرة</button>
                     @endif
                     <a class="action blue" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>{{ $isImage ? 'تحميل الصورة' : 'تحميل الملف' }}</a>
-                    <a class="action green" href="{{ route($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid', ['open_order' => $order->id]) }}">العودة لعرض الطلب</a>
+                    <a class="action green" href="{{ route($order->status === 'cancelled' ? 'admin.orders.cancelled' : ($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid'), ['open_order' => $order->id]) }}">العودة لعرض الطلب</a>
                 </div>
             </aside>
 

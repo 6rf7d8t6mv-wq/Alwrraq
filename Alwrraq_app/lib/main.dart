@@ -34,13 +34,10 @@ class AlwrraqWebApp extends StatefulWidget {
 class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   static const String _configuredSiteUrl = String.fromEnvironment(
     'ALWRRAQ_SITE_URL',
+    defaultValue: 'https://alwrraq.com',
   );
   static final Uri _siteUri = Uri.parse(
-    _configuredSiteUrl.isNotEmpty
-        ? '${_configuredSiteUrl.replaceFirst(RegExp(r'/$'), '')}/app'
-        : kReleaseMode
-        ? 'https://alwrraq.com/app'
-        : 'http://127.0.0.1:8000/app',
+    '${_configuredSiteUrl.replaceFirst(RegExp(r'/$'), '')}/app',
   );
   static const MethodChannel _downloadsChannel = MethodChannel(
     'alwrraq/downloads',
@@ -145,8 +142,8 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
             setState(() {
               _isLoading = false;
               _errorMessage = _isEnglish
-                  ? 'Alwrraq could not be opened. Make sure the server is running at 127.0.0.1:8000.'
-                  : 'تعذر فتح تطبيق الورّاق. تأكد أن السيرفر يعمل على 127.0.0.1:8000.';
+                  ? 'Alwrraq could not be opened. Check your internet connection and try again.'
+                  : 'تعذر فتح تطبيق الورّاق. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.';
             });
           },
         ),

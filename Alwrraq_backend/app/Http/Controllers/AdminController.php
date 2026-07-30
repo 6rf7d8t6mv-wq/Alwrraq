@@ -150,13 +150,26 @@ class AdminController extends Controller
         $this->ensurePermission('orders_view');
         $moyasar->reconcilePendingAttempts();
 
-        $paymentView = $request->routeIs('admin.orders.unpaid') ? 'unpaid' : 'paid';
-        $pageRouteName = $paymentView === 'unpaid' ? 'admin.orders.unpaid' : 'admin.orders';
+        $paymentView = match (true) {
+            $request->routeIs('admin.orders.unpaid') => 'unpaid',
+            $request->routeIs('admin.orders.cancelled') => 'cancelled',
+            default => 'paid',
+        };
+        $pageRouteName = match ($paymentView) {
+            'unpaid' => 'admin.orders.unpaid',
+            'cancelled' => 'admin.orders.cancelled',
+            default => 'admin.orders',
+        };
 
         Order::query()
             ->whereNull('admin_notification_seen_at')
-            ->when($paymentView === 'paid', fn ($query) => $query->whereIn('payment_status', ['paid', 'voided', 'refunded']))
-            ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', 'unpaid'))
+            ->when($paymentView === 'paid', fn ($query) => $query
+                ->where('payment_status', 'paid')
+                ->where('status', '!=', 'cancelled'))
+            ->when($paymentView === 'unpaid', fn ($query) => $query
+                ->where('payment_status', 'unpaid')
+                ->where('status', '!=', 'cancelled'))
+            ->when($paymentView === 'cancelled', fn ($query) => $query->where('status', 'cancelled'))
             ->update(['admin_notification_seen_at' => now()]);
 
         $search = trim((string) $request->query('search', ''));
@@ -180,14 +193,19 @@ class AdminController extends Controller
             $statusFilter = $hasNewOrders ? 'new' : ($hasInProgressOrders ? 'in_progress' : 'completed');
         }
 
-        if ($paymentView === 'unpaid') {
+        if ($paymentView !== 'paid') {
             $statusFilter = '';
         }
 
         $orders = Order::query()
             ->with(['user', 'files', 'deliveredFiles', 'serviceDefinition'])
-            ->when($paymentView === 'paid', fn ($query) => $query->whereIn('payment_status', ['paid', 'voided', 'refunded']))
-            ->when($paymentView === 'unpaid', fn ($query) => $query->where('payment_status', 'unpaid'))
+            ->when($paymentView === 'paid', fn ($query) => $query
+                ->where('payment_status', 'paid')
+                ->where('status', '!=', 'cancelled'))
+            ->when($paymentView === 'unpaid', fn ($query) => $query
+                ->where('payment_status', 'unpaid')
+                ->where('status', '!=', 'cancelled'))
+            ->when($paymentView === 'cancelled', fn ($query) => $query->where('status', 'cancelled'))
             ->when($search !== '', function ($query) use ($search) {
                 $query->where(function ($searchQuery) use ($search) {
                     $searchQuery->where('id', $search)
@@ -212,8 +230,15 @@ class AdminController extends Controller
             ->latest()
             ->get();
 
-        $paidOrdersCount = Order::query()->where('payment_status', 'paid')->count();
-        $unpaidOrdersCount = Order::query()->where('payment_status', 'unpaid')->count();
+        $paidOrdersCount = Order::query()
+            ->where('payment_status', 'paid')
+            ->where('status', '!=', 'cancelled')
+            ->count();
+        $unpaidOrdersCount = Order::query()
+            ->where('payment_status', 'unpaid')
+            ->where('status', '!=', 'cancelled')
+            ->count();
+        $cancelledOrdersCount = Order::query()->where('status', 'cancelled')->count();
 
         return view('admin.orders', compact(
             'orders',
@@ -222,7 +247,8 @@ class AdminController extends Controller
             'paymentView',
             'pageRouteName',
             'paidOrdersCount',
-            'unpaidOrdersCount'
+            'unpaidOrdersCount',
+            'cancelledOrdersCount'
         ));
     }
 
@@ -721,7 +747,7 @@ class AdminController extends Controller
             : 'تم استرداد المبلغ بنجاح.';
 
         return redirect()
-            ->route('admin.orders', ['open_order' => $cancelledOrder->id])
+            ->route('admin.orders.cancelled', ['open_order' => $cancelledOrder->id])
             ->with('status', 'تم إلغاء الطلب. '.$method);
     }
 
@@ -879,7 +905,11 @@ class AdminController extends Controller
         }
 
         return redirect()
-            ->route(in_array($order->payment_status, ['paid', 'voided', 'refunded'], true) ? 'admin.orders' : 'admin.orders.unpaid')
+            ->route(
+                $order->status === 'cancelled'
+                    ? 'admin.orders.cancelled'
+                    : ($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid')
+            )
             ->with('status', 'تم فتح الطلب.');
     }
 
@@ -915,7 +945,9 @@ class AdminController extends Controller
                 ? $wordPreview->toHtml($absolutePath)
                 : null;
             $backUrl = route(
-                in_array($order->payment_status, ['paid', 'voided', 'refunded'], true) ? 'admin.orders' : 'admin.orders.unpaid',
+                $order->status === 'cancelled'
+                    ? 'admin.orders.cancelled'
+                    : ($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid'),
                 ['open_order' => $order->id]
             );
             $rawUrl = route('admin.delivered-files.raw', $deliveredFile);
@@ -997,9 +1029,9 @@ class AdminController extends Controller
             }
         }
 
-        $returnRoute = in_array($order->payment_status, ['paid', 'voided', 'refunded'], true)
-            ? 'admin.orders'
-            : 'admin.orders.unpaid';
+        $returnRoute = $order->status === 'cancelled'
+            ? 'admin.orders.cancelled'
+            : ($order->payment_status === 'paid' ? 'admin.orders' : 'admin.orders.unpaid');
         $order->delete();
 
         return redirect()->route($returnRoute)->with('status', 'تم حذف الطلب بنجاح.');

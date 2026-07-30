@@ -1,14 +1,19 @@
 @extends('admin.layout')
 
-@section('title', ($paymentView === 'paid' ? 'الطلبات المدفوعة' : 'الطلبات غير المدفوعة').' - لوحة المدير')
+@section('title', match ($paymentView) {
+    'unpaid' => 'الطلبات غير المدفوعة',
+    'cancelled' => 'الطلبات الملغاة',
+    default => 'الطلبات المدفوعة',
+}.' - لوحة المدير')
 
 @section('content')
     <style>
         .orders-page-title { margin-bottom: 9px; }
-        .payment-order-pages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 9px; }
+        .payment-order-pages { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 9px; }
         .payment-order-page-button { display: flex; align-items: center; justify-content: center; gap: 7px; min-width: 0; min-height: 42px; padding: 8px 11px; border: 2px solid transparent; border-radius: 9px; color: #ffffff; text-decoration: none; font-size: 11px; font-weight: 900; line-height: 1.3; text-align: center; box-shadow: 0 9px 22px rgba(15,23,42,.1); }
         .payment-order-page-button.paid { background: #047857; }
         .payment-order-page-button.unpaid { background: #d97706; }
+        .payment-order-page-button.cancelled { background: #b91c1c; }
         .payment-order-page-button.active { border-color: #0f172a; box-shadow: 0 11px 25px rgba(15,23,42,.16); transform: translateY(-1px); }
         .payment-order-page-count { min-width: 23px; padding: 2px 6px; border-radius: 999px; background: rgba(255,255,255,.94); color: #0f172a; font-size: 9px; line-height: 1.4; }
         .order-filter-bar { margin-bottom: 9px; }
@@ -26,6 +31,8 @@
         .summary-status-box.status-processing .summary-status-value { background: #facc15; color: #422006; }
         .orders-customer-card .order-head > .summary-status-box.status-completed { border-color: #86efac; background: #ecfdf5; }
         .summary-status-box.status-completed .summary-status-value { background: #16a34a; color: #ffffff; }
+        .orders-customer-card .order-head > .summary-status-box.status-cancelled { border-color: #fecaca; background: #fef2f2; }
+        .summary-status-box.status-cancelled .summary-status-value { background: #b91c1c; color: #ffffff; }
         .orders-customer-card .summary-action { align-items: center; justify-content: center; }
         .orders-customer-card .summary-action .small-button { width: auto; min-width: 62px; min-height: 28px; margin: 0; padding: 5px 7px; font-size: 9px; }
         #adminModalBody .panel[data-order-id] { padding: 9px; border: 1px solid #dbe5f1; border-inline-start: 4px solid #2563eb; border-radius: 10px; box-shadow: 0 5px 14px rgba(37, 99, 235, 0.07); }
@@ -179,7 +186,11 @@
 
     <div class="page-title orders-page-title">
         <div>
-            <h1>{{ $paymentView === 'paid' ? 'الطلبات المدفوعة' : 'الطلبات غير المدفوعة' }}</h1>
+            <h1>{{ match ($paymentView) {
+                'unpaid' => 'الطلبات غير المدفوعة',
+                'cancelled' => 'الطلبات الملغاة',
+                default => 'الطلبات المدفوعة',
+            } }}</h1>
         </div>
     </div>
 
@@ -191,6 +202,10 @@
         <a class="payment-order-page-button unpaid {{ $paymentView === 'unpaid' ? 'active' : '' }}" href="{{ route('admin.orders.unpaid') }}">
             <span>الطلبات غير المدفوعة</span>
             <span class="payment-order-page-count">{{ $unpaidOrdersCount }}</span>
+        </a>
+        <a class="payment-order-page-button cancelled {{ $paymentView === 'cancelled' ? 'active' : '' }}" href="{{ route('admin.orders.cancelled') }}">
+            <span>الطلبات الملغاة</span>
+            <span class="payment-order-page-count">{{ $cancelledOrdersCount }}</span>
         </a>
     </div>
 
@@ -265,20 +280,24 @@
                 ->unique()
                 ->map(fn ($service) => $serviceNames[$service] ?? $service)
                 ->implode('، ');
-            $paymentSummary = $paymentView === 'paid'
-                ? 'مدفوع ' . $customerOrders->count()
-                : 'غير مدفوع ' . $customerOrders->count();
+            $paymentSummary = match ($paymentView) {
+                'paid' => 'مدفوع ' . $customerOrders->count(),
+                'cancelled' => 'تمت إعادة المبلغ ' . $customerOrders->count(),
+                default => 'غير مدفوع ' . $customerOrders->count(),
+            };
             $allCustomerOrdersCompleted = $customerOrders->every(
                 fn ($order) => in_array($order->status, ['completed', 'finished'], true)
             );
             $hasNewCustomerOrder = $customerOrders->contains(
                 fn ($order) => ! in_array($order->status, ['completed', 'finished'], true) && blank($order->admin_opened_at)
             );
-            [$customerStatusText, $customerStatusClass] = $allCustomerOrdersCompleted
-                ? ['طلب مكتمل', 'status-completed']
-                : ($hasNewCustomerOrder
-                    ? ['طلب جديد', 'status-new']
-                    : ['طلب قيد العمل', 'status-processing']);
+            [$customerStatusText, $customerStatusClass] = $paymentView === 'cancelled'
+                ? ['طلب ملغي', 'status-cancelled']
+                : ($allCustomerOrdersCompleted
+                    ? ['طلب مكتمل', 'status-completed']
+                    : ($hasNewCustomerOrder
+                        ? ['طلب جديد', 'status-new']
+                        : ['طلب قيد العمل', 'status-processing']));
         @endphp
 
         <div class="order orders-customer-card">
@@ -288,7 +307,7 @@
                 <div><span class="label">آخر طلب</span><span class="order-summary-value" data-local-datetime="{{ $latestOrder->created_at->toIso8601String() }}">{{ $createdAtText }}</span></div>
                 <div><span class="label">نوع الخدمة</span><span class="order-summary-value">{{ $servicesText }}</span></div>
                 <div><span class="label">حالة الدفع</span><span class="order-summary-value">{{ $paymentSummary }}</span></div>
-                @if ($paymentView === 'paid')
+                @if (in_array($paymentView, ['paid', 'cancelled'], true))
                     <div class="summary-status-box {{ $customerStatusClass }}"><span class="label">حالة الطلب</span><span class="summary-status-value">{{ $customerStatusText }}</span></div>
                 @endif
                 <div><span class="label">المبلغ</span><span class="order-summary-value">{{ $customerOrders->sum('grand_total') }} ريال</span></div>
@@ -702,7 +721,11 @@
             </template>
         </div>
     @empty
-        <div class="panel empty">{{ $paymentView === 'paid' ? 'لا توجد طلبات مدفوعة حتى الآن.' : 'لا توجد طلبات غير مدفوعة في سلال العملاء حاليًا.' }}</div>
+        <div class="panel empty">{{ match ($paymentView) {
+            'paid' => 'لا توجد طلبات مدفوعة حتى الآن.',
+            'cancelled' => 'لا توجد طلبات ملغاة حتى الآن.',
+            default => 'لا توجد طلبات غير مدفوعة في سلال العملاء حاليًا.',
+        } }}</div>
     @endforelse
 
     @foreach ($orders as $order)

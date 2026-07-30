@@ -261,6 +261,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
     Route::patch('/service-pricing', [AdminServicePricingController::class, 'update'])->name('service-pricing.update');
     Route::get('/orders', [AdminController::class, 'orders'])->name('orders');
     Route::get('/orders/unpaid', [AdminController::class, 'orders'])->name('orders.unpaid');
+    Route::get('/orders/cancelled', [AdminController::class, 'orders'])->name('orders.cancelled');
     Route::get('/live-status', [AdminController::class, 'liveStatus'])->name('live-status');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
     Route::get('/customers', [AdminController::class, 'customers'])->name('customers');
