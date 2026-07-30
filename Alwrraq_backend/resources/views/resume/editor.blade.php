@@ -12,7 +12,7 @@
         @include('resume._document_css')
         @media(max-width:980px){.workspace{grid-template-columns:1fr}.preview-panel{position:static}.paper-wrap{max-height:none}.resume-page{transform-origin:top center}.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}@media(max-width:580px){.workspace{width:100%;margin:0}.panel{border-radius:0}.resume-page{min-height:auto}.resume-inner{grid-template-columns:34% 66%;min-height:720px}.resume-side{padding:20px 10px}.resume-main{padding:22px 14px}.photo{width:82px;height:82px}.resume-name{font-size:22px}.watermark span{font-size:20px}.top-inner{font-size:13px;align-items:flex-start}.top-nav{justify-content:flex-start}.template-grid{grid-template-columns:1fr 1fr}.template-modern_silk .resume-side,.template-modern_silk .resume-main{padding:18px 14px}}
         @include('resume._customer_header_css')
-        html,body{max-width:100%;overflow-x:hidden}.workspace,.panel,.form-panel,.preview-panel,.paper-wrap,.steps,.grid,.field,.items,.item-card{min-width:0}.field input,.field textarea,.field select{max-width:100%}
+        html,body{max-width:100%;overflow-x:hidden}.workspace,.panel,.form-panel,.preview-panel,.paper-wrap,.steps,.grid,.field,.items,.item-card{min-width:0}.field input,.field textarea,.field select{max-width:100%}.steps{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;overflow:visible;padding-bottom:0}.step{min-width:0;min-height:42px;padding:7px 5px;white-space:normal;font-size:11px;line-height:1.35;text-align:center}
         @media(max-width:980px){
             .workspace{width:min(calc(100% - 20px),760px);margin:12px auto;gap:12px}
             .form-panel,.preview-panel{width:100%;min-width:0}
@@ -22,7 +22,7 @@
             .workspace{width:100%;margin:0;gap:8px;padding:8px}
             .panel{border-radius:13px}.form-panel,.preview-panel{padding:13px}
             .editor-heading{align-items:stretch;flex-direction:column}.editor-heading .secondary{text-align:center;white-space:normal}
-            .steps{margin-inline:-13px;padding-inline:13px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}.steps::-webkit-scrollbar{display:none}.step{scroll-snap-align:start}
+            .steps{grid-template-columns:repeat(4,minmax(0,1fr));margin-inline:0;padding-inline:0;gap:6px;overflow:visible;scroll-snap-type:none}.step{min-height:40px;padding:6px 3px;font-size:10px;scroll-snap-align:none}
             .grid{grid-template-columns:minmax(0,1fr)}.field.full{grid-column:auto}
             .item-head{align-items:flex-start;flex-direction:column}.item-actions{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}.item-actions .small{width:100%}
             .section-control{grid-template-columns:minmax(0,1fr) auto auto}.section-control label{grid-column:1/-1;grid-row:2}
