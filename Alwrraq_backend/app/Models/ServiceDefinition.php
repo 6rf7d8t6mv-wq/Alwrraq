@@ -17,6 +17,7 @@ class ServiceDefinition extends Model
         'research' => 'إنشاء بحث بدون رفع ملف',
         'images' => 'رفع صور أو مجلد صور',
         'stationery' => 'متجر القرطاسية',
+        'resume' => 'إنشاء سيرة ذاتية احترافية',
     ];
 
     protected $fillable = [

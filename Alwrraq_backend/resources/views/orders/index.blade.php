@@ -513,7 +513,7 @@
                             'stationery' => 'القرطاسية',
                             'images' => 'رفع الصور',
                         ];
-                        $noPrintServices = ['formatting', 'research', 'stationery', 'images'];
+                        $noPrintServices = ['formatting', 'research', 'stationery', 'images', 'resume'];
                         $hasDeliveredFile = in_array($order->service_type, ['formatting', 'research'], true) && $order->deliveredFiles->isNotEmpty();
                         $projectNames = [
                             'thesis' => 'رسالة ماجستير',
@@ -570,6 +570,7 @@
                             'formatting' => 'التنسيق',
                             'research' => 'إنشاء البحوث',
                             'images' => 'الخدمة',
+                            'resume' => 'سعر الخدمة',
                             default => 'التجليد',
                         };
                         $bindingPriceLabel = match ($order->service_type) {
@@ -664,7 +665,7 @@
                                 @endif
 
                                 <div class="files-panel">
-                                    <h2 class="files-title">{{ $order->service_type === 'stationery' ? 'المنتجات والتفاصيل والأسعار' : 'الملفات والتفاصيل والأسعار' }}</h2>
+                                    <h2 class="files-title">{{ $order->service_type === 'stationery' ? 'المنتجات والتفاصيل والأسعار' : ($order->service_type === 'resume' ? 'السيرة الذاتية والملفات النهائية' : 'الملفات والتفاصيل والأسعار') }}</h2>
                                     @if ($order->service_type === 'stationery')
                                         <div class="detail-table-wrap">
                                             <table>
@@ -683,6 +684,25 @@
                                                 </tbody>
                                             </table>
                                         </div>
+                                    @elseif ($order->service_type === 'resume')
+                                        <div class="detail-grid">
+                                            <div class="detail-card"><span>اللغة</span><strong>{{ $order->resumeDraft?->language === 'en' ? 'English' : 'العربية' }}</strong></div>
+                                            <div class="detail-card"><span>التصميم</span><strong>التصميم التنفيذي الفاخر</strong></div>
+                                            <div class="detail-card"><span>الحالة</span><strong>{{ $order->payment_status === 'paid' ? 'النسخة النهائية متاحة' : 'معاينة محمية' }}</strong></div>
+                                        </div>
+                                        @if($order->resumeDraft)
+                                            <div class="modal-actions">
+                                                <a class="action ghost" href="{{ route('resume.preview', $order->resumeDraft) }}">معاينة السيرة الذاتية</a>
+                                                @if($order->payment_status === 'paid')
+                                                    <a class="action secondary" href="{{ route('resume.download.pdf', $order->resumeDraft) }}">تحميل السيرة الذاتية PDF</a>
+                                                    @if($order->resumeDraft->image_path)
+                                                        <a class="action secondary" href="{{ route('resume.download.image', $order->resumeDraft) }}">تحميل السيرة الذاتية كصورة</a>
+                                                    @else
+                                                        <a class="action secondary" href="{{ route('resume.preview', $order->resumeDraft) }}">إنشاء نسخة الصورة</a>
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        @endif
                                     @else
                                     <div class="detail-table-wrap">
                                         <table>

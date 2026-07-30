@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Services\CartPricingService;
 use App\Services\Payments\MoyasarPaymentService;
 use App\Services\ServicePricingService;
+use App\Services\ResumeDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -248,6 +249,7 @@ class CartController extends Controller
             return [
                 'confirmed' => true,
                 'order_id' => $orders->first()->id,
+                'order_ids' => $orders->pluck('id')->all(),
             ];
         }, 3);
 
@@ -258,6 +260,17 @@ class CartController extends Controller
                 'payment' => 'أصبح المبلغ أكبر من صفر. أكمل الدفع عبر ميسر.',
             ]);
         }
+
+        Order::query()
+            ->whereIn('id', $result['order_ids'] ?? [$result['order_id']])
+            ->where('service_type', 'resume')
+            ->with('resumeDraft.order')
+            ->get()
+            ->each(function (Order $order): void {
+                if ($order->resumeDraft) {
+                    app(ResumeDocumentService::class)->ensurePdf($order->resumeDraft);
+                }
+            });
 
         return redirect()
             ->route('orders.index', ['open_order' => $result['order_id']])
@@ -344,6 +357,7 @@ class CartController extends Controller
             ->where('payment_status', 'unpaid');
 
         (clone $cartQuery)
+            ->where('service_type', '!=', 'resume')
             ->whereDoesntHave('files')
             ->whereDoesntHave('productItems')
             ->delete();
@@ -469,8 +483,12 @@ class CartController extends Controller
             return 'تم دفع هذا الطلب مسبقًا.';
         }
 
-        if ($order->files->isEmpty() && $order->productItems->isEmpty()) {
+        if ($order->service_type !== 'resume' && $order->files->isEmpty() && $order->productItems->isEmpty()) {
             return 'لا يمكن إتمام طلب فارغ.';
+        }
+
+        if ($order->service_type === 'resume' && ! $order->resumeDraft()->exists()) {
+            return 'بيانات السيرة الذاتية غير موجودة.';
         }
 
         if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true) && blank($order->delivery_method)) {

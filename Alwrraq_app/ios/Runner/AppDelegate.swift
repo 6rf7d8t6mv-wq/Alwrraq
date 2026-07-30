@@ -4,6 +4,7 @@ import WebKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  private var privacyCover: UIView?
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -69,6 +70,27 @@ import WebKit
         result(true)
       }
     }
+
+    guard let securityRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "AlwrraqSecurity") else {
+      return
+    }
+    let securityChannel = FlutterMethodChannel(
+      name: "alwrraq/security",
+      binaryMessenger: securityRegistrar.messenger()
+    )
+    securityChannel.setMethodCallHandler { [weak self] call, result in
+      guard call.method == "setSecureScreen",
+            let arguments = call.arguments as? [String: Any]
+      else {
+        result(FlutterMethodNotImplemented)
+        return
+      }
+      let secure = (arguments["secure"] as? Bool) == true
+      DispatchQueue.main.async {
+        self?.setPrivacyCover(enabled: secure)
+        result(nil)
+      }
+    }
   }
 
   private func safeFileName(_ fileName: String) -> String {
@@ -124,5 +146,52 @@ import WebKit
     }
 
     return controller
+  }
+
+  private func setPrivacyCover(enabled: Bool) {
+    guard let window = activeRootViewController()?.view.window else { return }
+
+    NotificationCenter.default.removeObserver(
+      self,
+      name: UIScreen.capturedDidChangeNotification,
+      object: nil
+    )
+
+    guard enabled else {
+      privacyCover?.removeFromSuperview()
+      privacyCover = nil
+      return
+    }
+
+    let cover = privacyCover ?? {
+      let view = UIView(frame: window.bounds)
+      view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      view.backgroundColor = UIColor(red: 0.059, green: 0.09, blue: 0.165, alpha: 1)
+      let label = UILabel(frame: view.bounds.insetBy(dx: 24, dy: 24))
+      label.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+      label.text = "المعاينة محمية حتى إتمام الدفع"
+      label.textColor = .white
+      label.font = .boldSystemFont(ofSize: 18)
+      label.textAlignment = .center
+      label.numberOfLines = 0
+      view.addSubview(label)
+      privacyCover = view
+      return view
+    }()
+
+    let refreshCover = { [weak self, weak window] in
+      guard let self, let window else { return }
+      if UIScreen.main.isCaptured {
+        if cover.superview == nil { window.addSubview(cover) }
+      } else {
+        cover.removeFromSuperview()
+      }
+    }
+    NotificationCenter.default.addObserver(
+      forName: UIScreen.capturedDidChangeNotification,
+      object: nil,
+      queue: .main
+    ) { _ in refreshCover() }
+    refreshCover()
   }
 }

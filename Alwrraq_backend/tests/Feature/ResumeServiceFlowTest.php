@@ -1,0 +1,297 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Order;
+use App\Models\ResumeDraft;
+use App\Models\ServiceDefinition;
+use App\Models\User;
+use App\Services\ServicePricingService;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class ResumeServiceFlowTest extends TestCase
+{
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Schema::create('users', function (Blueprint $table): void {
+            $table->id();
+            $table->string('name');
+            $table->string('phone')->nullable();
+            $table->string('password')->nullable();
+            $table->string('role')->default('customer');
+            $table->timestamps();
+        });
+        Schema::create('service_definitions', function (Blueprint $table): void {
+            $table->id();
+            $table->string('code')->unique();
+            $table->string('title');
+            $table->text('description');
+            $table->string('icon')->nullable();
+            $table->string('image_path')->nullable();
+            $table->string('workflow_type');
+            $table->boolean('requires_file')->default(false);
+            $table->boolean('is_active')->default(true);
+            $table->boolean('is_system')->default(false);
+            $table->unsignedInteger('sort_order')->default(0);
+            $table->timestamps();
+        });
+        Schema::create('service_price_settings', function (Blueprint $table): void {
+            $table->id();
+            $table->string('key')->unique();
+            $table->decimal('value', 12, 4);
+            $table->unsignedBigInteger('updated_by')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('orders', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('service_definition_id')->nullable();
+            $table->string('service_type');
+            $table->string('status');
+            $table->string('payment_status');
+            $table->string('payment_method')->nullable();
+            $table->string('payment_reference')->nullable();
+            $table->timestamp('paid_at')->nullable();
+            $table->decimal('print_total', 10, 2)->default(0);
+            $table->decimal('binding_total', 10, 2)->default(0);
+            $table->string('discount_code')->nullable();
+            $table->decimal('discount_amount', 10, 2)->default(0);
+            $table->unsignedBigInteger('discount_applied_by')->nullable();
+            $table->timestamp('discount_applied_at')->nullable();
+            $table->string('delivery_method')->nullable();
+            $table->decimal('delivery_fee', 10, 2)->default(0);
+            $table->decimal('grand_total', 10, 2)->default(0);
+            $table->timestamps();
+        });
+        Schema::create('order_files', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('order_id');
+            $table->string('file_type')->nullable();
+            $table->string('image_print_type')->nullable();
+            $table->unsignedInteger('pages')->default(1);
+            $table->unsignedInteger('copies')->default(1);
+            $table->string('print_sides')->nullable();
+            $table->string('page_size')->nullable();
+            $table->string('paper_color')->nullable();
+            $table->decimal('print_price', 10, 2)->default(0);
+            $table->decimal('binding_price', 10, 2)->default(0);
+            $table->decimal('cd_price', 10, 2)->default(0);
+            $table->timestamps();
+        });
+        Schema::create('order_product_items', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('order_id');
+            $table->decimal('total_price', 10, 2)->default(0);
+            $table->timestamps();
+        });
+        Schema::create('resume_drafts', function (Blueprint $table): void {
+            $table->id();
+            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('order_id')->nullable();
+            $table->string('template_id')->default('executive_classic');
+            $table->string('language', 2)->default('ar');
+            $table->json('content')->nullable();
+            $table->json('section_order')->nullable();
+            $table->json('hidden_sections')->nullable();
+            $table->string('photo_path')->nullable();
+            $table->string('status')->default('draft');
+            $table->string('pdf_path')->nullable();
+            $table->string('image_path')->nullable();
+            $table->timestamp('completed_at')->nullable();
+            $table->timestamps();
+        });
+    }
+
+    protected function tearDown(): void
+    {
+        Schema::dropIfExists('resume_drafts');
+        Schema::dropIfExists('order_product_items');
+        Schema::dropIfExists('order_files');
+        Schema::dropIfExists('orders');
+        Schema::dropIfExists('service_price_settings');
+        Schema::dropIfExists('service_definitions');
+        Schema::dropIfExists('users');
+
+        parent::tearDown();
+    }
+
+    public function test_resume_price_is_fixed_at_five_riyals(): void
+    {
+        $service = new ServiceDefinition();
+        $service->forceFill([
+            'id' => 99,
+            'is_system' => false,
+            'workflow_type' => 'resume',
+        ]);
+
+        $this->assertSame(5.0, app(ServicePricingService::class)->customServicePrice($service));
+    }
+
+    public function test_unpaid_resume_preview_has_strong_watermark_and_no_download_buttons(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+
+        $this->actingAs($user)
+            ->get(route('resume.preview', $draft))
+            ->assertOk()
+            ->assertSee('معاينة غير مدفوعة — الورّاق')
+            ->assertSee('معاينة محمية')
+            ->assertDontSee('تحميل السيرة الذاتية PDF');
+    }
+
+    public function test_resume_editor_renders_all_requested_sections(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+
+        $this->actingAs($user)
+            ->get(route('resume.edit', $draft))
+            ->assertOk()
+            ->assertSee('المعلومات الشخصية')
+            ->assertSee('المؤهلات العلمية')
+            ->assertSee('الخبرات العملية')
+            ->assertSee('الدورات والشهادات')
+            ->assertSee('العمل التطوعي')
+            ->assertSee('متابعة إلى الدفع — 5 ريالات');
+    }
+
+    public function test_resume_draft_is_private_to_its_owner(): void
+    {
+        [, $draft] = $this->createDraft('unpaid');
+        $other = User::query()->create([
+            'name' => 'Other Customer',
+            'phone' => '0511111111',
+            'password' => 'password',
+            'role' => 'customer',
+        ]);
+
+        $this->actingAs($other)->get(route('resume.preview', $draft))->assertForbidden();
+    }
+
+    public function test_paid_resume_can_be_generated_as_a_real_pdf(): void
+    {
+        Storage::fake('local');
+        [$user, $draft] = $this->createDraft('paid');
+
+        $response = $this->actingAs($user)->get(route('resume.download.pdf', $draft));
+
+        $response
+            ->assertOk()
+            ->assertDownload('professional-resume-'.$draft->id.'.pdf');
+        $draft->refresh();
+        $this->assertNotNull($draft->pdf_path);
+        Storage::disk('local')->assertExists($draft->pdf_path);
+        $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($draft->pdf_path));
+    }
+
+    public function test_resume_checkout_uses_five_riyal_price_and_full_discount_confirmation(): void
+    {
+        Storage::fake('local');
+        $user = User::query()->create([
+            'name' => 'Resume Customer',
+            'phone' => '0500000000',
+            'password' => 'password',
+            'role' => 'customer',
+        ]);
+        $service = ServiceDefinition::query()->create([
+            'code' => 'resume',
+            'title' => 'إنشاء سيرة ذاتية احترافية',
+            'description' => 'خدمة سيرة ذاتية',
+            'workflow_type' => 'resume',
+            'requires_file' => false,
+            'is_active' => true,
+            'is_system' => false,
+            'sort_order' => 85,
+        ]);
+        $draft = ResumeDraft::query()->create([
+            'user_id' => $user->id,
+            'template_id' => 'executive_classic',
+            'language' => 'ar',
+            'content' => [
+                'personal' => [
+                    'full_name' => 'عميل السيرة',
+                    'job_title' => 'مهندس',
+                    'phone' => '0500000000',
+                ],
+            ],
+            'section_order' => ResumeDraft::DEFAULT_SECTION_ORDER,
+            'hidden_sections' => [],
+            'status' => 'draft',
+        ]);
+
+        $response = $this->actingAs($user)->post(route('resume.checkout', $draft));
+
+        $response->assertRedirect(route('cart.index'));
+        $draft->refresh();
+        $this->assertNotNull($draft->order_id);
+        $this->assertSame('pending_payment', $draft->status);
+        $order = Order::query()->findOrFail($draft->order_id);
+        $this->assertSame($service->id, $order->service_definition_id);
+        $this->assertSame('unpaid', $order->payment_status);
+        $this->assertSame(5.0, (float) $order->grand_total);
+        $this->assertSame(1, Order::query()->where('service_type', 'resume')->count());
+
+        $order->forceFill([
+            'discount_code' => 'FULL5',
+            'discount_amount' => 5,
+            'discount_applied_at' => now(),
+            'grand_total' => 0,
+        ])->save();
+
+        $confirmation = $this->actingAs($user)->post(route('cart.free.confirm'), [
+            'order_ids' => [$order->id],
+        ]);
+
+        $confirmation->assertRedirect(route('orders.index', ['open_order' => $order->id]));
+        $order->refresh();
+        $draft->refresh();
+        $this->assertSame('paid', $order->payment_status);
+        $this->assertSame('full_discount', $order->payment_method);
+        $this->assertSame(0.0, (float) $order->grand_total);
+        $this->assertSame('completed', $order->status);
+        $this->assertNotNull($draft->pdf_path);
+        Storage::disk('local')->assertExists($draft->pdf_path);
+    }
+
+    /**
+     * @return array{User, ResumeDraft}
+     */
+    private function createDraft(string $paymentStatus): array
+    {
+        $user = User::query()->create([
+            'name' => 'Resume Customer',
+            'phone' => '0500000000',
+            'password' => 'password',
+            'role' => 'customer',
+        ]);
+        $order = Order::query()->create([
+            'user_id' => $user->id,
+            'service_type' => 'resume',
+            'status' => 'new',
+            'payment_status' => $paymentStatus,
+            'grand_total' => 5,
+        ]);
+        $draft = ResumeDraft::query()->create([
+            'user_id' => $user->id,
+            'order_id' => $order->id,
+            'template_id' => 'executive_classic',
+            'language' => 'ar',
+            'content' => [
+                'personal' => [
+                    'full_name' => 'عميل السيرة',
+                    'job_title' => 'مهندس',
+                    'phone' => '0500000000',
+                ],
+            ],
+            'section_order' => ResumeDraft::DEFAULT_SECTION_ORDER,
+            'hidden_sections' => [],
+            'status' => 'pending_payment',
+        ]);
+
+        return [$user, $draft];
+    }
+}

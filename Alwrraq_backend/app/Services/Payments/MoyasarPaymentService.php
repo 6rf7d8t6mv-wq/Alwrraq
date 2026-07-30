@@ -6,6 +6,7 @@ use App\Models\MoyasarPaymentAttempt;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\User;
+use App\Services\ResumeDocumentService;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -191,6 +192,26 @@ class MoyasarPaymentService
                 'paid_at' => now(),
             ])->save();
         });
+
+        Order::query()
+            ->whereIn('id', $attempt->order_ids)
+            ->where('service_type', 'resume')
+            ->with('resumeDraft.order')
+            ->get()
+            ->each(function (Order $order): void {
+                if (! $order->resumeDraft) {
+                    return;
+                }
+                try {
+                    app(ResumeDocumentService::class)->ensurePdf($order->resumeDraft);
+                } catch (Throwable $exception) {
+                    Log::error('Paid resume PDF generation failed.', [
+                        'order_id' => $order->id,
+                        'resume_draft_id' => $order->resumeDraft->id,
+                        'error' => $exception->getMessage(),
+                    ]);
+                }
+            });
 
         return true;
     }

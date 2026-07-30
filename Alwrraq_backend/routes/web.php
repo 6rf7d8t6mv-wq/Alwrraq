@@ -15,6 +15,7 @@ use App\Http\Controllers\FileUploadController;
 use App\Http\Controllers\LivePageUpdateController;
 use App\Http\Controllers\MoyasarPaymentController;
 use App\Http\Controllers\PublicAssetController;
+use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\StationeryController;
 use App\Models\Order;
 use App\Models\ServiceDefinition;
@@ -199,6 +200,20 @@ Route::middleware('auth')->prefix('stationery')->name('stationery.')->group(func
     Route::post('/products/{product}/add', [StationeryController::class, 'add'])->name('products.add');
     Route::delete('/products/{product}/remove', [StationeryController::class, 'remove'])->name('products.remove');
     Route::delete('/items/{item}', [StationeryController::class, 'removeItem'])->name('items.destroy');
+});
+
+Route::middleware('auth')->prefix('resume')->name('resume.')->group(function () {
+    Route::get('/', [ResumeController::class, 'landing'])->name('landing');
+    Route::post('/start', [ResumeController::class, 'start'])->name('start');
+    Route::get('/{resumeDraft}/edit', [ResumeController::class, 'edit'])->name('edit');
+    Route::patch('/{resumeDraft}', [ResumeController::class, 'update'])->name('update');
+    Route::post('/{resumeDraft}/photo', [ResumeController::class, 'photo'])->name('photo');
+    Route::delete('/{resumeDraft}/photo', [ResumeController::class, 'destroyPhoto'])->name('photo.destroy');
+    Route::post('/{resumeDraft}/checkout', [ResumeController::class, 'checkout'])->name('checkout');
+    Route::get('/{resumeDraft}/preview', [ResumeController::class, 'preview'])->name('preview');
+    Route::get('/{resumeDraft}/download/pdf', [ResumeController::class, 'downloadPdf'])->name('download.pdf');
+    Route::get('/{resumeDraft}/download/image', [ResumeController::class, 'downloadImage'])->name('download.image');
+    Route::post('/{resumeDraft}/final-image', [ResumeController::class, 'storeFinalImage'])->name('final-image.store');
 });
 
 Route::middleware('auth')->prefix('cart')->name('cart.')->group(function () {

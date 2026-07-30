@@ -234,7 +234,7 @@
 
     @php
         $dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        $noPrintServices = ['formatting', 'research', 'stationery', 'images'];
+        $noPrintServices = ['formatting', 'research', 'stationery', 'images', 'resume'];
         $serviceNames = [
             'notes' => 'مذكرات',
             'books' => 'كتب',
@@ -245,6 +245,7 @@
             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
             'stationery' => 'القرطاسية',
             'images' => 'رفع الصور',
+            'resume' => 'إنشاء سيرة ذاتية احترافية',
         ];
         $serviceFullNames = [
             'notes' => 'طباعة المذكرات وملفات ال PDF',
@@ -256,6 +257,7 @@
             'research' => 'إنشاء بحوث جامعية وأكاديمية ودراسية',
             'stationery' => 'القرطاسية',
             'images' => 'رفع الصور',
+            'resume' => 'إنشاء سيرة ذاتية احترافية',
         ];
         $statusNames = [
             'new' => 'جديد',
@@ -327,6 +329,7 @@
                             'research' => 'إنشاء البحوث',
                             'stationery' => 'المنتجات',
                             'images' => 'الخدمة',
+                            'resume' => 'الخدمة',
                             default => 'التجليد',
                         };
                         $bindingPriceLabel = match ($order->service_type) {
@@ -337,6 +340,7 @@
                             'research' => 'سعر إنشاء البحوث',
                             'stationery' => 'إجمالي المنتجات',
                             'images' => 'سعر الخدمة',
+                            'resume' => 'سعر الخدمة',
                             default => 'سعر التجليد',
                         };
                         $bindingNames = $order->service_type === 'books'
@@ -478,6 +482,27 @@
                         </div>
 
                         <div class="order-detail-section order-files-cards {{ $order->service_type === 'research' ? 'research' : '' }}">
+                            @if ($order->service_type === 'resume' && $order->resumeDraft)
+                                <div class="order-file-card">
+                                    <div class="order-file-field file-name">
+                                        <span>العميل في السيرة الذاتية</span>
+                                        <strong>{{ data_get($order->resumeDraft->content, 'personal.full_name', $order->user->name) }}</strong>
+                                    </div>
+                                    <div class="order-file-field"><span>اللغة</span><strong>{{ $order->resumeDraft->language === 'en' ? 'English' : 'العربية' }}</strong></div>
+                                    <div class="order-file-field"><span>التصميم</span><strong>التصميم التنفيذي الفاخر</strong></div>
+                                    @if (auth()->user()->hasAdminPermission('files_download'))
+                                        <div class="order-file-field actions-field">
+                                            <span>السيرة الذاتية</span>
+                                            <div class="file-action-buttons">
+                                                <a class="file-action-button view" href="{{ route('resume.preview', $order->resumeDraft) }}">معاينة السيرة الذاتية</a>
+                                                @if ($order->payment_status === 'paid')
+                                                    <a class="file-action-button download" href="{{ route('resume.download.pdf', $order->resumeDraft) }}" data-direct-file-download>تحميل PDF</a>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                             @foreach ($order->productItems as $item)
                                 <div class="order-file-card product-order-card">
                                     <div class="order-file-field file-name product-name-field">

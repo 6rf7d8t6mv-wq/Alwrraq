@@ -5,12 +5,14 @@ import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.webkit.CookieManager
+import android.view.WindowManager
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     private val downloadsChannel = "alwrraq/downloads"
+    private val securityChannel = "alwrraq/security"
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -51,6 +53,24 @@ class MainActivity : FlutterActivity() {
                     result.success(downloadManager.enqueue(request))
                 } catch (error: Exception) {
                     result.error("download_failed", error.message, null)
+                }
+            }
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, securityChannel)
+            .setMethodCallHandler { call, result ->
+                if (call.method != "setSecureScreen") {
+                    result.notImplemented()
+                    return@setMethodCallHandler
+                }
+
+                val secure = call.argument<Boolean>("secure") == true
+                runOnUiThread {
+                    if (secure) {
+                        window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    } else {
+                        window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    }
+                    result.success(null)
                 }
             }
     }

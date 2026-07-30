@@ -722,6 +722,8 @@
                         <p class="service-description">{{ $serviceDefinition->description }}</p>
                         @if ($serviceDefinition->workflow_type === 'stationery')
                             <button class="service-entry" type="button" onclick="window.location.href='{{ route('stationery.index') }}'">الدخول للمتجر</button>
+                        @elseif ($serviceDefinition->workflow_type === 'resume')
+                            <button class="service-entry" type="button" onclick="window.location.href='{{ route('resume.landing') }}'">الدخول للخدمة</button>
                         @else
                             <button class="service-entry" type="button" onclick="selectService(@js($serviceDefinition->workflow_type), {{ $serviceDefinition->id }})">الدخول للخدمة</button>
                         @endif

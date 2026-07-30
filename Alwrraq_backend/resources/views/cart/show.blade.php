@@ -597,6 +597,7 @@
                                     'formatting' => 'التنسيق',
                                     'research' => 'إنشاء البحوث',
                                     'images' => 'الخدمة',
+                                    'resume' => 'سعر الخدمة',
                                     default => 'التجليد',
                                 };
                                 $cartBindingPriceLabel = match ($cartOrder->service_type) {
@@ -643,7 +644,7 @@
                                 </div>
 
                                 <div class="cart-section-box">
-                                    <h3>{{ $cartOrder->service_type === 'stationery' ? 'المنتجات والتفاصيل والأسعار' : 'الملفات والتفاصيل والأسعار' }}</h3>
+                                    <h3>{{ $cartOrder->service_type === 'stationery' ? 'المنتجات والتفاصيل والأسعار' : ($cartOrder->service_type === 'resume' ? 'تفاصيل السيرة الذاتية والسعر' : 'الملفات والتفاصيل والأسعار') }}</h3>
                                     @if ($cartOrder->service_type === 'stationery')
                                         <div class="detail-table-wrap">
                                             <table>
@@ -673,6 +674,18 @@
                                                     @endforeach
                                                 </tbody>
                                             </table>
+                                        </div>
+                                    @elseif ($cartOrder->service_type === 'resume')
+                                        <div class="detail-table-wrap">
+                                            <table><tbody><tr>
+                                                <td data-label="الخدمة"><span class="detail-value">إنشاء سيرة ذاتية احترافية</span></td>
+                                                <td data-label="اللغة"><span class="detail-value">{{ $cartOrder->resumeDraft?->language === 'en' ? 'English' : 'العربية' }}</span></td>
+                                                <td data-label="التصميم"><span class="detail-value">التصميم التنفيذي الفاخر</span></td>
+                                                <td data-label="الإجراء">
+                                                    <a class="edit-file-button" href="{{ $cartOrder->resumeDraft ? route('resume.edit', $cartOrder->resumeDraft) : route('resume.landing') }}">تعديل</a>
+                                                    @if($cartOrder->resumeDraft)<a class="view-file-button" href="{{ route('resume.preview', $cartOrder->resumeDraft) }}" target="_blank">معاينة محمية</a>@endif
+                                                </td>
+                                            </tr></tbody></table>
                                         </div>
                                     @elseif ($cartOrder->service_type === 'images')
                                         <div class="cart-image-files">

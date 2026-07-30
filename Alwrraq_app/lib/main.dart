@@ -42,6 +42,9 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   static const MethodChannel _downloadsChannel = MethodChannel(
     'alwrraq/downloads',
   );
+  static const MethodChannel _securityChannel = MethodChannel(
+    'alwrraq/security',
+  );
 
   late final WebViewController _controller;
   var _isLoading = true;
@@ -62,6 +65,19 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           if (_isEnglish == isEnglish) return;
 
           setState(() => _isEnglish = isEnglish);
+        },
+      )
+      ..addJavaScriptChannel(
+        'ResumeSecurity',
+        onMessageReceived: (message) async {
+          final secure = message.message == 'secure';
+          try {
+            await _securityChannel.invokeMethod<void>('setSecureScreen', {
+              'secure': secure,
+            });
+          } on PlatformException {
+            // Web and unsupported platforms still keep the protected watermark.
+          }
         },
       )
       ..setNavigationDelegate(
