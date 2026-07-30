@@ -165,4 +165,19 @@ class ExampleTest extends TestCase
         $this->get('/admin/orders/unpaid')->assertRedirect('/login');
         $this->get('/admin/orders/cancelled')->assertRedirect('/login');
     }
+
+    public function test_restricted_admin_cannot_access_ungranted_management_pages(): void
+    {
+        $admin = User::factory()->make([
+            'role' => 'admin',
+            'admin_permissions' => ['orders_view'],
+        ]);
+
+        $this->actingAs($admin);
+
+        $this->get('/admin')->assertRedirect('/admin/orders');
+        $this->get('/admin/services')->assertForbidden();
+        $this->get('/admin/stationery-products')->assertForbidden();
+        $this->get('/admin/service-pricing')->assertForbidden();
+    }
 }

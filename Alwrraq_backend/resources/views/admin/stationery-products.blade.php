@@ -64,7 +64,9 @@
         <div>
             <h1>منتجات القرطاسية</h1>
         </div>
-        <button class="save" type="button" onclick="openAdminModal('إضافة منتج', 'create-stationery-product')">إضافة منتج</button>
+        @if (auth()->user()->hasAdminPermission('stationery_products_create'))
+            <button class="save" type="button" onclick="openAdminModal('إضافة منتج', 'create-stationery-product')">إضافة منتج</button>
+        @endif
     </div>
 
     <div class="panel compact-management-panel">
@@ -96,11 +98,18 @@
                             <strong class="admin-product-price">{{ $product->price }} ريال</strong>
                         </div>
                         <div class="admin-product-actions">
-                            <button class="ghost" type="button" onclick="openAdminModal('تعديل المنتج', 'edit-stationery-product-{{ $product->id }}')">تعديل</button>
-                            <form method="post" action="{{ route('admin.stationery-products.destroy', $product) }}" onsubmit="return confirm('حذف هذا المنتج؟')">
-                                @csrf @method('delete')
-                                <button class="danger" type="submit">حذف</button>
-                            </form>
+                            @if (auth()->user()->hasAnyAdminPermission(['stationery_products_update', 'stationery_products_price_update']))
+                                <button class="ghost" type="button" onclick="openAdminModal('تعديل المنتج', 'edit-stationery-product-{{ $product->id }}')">تعديل</button>
+                            @endif
+                            @if (auth()->user()->hasAdminPermission('stationery_products_delete'))
+                                <form method="post" action="{{ route('admin.stationery-products.destroy', $product) }}" onsubmit="return confirm('حذف هذا المنتج؟')">
+                                    @csrf @method('delete')
+                                    <button class="danger" type="submit">حذف</button>
+                                </form>
+                            @endif
+                            @if (! auth()->user()->hasAnyAdminPermission(['stationery_products_update', 'stationery_products_price_update', 'stationery_products_delete']))
+                                <span class="muted">عرض فقط</span>
+                            @endif
                         </div>
                     </div>
                 </article>
@@ -110,6 +119,7 @@
         </div>
     </div>
 
+    @if (auth()->user()->hasAdminPermission('stationery_products_create'))
     <template id="create-stationery-product">
         <form method="post" action="{{ route('admin.stationery-products.store') }}" enctype="multipart/form-data">
             @csrf
@@ -124,16 +134,19 @@
             <button class="save" type="submit">حفظ المنتج</button>
         </form>
     </template>
+    @endif
 
+    @if (auth()->user()->hasAnyAdminPermission(['stationery_products_update', 'stationery_products_price_update']))
     @foreach ($products as $product)
         <template id="edit-stationery-product-{{ $product->id }}">
             <form method="post" action="{{ route('admin.stationery-products.update', $product) }}" enctype="multipart/form-data">
                 @csrf @method('patch')
                 <div class="form-grid">
-                    <div><label>اسم المنتج</label><input name="name" value="{{ $product->name }}" required></div>
-                    <div><label>اسم الشركة</label><input name="company_name" value="{{ $product->company_name }}" required></div>
-                    <div><label>نوع المنتج</label><input name="product_type" value="{{ $product->product_type }}" required></div>
-                    <div><label>السعر</label><input name="price" type="number" min="0.01" step="0.01" value="{{ $product->price }}" required></div>
+                    <div><label>اسم المنتج</label><input name="name" value="{{ $product->name }}" required @readonly(! auth()->user()->hasAdminPermission('stationery_products_update'))></div>
+                    <div><label>اسم الشركة</label><input name="company_name" value="{{ $product->company_name }}" required @readonly(! auth()->user()->hasAdminPermission('stationery_products_update'))></div>
+                    <div><label>نوع المنتج</label><input name="product_type" value="{{ $product->product_type }}" required @readonly(! auth()->user()->hasAdminPermission('stationery_products_update'))></div>
+                    <div><label>السعر</label><input name="price" type="number" min="0.01" step="0.01" value="{{ $product->price }}" required @readonly(! auth()->user()->hasAdminPermission('stationery_products_price_update'))></div>
+                    @if (auth()->user()->hasAdminPermission('stationery_products_update'))
                     <div class="full stationery-edit-image">
                         <label>صورة المنتج</label>
                         <div class="stationery-edit-image-preview">
@@ -151,11 +164,15 @@
                         <input name="image" type="file" accept="image/jpeg,image/png,image/webp" data-stationery-image-input>
                     </div>
                     <label class="full"><input name="is_active" type="checkbox" value="1" {{ $product->is_active ? 'checked' : '' }} style="width:auto;"> إظهار المنتج للمستخدمين</label>
+                    @else
+                        <input name="is_active" type="hidden" value="{{ $product->is_active ? 1 : 0 }}">
+                    @endif
                 </div>
                 <button class="save" type="submit">حفظ التعديل</button>
             </form>
         </template>
     @endforeach
+    @endif
 
     <script>
         document.addEventListener('change', (event) => {

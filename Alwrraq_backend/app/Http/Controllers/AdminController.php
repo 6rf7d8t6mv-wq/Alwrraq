@@ -48,6 +48,7 @@ class AdminController extends Controller
         'customers_email_update',
         'customers_verify',
         'orders_view',
+        'orders_complete',
         'orders_cancel',
         'orders_delete',
         'files_download',
@@ -58,11 +59,22 @@ class AdminController extends Controller
         'payments_view',
         'discounts_apply',
         'service_prices_update',
+        'services_view',
+        'services_create',
+        'services_update',
+        'stationery_products_view',
+        'stationery_products_create',
+        'stationery_products_update',
+        'stationery_products_price_update',
+        'stationery_products_delete',
     ];
 
     public function dashboard()
     {
         $this->ensureAdmin();
+        if (! Auth::user()?->hasAdminPermission('reports_view')) {
+            return redirect()->route($this->firstAllowedAdminRoute());
+        }
 
         $orders = Order::query()
             ->with(['user', 'files', 'productItems', 'deliveredFiles', 'serviceDefinition'])
@@ -543,16 +555,35 @@ class AdminController extends Controller
             $sourceUser = User::query()
                 ->where('role', 'admin')
                 ->findOrFail($request->integer('copy_permissions_from'));
+            $delegablePermissions = $this->delegablePermissionKeys();
+            $preservedPermissions = array_diff(
+                $user->admin_permissions ?? [],
+                $delegablePermissions
+            );
 
             $user->update([
-                'admin_permissions' => $sourceUser->admin_permissions ?? self::ADMIN_PERMISSION_KEYS,
+                'admin_permissions' => array_values(array_unique(array_merge(
+                    $preservedPermissions,
+                    array_intersect(
+                        $sourceUser->admin_permissions ?? self::ADMIN_PERMISSION_KEYS,
+                        $delegablePermissions
+                    )
+                ))),
             ]);
 
             return redirect()->route('admin.users')->with('status', 'تم نسخ صلاحيات المستخدم.');
         }
 
+        $delegablePermissions = $this->delegablePermissionKeys();
+        $preservedPermissions = array_diff(
+            $user->admin_permissions ?? [],
+            $delegablePermissions
+        );
         $user->update([
-            'admin_permissions' => $this->adminPermissionsFromRequest($request),
+            'admin_permissions' => array_values(array_unique(array_merge(
+                $preservedPermissions,
+                $this->adminPermissionsFromRequest($request)
+            ))),
         ]);
 
         return redirect()->route('admin.users')->with('status', 'تم تحديث صلاحيات المستخدم.');
@@ -680,7 +711,7 @@ class AdminController extends Controller
     public function completeOrder(Order $order)
     {
         $this->ensureAdmin();
-        $this->ensurePermission('orders_view');
+        $this->ensurePermission('orders_complete');
 
         if ($order->payment_status !== 'paid') {
             return back()->withErrors([
@@ -895,6 +926,7 @@ class AdminController extends Controller
     public function openOrder(Order $order)
     {
         $this->ensureAdmin();
+        $this->ensurePermission('orders_view');
 
         if (blank($order->admin_opened_at)) {
             $order->update(['admin_opened_at' => now()]);
@@ -1049,15 +1081,29 @@ class AdminController extends Controller
 
     private function adminPermissionsFromRequest(Request $request): array
     {
+        $delegablePermissions = $this->delegablePermissionKeys();
+
         return collect($request->input('admin_permissions', []))
-            ->filter(fn ($permission) => in_array($permission, self::ADMIN_PERMISSION_KEYS, true))
+            ->filter(fn ($permission) => in_array($permission, $delegablePermissions, true))
             ->values()
             ->all();
     }
 
+    private function delegablePermissionKeys(): array
+    {
+        $currentUser = Auth::user();
+
+        return $currentUser?->admin_permissions === null
+            ? self::ADMIN_PERMISSION_KEYS
+            : array_values(array_intersect(
+                self::ADMIN_PERMISSION_KEYS,
+                $currentUser?->admin_permissions ?? []
+            ));
+    }
+
     private function permissionOptions(): array
     {
-        return [
+        return array_intersect_key([
             'reports_view' => 'التقارير: مشاهدة لوحة الأرقام والإيرادات',
             'users_view' => 'المستخدمين: مشاهدة المستخدمين',
             'users_create' => 'المستخدمين: إنشاء مستخدم جديد',
@@ -1082,6 +1128,7 @@ class AdminController extends Controller
             'customers_email_update' => 'العملاء: تغيير البريد الإلكتروني',
             'customers_verify' => 'العملاء: توثيق الحساب',
             'orders_view' => 'الطلبات: مشاهدة جميع الطلبات',
+            'orders_complete' => 'الطلبات: إكمال الطلب',
             'orders_cancel' => 'الطلبات: إلغاء الطلب وإعادة المبلغ',
             'orders_delete' => 'الطلبات: حذف الطلب',
             'files_download' => 'الملفات: تحميل ملفات العملاء',
@@ -1092,7 +1139,15 @@ class AdminController extends Controller
             'payments_view' => 'المالية: مشاهدة حالة المدفوعات والمبالغ',
             'discounts_apply' => 'المالية: منح كود خصم قبل الدفع',
             'service_prices_update' => 'الأسعار: تعديل أسعار الخدمات (لا تشمل القرطاسية)',
-        ];
+            'services_view' => 'الخدمات: مشاهدة إدارة الخدمات',
+            'services_create' => 'الخدمات: إضافة خدمة جديدة',
+            'services_update' => 'الخدمات: تعديل الخدمات وصورها',
+            'stationery_products_view' => 'القرطاسية: مشاهدة المنتجات',
+            'stationery_products_create' => 'القرطاسية: إضافة منتج جديد',
+            'stationery_products_update' => 'القرطاسية: تعديل بيانات المنتج وصورته وظهوره',
+            'stationery_products_price_update' => 'القرطاسية: تعديل سعر المنتج',
+            'stationery_products_delete' => 'القرطاسية: حذف المنتج',
+        ], array_flip($this->delegablePermissionKeys()));
     }
 
     private function firstAllowedAdminRoute(): string
@@ -1113,6 +1168,20 @@ class AdminController extends Controller
 
         if ($user?->hasAdminPermission('service_prices_update')) {
             return 'admin.service-pricing.index';
+        }
+
+        if ($user?->hasAnyAdminPermission(['services_view', 'services_create', 'services_update'])) {
+            return 'admin.services.index';
+        }
+
+        if ($user?->hasAnyAdminPermission([
+            'stationery_products_view',
+            'stationery_products_create',
+            'stationery_products_update',
+            'stationery_products_price_update',
+            'stationery_products_delete',
+        ])) {
+            return 'admin.stationery-products.index';
         }
 
         return 'admin.settings';

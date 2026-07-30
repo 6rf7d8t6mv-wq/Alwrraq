@@ -11,6 +11,13 @@ class AdminStationeryProductController extends Controller
     public function index(Request $request)
     {
         $this->ensureAdmin();
+        $this->ensureAnyPermission([
+            'stationery_products_view',
+            'stationery_products_create',
+            'stationery_products_update',
+            'stationery_products_price_update',
+            'stationery_products_delete',
+        ]);
         $search = trim((string) $request->query('q', ''));
         $products = StationeryProduct::query()
             ->when($search !== '', function ($query) use ($search) {
@@ -29,6 +36,7 @@ class AdminStationeryProductController extends Controller
     public function store(Request $request)
     {
         $this->ensureAdmin();
+        $this->ensurePermission('stationery_products_create');
         $data = $this->validated($request, true);
         $data['image_path'] = $request->file('image')->store('stationery-products', 'public');
         $data['is_active'] = $request->boolean('is_active');
@@ -40,17 +48,49 @@ class AdminStationeryProductController extends Controller
     public function update(Request $request, StationeryProduct $product)
     {
         $this->ensureAdmin();
+        $this->ensureAnyPermission([
+            'stationery_products_update',
+            'stationery_products_price_update',
+        ]);
         $data = $this->validated($request, false);
         $data['is_active'] = $request->boolean('is_active');
+        $detailsChanged = $data['name'] !== $product->name
+            || $data['company_name'] !== $product->company_name
+            || $data['product_type'] !== $product->product_type
+            || $data['is_active'] !== (bool) $product->is_active
+            || $request->hasFile('image');
+        $priceChanged = round((float) $data['price'], 2) !== round((float) $product->price, 2);
 
-        if ($request->hasFile('image')) {
+        if ($detailsChanged) {
+            $this->ensurePermission('stationery_products_update');
+        }
+        if ($priceChanged) {
+            $this->ensurePermission('stationery_products_price_update');
+        }
+
+        $updates = [];
+        if (auth()->user()?->hasAdminPermission('stationery_products_update')) {
+            $updates = [
+                'name' => $data['name'],
+                'company_name' => $data['company_name'],
+                'product_type' => $data['product_type'],
+                'is_active' => $data['is_active'],
+            ];
+        }
+        if (auth()->user()?->hasAdminPermission('stationery_products_price_update')) {
+            $updates['price'] = $data['price'];
+        }
+
+        if ($request->hasFile('image') && auth()->user()?->hasAdminPermission('stationery_products_update')) {
             if ($product->image_path) {
                 Storage::disk('public')->delete($product->image_path);
             }
-            $data['image_path'] = $request->file('image')->store('stationery-products', 'public');
+            $updates['image_path'] = $request->file('image')->store('stationery-products', 'public');
         }
 
-        $product->update($data);
+        if ($updates !== []) {
+            $product->update($updates);
+        }
 
         return back()->with('status', 'تم تعديل المنتج بنجاح.');
     }
@@ -58,6 +98,7 @@ class AdminStationeryProductController extends Controller
     public function destroy(StationeryProduct $product)
     {
         $this->ensureAdmin();
+        $this->ensurePermission('stationery_products_delete');
         if ($product->image_path) {
             Storage::disk('public')->delete($product->image_path);
         }
@@ -80,5 +121,15 @@ class AdminStationeryProductController extends Controller
     private function ensureAdmin(): void
     {
         abort_unless(auth()->user()?->role === 'admin', 403);
+    }
+
+    private function ensurePermission(string $permission): void
+    {
+        abort_unless(auth()->user()?->hasAdminPermission($permission), 403);
+    }
+
+    private function ensureAnyPermission(array $permissions): void
+    {
+        abort_unless(auth()->user()?->hasAnyAdminPermission($permissions), 403);
     }
 }

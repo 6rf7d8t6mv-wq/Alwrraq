@@ -19,8 +19,10 @@
                 nativeViewer.src = sameOriginPdfUrl;
                 nativeViewer.title = 'معاينة ملف PDF';
                 nativeViewer.style.width = '100%';
+                nativeViewer.style.maxWidth = '100%';
                 nativeViewer.style.minHeight = 'calc(100vh - 120px)';
                 nativeViewer.style.border = '0';
+                nativeViewer.style.display = 'block';
                 preview.replaceChildren(nativeViewer);
                 return;
             }
@@ -37,7 +39,14 @@
 
             const pdfBytes = new Uint8Array(await response.arrayBuffer());
             const pdf = await pdfjsLib.getDocument({ data: pdfBytes }).promise;
-            const availableWidth = Math.max(280, preview.clientWidth - 20);
+            const previewStyle = window.getComputedStyle(preview);
+            const horizontalPadding =
+                (Number.parseFloat(previewStyle.paddingLeft) || 0)
+                + (Number.parseFloat(previewStyle.paddingRight) || 0);
+            const availableWidth = Math.max(
+                1,
+                Math.floor(preview.clientWidth - horizontalPadding)
+            );
             const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
 
             status.remove();
@@ -96,8 +105,10 @@
                 + new URL(@json($pdfUrl), window.location.href).search;
             fallback.title = 'معاينة ملف PDF';
             fallback.style.width = '100%';
+            fallback.style.maxWidth = '100%';
             fallback.style.minHeight = 'calc(100vh - 120px)';
             fallback.style.border = '0';
+            fallback.style.display = 'block';
             preview.replaceChildren(fallback);
         }
     });

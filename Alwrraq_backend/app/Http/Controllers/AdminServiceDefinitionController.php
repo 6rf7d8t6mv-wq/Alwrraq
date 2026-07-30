@@ -28,6 +28,7 @@ class AdminServiceDefinitionController extends Controller
     public function index()
     {
         $this->ensureAdmin();
+        $this->ensureAnyPermission(['services_view', 'services_create', 'services_update']);
 
         return view('admin.services', [
             'services' => ServiceDefinition::query()->orderBy('sort_order')->orderBy('id')->get(),
@@ -38,6 +39,7 @@ class AdminServiceDefinitionController extends Controller
     public function store(Request $request, ServicePricingService $pricing)
     {
         $this->ensureAdmin();
+        $this->ensurePermission('services_create');
         $data = $this->validated($request);
         $image = $data['image'] ?? null;
         unset($data['image']);
@@ -67,6 +69,7 @@ class AdminServiceDefinitionController extends Controller
     public function update(Request $request, ServiceDefinition $service)
     {
         $this->ensureAdmin();
+        $this->ensurePermission('services_update');
         $data = $this->validated($request, $service);
         $image = $data['image'] ?? null;
         unset($data['image']);
@@ -130,5 +133,15 @@ class AdminServiceDefinitionController extends Controller
     private function ensureAdmin(): void
     {
         abort_unless(auth()->user()?->role === 'admin', 403);
+    }
+
+    private function ensurePermission(string $permission): void
+    {
+        abort_unless(auth()->user()?->hasAdminPermission($permission), 403);
+    }
+
+    private function ensureAnyPermission(array $permissions): void
+    {
+        abort_unless(auth()->user()?->hasAnyAdminPermission($permissions), 403);
     }
 }

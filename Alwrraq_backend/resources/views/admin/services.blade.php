@@ -15,7 +15,9 @@
             <h1>إدارة الخدمات</h1>
             <p class="subtitle">تعديل بيانات الخدمات الحالية أو إضافة خدمة جديدة من نموذج خدمة موجود.</p>
         </div>
-        <button class="save" type="button" onclick="showServiceModal('addServiceModal')">إضافة خدمة جديدة</button>
+        @if (auth()->user()->hasAdminPermission('services_create'))
+            <button class="save" type="button" onclick="showServiceModal('addServiceModal')">إضافة خدمة جديدة</button>
+        @endif
     </div>
 
     <section class="panel compact-management-panel blue-records-panel">
@@ -39,21 +41,25 @@
                             <td>{{ $workflows[$service->workflow_type] }}</td>
                             <td>{{ $service->requires_file ? 'نعم' : 'لا' }}</td>
                             <td>
-                                <button
-                                    class="ghost"
-                                    type="button"
-                                    data-service="{{ json_encode([
-                                        'id' => $service->id,
-                                        'title' => $service->title,
-                                        'description' => $service->description,
-                                        'icon' => $service->icon,
-                                        'image_url' => $service->image_path
-                                            ? route('services.image', ['filename' => basename($service->image_path)], false)
-                                            : null,
-                                        'workflow_type' => $service->workflow_type,
-                                    ], JSON_UNESCAPED_UNICODE) }}"
-                                    onclick="openServiceEditor(JSON.parse(this.dataset.service))"
-                                >تعديل</button>
+                                @if (auth()->user()->hasAdminPermission('services_update'))
+                                    <button
+                                        class="ghost"
+                                        type="button"
+                                        data-service="{{ json_encode([
+                                            'id' => $service->id,
+                                            'title' => $service->title,
+                                            'description' => $service->description,
+                                            'icon' => $service->icon,
+                                            'image_url' => $service->image_path
+                                                ? route('services.image', ['filename' => basename($service->image_path)], false)
+                                                : null,
+                                            'workflow_type' => $service->workflow_type,
+                                        ], JSON_UNESCAPED_UNICODE) }}"
+                                        onclick="openServiceEditor(JSON.parse(this.dataset.service))"
+                                    >تعديل</button>
+                                @else
+                                    <span class="muted">عرض فقط</span>
+                                @endif
                             </td>
                         </tr>
                     @endforeach
@@ -62,6 +68,7 @@
         </div>
     </section>
 
+    @if (auth()->user()->hasAdminPermission('services_create'))
     <div class="modal-backdrop" id="addServiceModal" onclick="hideServiceModal(event)">
         <div class="modal" onclick="event.stopPropagation()">
             <div class="modal-head">
@@ -77,7 +84,9 @@
             </div>
         </div>
     </div>
+    @endif
 
+    @if (auth()->user()->hasAdminPermission('services_update'))
     <div class="modal-backdrop" id="editServiceModal" onclick="hideServiceModal(event)">
         <div class="modal" onclick="event.stopPropagation()">
             <div class="modal-head">
@@ -94,6 +103,7 @@
             </div>
         </div>
     </div>
+    @endif
 
     <script>
         function showServiceModal(id) {

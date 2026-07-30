@@ -6,9 +6,10 @@
     @include('shared.tab-brand')
     <style>
         * { box-sizing: border-box; }
+        html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
         body { margin: 0; font-family: Tahoma, Arial, sans-serif; background: #f3f6fb; color: #0f172a; }
-        .page { min-height: 100vh; padding: clamp(10px, 2.5vw, 18px); }
-        .viewer-shell { max-width: 1220px; margin: 0 auto; display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 12px; align-items: start; }
+        .page { width: 100%; max-width: 100%; min-height: 100vh; padding: clamp(10px, 2.5vw, 18px); }
+        .viewer-shell { width: 100%; max-width: 1220px; min-width: 0; margin: 0 auto; display: grid; grid-template-columns: minmax(250px, 320px) minmax(0, 1fr); gap: 12px; align-items: start; }
         .panel { background: #ffffff; border: 1px solid #dbe3ef; border-radius: 12px; box-shadow: 0 12px 32px rgba(15, 23, 42, 0.07); overflow: hidden; }
         .info-panel { padding: 10px; position: sticky; top: 10px; }
         .brand { min-height: 50px; padding: 7px 9px; margin-bottom: 8px; border-radius: 9px; background: #0f172a; color: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
@@ -66,7 +67,8 @@
         }
         @media (max-width: 560px) {
             .page { padding: 6px; }
-            .viewer-shell { gap: 6px; }
+            .viewer-shell { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+            .viewer-shell, .panel, .preview-panel, .pdf-preview, .image-preview, .word-preview { width: 100%; max-width: 100%; min-width: 0; }
             .info-panel { padding: 6px; border-radius: 9px; }
             .brand { min-height: 40px; margin-bottom: 5px; padding: 5px 7px; border-radius: 7px; }
             .brand-logo { width: 29px; height: 29px; border-radius: 7px; }
@@ -85,9 +87,15 @@
             .preview-head { padding: 7px 8px; }
             .preview-head h2 { font-size: 11px; }
             .preview-head span { font-size: 8px; }
-            .pdf-preview { min-height: 560px; }
-            .image-preview { min-height: 560px; }
-            .word-preview { min-height: 560px; padding: 16px 12px; font-size: 13px; }
+            .pdf-preview { min-height: 560px; padding: 6px; overflow-x: hidden; }
+            .pdf-page { width: 100% !important; max-width: 100% !important; height: auto !important; }
+            .image-preview { min-height: 560px; overflow: hidden; }
+            .image-preview img { width: auto; max-width: 100%; height: auto; }
+            .word-preview { min-height: 560px; padding: 16px 12px; overflow-x: hidden; overflow-wrap: anywhere; word-break: break-word; font-size: 13px; }
+            .word-preview p { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+            .word-table-wrap { max-width: 100%; overflow-x: hidden; }
+            .word-table { width: 100%; max-width: 100%; table-layout: fixed; }
+            .word-table td { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
         }
         @media (min-width: 1100px) {
             .viewer-shell { grid-template-columns: minmax(300px, 350px) minmax(0, 1fr); }

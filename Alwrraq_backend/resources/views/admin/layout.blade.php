@@ -425,7 +425,9 @@
             </div>
             <div class="admin-name"><strong>👤 {{ auth()->user()->name }}</strong><small>المدير</small></div>
             <nav>
-                <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>
+                @if (auth()->user()->hasAdminPermission('reports_view'))
+                    <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>
+                @endif
                 @if ($hasOrdersAccess)
                     <a class="{{ request()->routeIs('admin.orders', 'admin.orders.unpaid', 'admin.orders.cancelled') ? 'active' : '' }}" href="{{ route('admin.orders') }}" data-admin-orders-link>
                         <span class="nav-icon" aria-hidden="true">🧾</span>
@@ -441,8 +443,12 @@
                 @if (auth()->user()->hasAnyAdminPermission(['customers_view', 'customers_create', 'customers_update', 'customers_delete']))
                     <a class="{{ request()->routeIs('admin.customers') ? 'active' : '' }}" href="{{ route('admin.customers') }}"><span class="nav-icon" aria-hidden="true">👤</span><span class="nav-text">العملاء</span></a>
                 @endif
-                <a class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}" href="{{ route('admin.services.index') }}"><span class="nav-icon" aria-hidden="true">🧩</span><span class="nav-text">إدارة الخدمات</span></a>
-                <a class="{{ request()->routeIs('admin.stationery-products.*') ? 'active' : '' }}" href="{{ route('admin.stationery-products.index') }}"><span class="nav-icon" aria-hidden="true">✏️</span><span class="nav-text">القرطاسية</span></a>
+                @if (auth()->user()->hasAnyAdminPermission(['services_view', 'services_create', 'services_update']))
+                    <a class="{{ request()->routeIs('admin.services.*') ? 'active' : '' }}" href="{{ route('admin.services.index') }}"><span class="nav-icon" aria-hidden="true">🧩</span><span class="nav-text">إدارة الخدمات</span></a>
+                @endif
+                @if (auth()->user()->hasAnyAdminPermission(['stationery_products_view', 'stationery_products_create', 'stationery_products_update', 'stationery_products_price_update', 'stationery_products_delete']))
+                    <a class="{{ request()->routeIs('admin.stationery-products.*') ? 'active' : '' }}" href="{{ route('admin.stationery-products.index') }}"><span class="nav-icon" aria-hidden="true">✏️</span><span class="nav-text">القرطاسية</span></a>
+                @endif
                 @if (auth()->user()->hasAdminPermission('service_prices_update'))
                     <a class="pricing-link {{ request()->routeIs('admin.service-pricing.*') ? 'active' : '' }}" href="{{ route('admin.service-pricing.index') }}"><span class="nav-icon" aria-hidden="true">💰</span><span class="nav-text">الأسعار</span></a>
                 @endif

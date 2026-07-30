@@ -6,6 +6,7 @@
     @include('shared.tab-brand')
     <style>
         * { box-sizing: border-box; }
+        html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
         body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
         .page { min-height: 100vh; padding: clamp(10px, 3vw, 24px); }
         .viewer { width: min(1180px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }
@@ -41,9 +42,17 @@
         .unsupported h2 { margin: 0 0 8px; }
         .unsupported p { margin: 0; color: #64748b; font-weight: 800; line-height: 1.8; }
         @media (max-width: 860px) {
-            .viewer { grid-template-columns: 1fr; }
+            .page { padding: 8px; }
+            .viewer { grid-template-columns: minmax(0, 1fr); }
+            .viewer, .panel, .preview, .pdf-preview, .word-preview { width: 100%; max-width: 100%; min-width: 0; }
             .preview { min-height: 560px; }
-            .pdf-preview, .word-preview { min-height: 560px; }
+            .pdf-preview { min-height: 560px; padding: 6px; overflow-x: hidden; }
+            .pdf-page { width: 100% !important; max-width: 100% !important; height: auto !important; }
+            .word-preview { min-height: 560px; padding: 16px 12px; overflow-x: hidden; overflow-wrap: anywhere; word-break: break-word; }
+            .word-preview p { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+            .word-table-wrap { max-width: 100%; overflow-x: hidden; }
+            .word-table { width: 100%; max-width: 100%; table-layout: fixed; }
+            .word-table td { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
         }
     </style>
 </head>

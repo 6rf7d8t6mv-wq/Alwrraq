@@ -6,9 +6,10 @@
     @include('shared.tab-brand')
     <style>
         * { box-sizing: border-box; }
+        html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
         body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
-        .page { min-height: 100vh; padding: clamp(12px, 3vw, 24px); }
-        .viewer { max-width: 1180px; margin: 0 auto; display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }
+        .page { width: 100%; max-width: 100%; min-height: 100vh; padding: clamp(12px, 3vw, 24px); }
+        .viewer { width: 100%; max-width: 1180px; min-width: 0; margin: 0 auto; display: grid; grid-template-columns: minmax(220px, 300px) minmax(0, 1fr); gap: 14px; align-items: start; }
         .panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 14px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); overflow: hidden; }
         .side { padding: 12px; }
         .brand { min-height: 54px; padding: 9px 10px; margin-bottom: 10px; border-radius: 10px; background: #0f172a; color: #ffffff; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -46,9 +47,18 @@
         .unsupported-box h2 { margin: 0 0 8px; }
         .unsupported-box p { margin: 0; color: #64748b; font-weight: 800; line-height: 1.8; }
         @media (max-width: 860px) {
-            .viewer { grid-template-columns: 1fr; }
-            .pdf-preview { min-height: 560px; }
-            .image-preview { min-height: 560px; padding: 10px; }
+            .page { padding: 8px; }
+            .viewer { grid-template-columns: minmax(0, 1fr); }
+            .viewer, .panel, .preview, .pdf-preview, .image-preview, .word-preview { width: 100%; max-width: 100%; min-width: 0; }
+            .pdf-preview { min-height: 560px; padding: 6px; overflow-x: hidden; }
+            .pdf-page { width: 100% !important; max-width: 100% !important; height: auto !important; }
+            .image-preview { min-height: 560px; padding: 10px; overflow: hidden; }
+            .image-preview img { width: auto; max-width: 100%; height: auto; }
+            .word-preview { min-height: 560px; padding: 16px 12px; overflow-x: hidden; overflow-wrap: anywhere; word-break: break-word; }
+            .word-preview p { max-width: 100%; overflow-wrap: anywhere; word-break: break-word; }
+            .word-table-wrap { max-width: 100%; overflow-x: hidden; }
+            .word-table { width: 100%; max-width: 100%; table-layout: fixed; }
+            .word-table td { min-width: 0; overflow-wrap: anywhere; word-break: break-word; }
         }
         @media print {
             @page { margin: 8mm; }

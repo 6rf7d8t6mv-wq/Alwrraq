@@ -443,11 +443,11 @@
                                     <br><span class="muted">خصم {{ $order->discount_code }}: {{ $order->discount_amount }} ريال</span>
                                 @endif
                             </div>
-                            @if (($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view')) || ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('orders_cancel')) || auth()->user()->hasAdminPermission('orders_delete') || ($canCompleteOrder && auth()->user()->hasAdminPermission('orders_view')))
+                            @if (($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view')) || ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('orders_cancel')) || auth()->user()->hasAdminPermission('orders_delete') || ($canCompleteOrder && auth()->user()->hasAdminPermission('orders_complete')))
                                 <div>
                                     <span class="label">الإجراءات</span>
                                     <div class="compact-actions">
-                                        @if ($canCompleteOrder && auth()->user()->hasAdminPermission('orders_view'))
+                                        @if ($canCompleteOrder && auth()->user()->hasAdminPermission('orders_complete'))
                                             <form method="post" action="{{ route('admin.orders.complete', $order) }}">
                                                 @csrf
                                                 @method('patch')
