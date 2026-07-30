@@ -66,6 +66,11 @@ class ResumeServiceFlowTest extends TestCase
             $table->string('delivery_method')->nullable();
             $table->decimal('delivery_fee', 10, 2)->default(0);
             $table->decimal('grand_total', 10, 2)->default(0);
+            $table->timestamp('customer_notification_seen_at')->nullable();
+            $table->timestamps();
+        });
+        Schema::create('stationery_products', function (Blueprint $table): void {
+            $table->id();
             $table->timestamps();
         });
         Schema::create('order_files', function (Blueprint $table): void {
@@ -128,6 +133,7 @@ class ResumeServiceFlowTest extends TestCase
         Schema::dropIfExists('orders');
         Schema::dropIfExists('service_price_settings');
         Schema::dropIfExists('service_definitions');
+        Schema::dropIfExists('stationery_products');
         Schema::dropIfExists('users');
 
         parent::tearDown();
@@ -176,6 +182,35 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('midnight_luxury')
             ->assertSee('emerald_signature')
             ->assertSee('modern_silk');
+    }
+
+    public function test_resume_preview_displays_complete_personal_details_and_sparse_layout(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+        $content = $draft->content;
+        $content['personal'] = array_merge($content['personal'], [
+            'email' => 'resume@example.com',
+            'city' => 'المدينة المنورة',
+            'country' => 'المملكة العربية السعودية',
+            'birth_date' => '2003-01-06',
+            'nationality' => 'سعودي',
+            'marital_status' => 'أعزب',
+            'linkedin' => 'https://www.linkedin.com/in/resume',
+            'website' => 'https://example.com',
+        ]);
+        $draft->forceFill(['content' => $content])->save();
+
+        $this->actingAs($user)
+            ->get(route('resume.preview', $draft))
+            ->assertOk()
+            ->assertSee('content-sparse')
+            ->assertSee('2003-01-06')
+            ->assertSee('سعودي')
+            ->assertSee('أعزب')
+            ->assertSee('المدينة المنورة')
+            ->assertSee('resume@example.com')
+            ->assertSee('https://www.linkedin.com/in/resume')
+            ->assertSee('https://example.com');
     }
 
     public function test_resume_draft_is_private_to_its_owner(): void
@@ -272,6 +307,13 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame('unpaid', $order->payment_status);
         $this->assertSame(5.0, (float) $order->grand_total);
         $this->assertSame(1, Order::query()->where('service_type', 'resume')->count());
+
+        $this->actingAs($user)
+            ->get(route('cart.index'))
+            ->assertOk()
+            ->assertSee('إنشاء سيرة ذاتية احترافية')
+            ->assertSee('التنفيذي الفاخر')
+            ->assertSee('تطبيق الخصم');
 
         $order->forceFill([
             'discount_code' => 'FULL5',

@@ -5,22 +5,62 @@
     $hidden = $draft->hidden_sections ?? [];
     $isArabic = $draft->language === 'ar';
     $sectionNames = $isArabic ? [
-        'education' => 'المؤهلات العلمية', 'experience' => 'الخبرات العملية',
+        'education' => 'التعليم والمؤهلات', 'experience' => 'الخبرات العملية',
         'skills' => 'المهارات', 'languages' => 'اللغات',
         'certificates' => 'الدورات والشهادات', 'projects' => 'المشاريع',
         'achievements' => 'الإنجازات', 'volunteering' => 'العمل التطوعي',
         'references' => 'المراجع',
     ] : [
-        'education' => 'Education', 'experience' => 'Experience',
+        'education' => 'Education', 'experience' => 'Professional Experience',
         'skills' => 'Skills', 'languages' => 'Languages',
         'certificates' => 'Courses & Certificates', 'projects' => 'Projects',
         'achievements' => 'Achievements', 'volunteering' => 'Volunteer Work',
         'references' => 'References',
     ];
-    $titleFor = fn (array $item) => $item['qualification'] ?? $item['job_title'] ?? $item['name'] ?? $item['title'] ?? $item['organization'] ?? $item['role'] ?? '';
-    $subtitleFor = fn (array $item) => $item['institution'] ?? $item['company'] ?? $item['issuer'] ?? '';
-    $descriptionFor = fn (array $item) => $item['description'] ?? $item['achievements'] ?? $item['technologies'] ?? '';
+    $labels = $isArabic ? [
+        'phone' => 'رقم الجوال', 'email' => 'البريد الإلكتروني', 'address' => 'العنوان',
+        'birth_date' => 'تاريخ الميلاد', 'nationality' => 'الجنسية',
+        'marital_status' => 'الحالة الاجتماعية', 'linkedin' => 'LinkedIn',
+        'website' => 'الموقع الشخصي', 'summary' => 'الملف المهني',
+        'major' => 'التخصص', 'grade' => 'المعدل', 'location' => 'الموقع',
+        'date' => 'التاريخ', 'present' => 'حتى الآن',
+    ] : [
+        'phone' => 'Phone', 'email' => 'Email', 'address' => 'Address',
+        'birth_date' => 'Birth date', 'nationality' => 'Nationality',
+        'marital_status' => 'Marital status', 'linkedin' => 'LinkedIn',
+        'website' => 'Website', 'summary' => 'Professional Profile',
+        'major' => 'Major', 'grade' => 'Grade', 'location' => 'Location',
+        'date' => 'Date', 'present' => 'Present',
+    ];
+    $address = implode($isArabic ? '، ' : ', ', array_filter([
+        $personal['city'] ?? null,
+        $personal['country'] ?? null,
+    ]));
+    $personalRows = array_values(array_filter([
+        ['icon' => '☎', 'label' => $labels['phone'], 'value' => $personal['phone'] ?? null],
+        ['icon' => '✉', 'label' => $labels['email'], 'value' => $personal['email'] ?? null],
+        ['icon' => '⌂', 'label' => $labels['address'], 'value' => $address ?: null],
+        ['icon' => '◫', 'label' => $labels['birth_date'], 'value' => $personal['birth_date'] ?? null],
+        ['icon' => '◆', 'label' => $labels['nationality'], 'value' => $personal['nationality'] ?? null],
+        ['icon' => '●', 'label' => $labels['marital_status'], 'value' => $personal['marital_status'] ?? null],
+        ['icon' => 'in', 'label' => $labels['linkedin'], 'value' => $personal['linkedin'] ?? null],
+        ['icon' => '↗', 'label' => $labels['website'], 'value' => $personal['website'] ?? null],
+    ], fn (array $row) => filled($row['value'])));
     $sideSections = ['skills', 'languages', 'references'];
+    $visibleItemCount = 0;
+    foreach ($order as $section) {
+        if (in_array($section, $hidden, true)) {
+            continue;
+        }
+        $sectionData = $content[$section] ?? [];
+        $visibleItemCount += $section === 'references'
+            ? count($sectionData['items'] ?? [])
+            : count(is_array($sectionData) ? $sectionData : []);
+    }
+    $textLength = mb_strlen(json_encode($content, JSON_UNESCAPED_UNICODE) ?: '');
+    $density = $visibleItemCount <= 5 && $textLength < 1500
+        ? 'sparse'
+        : ($visibleItemCount >= 15 || $textLength > 5000 ? 'dense' : 'balanced');
     $photoSource = null;
     if ($draft->photo_path && \Illuminate\Support\Facades\Storage::disk('local')->exists($draft->photo_path)) {
         $absolutePhoto = \Illuminate\Support\Facades\Storage::disk('local')->path($draft->photo_path);
@@ -30,25 +70,31 @@
             : route('resume.preview', [$draft, 'photo' => 1]);
     }
 @endphp
-<div class="cv-sheet template-{{ $draft->template_id }}" dir="{{ $isArabic ? 'rtl' : 'ltr' }}">
+<div class="cv-sheet template-{{ $draft->template_id }} content-{{ $density }}" dir="{{ $isArabic ? 'rtl' : 'ltr' }}">
     <div class="cv-layout">
         <aside class="cv-side">
-            @if($photoSource)<img class="cv-photo" src="{{ $photoSource }}" alt="">@endif
-            @php
-                $contacts = array_filter([
-                    $personal['phone'] ?? null,
-                    $personal['email'] ?? null,
-                    $personal['city'] ?? null,
-                    $personal['country'] ?? null,
-                    $personal['linkedin'] ?? null,
-                    $personal['website'] ?? null,
-                ]);
-            @endphp
-            @if($contacts)
-                <section class="cv-section"><h3>{{ $isArabic ? 'التواصل' : 'Contact' }}</h3>
-                    @foreach($contacts as $contact)<div class="cv-contact">{{ $contact }}</div>@endforeach
+            <div class="cv-profile">
+                @if($photoSource)
+                    <img class="cv-photo" src="{{ $photoSource }}" alt="">
+                @else
+                    <div class="cv-photo cv-photo-placeholder">{{ mb_substr($personal['full_name'] ?? 'CV', 0, 1) }}</div>
+                @endif
+            </div>
+
+            @if($personalRows)
+                <section class="cv-section cv-personal-section">
+                    <h3>{{ $isArabic ? 'المعلومات الشخصية' : 'Personal Information' }}</h3>
+                    <div class="cv-personal-list">
+                        @foreach($personalRows as $row)
+                            <div class="cv-personal-row">
+                                <span class="cv-personal-icon">{{ $row['icon'] }}</span>
+                                <div><strong>{{ $row['label'] }}</strong><span>{{ $row['value'] }}</span></div>
+                            </div>
+                        @endforeach
+                    </div>
                 </section>
             @endif
+
             @foreach($order as $section)
                 @continue(in_array($section, $hidden, true) || !in_array($section, $sideSections, true))
                 @php
@@ -57,44 +103,82 @@
                     $available = $section === 'references' && ($sectionData['available_on_request'] ?? false);
                 @endphp
                 @if($available || count($items))
-                    <section class="cv-section"><h3>{{ $sectionNames[$section] }}</h3>
-                        @if($available)<div class="cv-body">{{ $isArabic ? 'المراجع متاحة عند الطلب' : 'References available upon request' }}</div>@endif
+                    <section class="cv-section cv-section-{{ $section }}">
+                        <h3>{{ $sectionNames[$section] }}</h3>
+                        @if($available)
+                            <div class="cv-body">{{ $isArabic ? 'المراجع متاحة عند الطلب' : 'References available upon request' }}</div>
+                        @endif
                         @foreach($items as $item)
-                            <div class="cv-item"><strong>{{ $titleFor($item) }}</strong>
-                                @if($subtitleFor($item))<small>{{ $subtitleFor($item) }}</small>@endif
-                                @if($item['level'] ?? null)<small>{{ $item['level'] }}</small>@endif
-                                @if($descriptionFor($item))<div class="cv-body">{{ $descriptionFor($item) }}</div>@endif
+                            <div class="cv-item">
+                                <div class="cv-item-heading">
+                                    <strong>{{ $item['name'] ?? '' }}</strong>
+                                    @if($item['level'] ?? null)<span class="cv-level">{{ $item['level'] }}</span>@endif
+                                </div>
+                                @if($section === 'references')
+                                    <small>{{ implode(' • ', array_filter([$item['job_title'] ?? null, $item['company'] ?? null])) }}</small>
+                                    @if($item['phone'] ?? null)<div class="cv-body">{{ $item['phone'] }}</div>@endif
+                                    @if($item['email'] ?? null)<div class="cv-body">{{ $item['email'] }}</div>@endif
+                                @endif
                             </div>
                         @endforeach
                     </section>
                 @endif
             @endforeach
         </aside>
+
         <main class="cv-main">
-            <h1>{{ $personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name') }}</h1>
-            <div class="cv-job">{{ $personal['job_title'] ?? ($isArabic ? 'المسمى الوظيفي' : 'Job title') }}</div>
+            <header class="cv-heading">
+                <h1>{{ $personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name') }}</h1>
+                <div class="cv-job">{{ $personal['job_title'] ?? ($isArabic ? 'المسمى الوظيفي' : 'Job title') }}</div>
+            </header>
+
             @if($personal['summary'] ?? null)
-                <section class="cv-section"><h3>{{ $isArabic ? 'نبذة مهنية' : 'Profile' }}</h3><div class="cv-body">{{ $personal['summary'] }}</div></section>
+                <section class="cv-section cv-summary">
+                    <h3>{{ $labels['summary'] }}</h3>
+                    <div class="cv-body">{{ $personal['summary'] }}</div>
+                </section>
             @endif
+
             @foreach($order as $section)
                 @continue(in_array($section, $hidden, true) || in_array($section, $sideSections, true))
-                @php($items = $content[$section] ?? [])
+                @php
+                    $items = $content[$section] ?? [];
+                @endphp
                 @if(count($items))
-                    <section class="cv-section"><h3>{{ $sectionNames[$section] }}</h3>
-                        @foreach($items as $item)
-                            @php($date = implode(' — ', array_filter([$item['start_date'] ?? null, ($item['current'] ?? false) ? ($isArabic ? 'حتى الآن' : 'Present') : ($item['end_date'] ?? $item['date'] ?? null)])))
-                            <div class="cv-item"><strong>{{ $titleFor($item) }}</strong>
-                                @if($subtitleFor($item))<small>{{ $subtitleFor($item) }}</small>@endif
-                                @if($date)<small>{{ $date }}</small>@endif
-                                @if($descriptionFor($item))<div class="cv-body">{{ $descriptionFor($item) }}</div>@endif
-                            </div>
-                        @endforeach
+                    <section class="cv-section cv-section-{{ $section }}">
+                        <h3><span class="cv-section-mark"></span>{{ $sectionNames[$section] }}</h3>
+                        <div class="cv-section-items">
+                            @foreach($items as $item)
+                                @php
+                                    $title = $item['qualification'] ?? $item['job_title'] ?? $item['name'] ?? $item['title'] ?? $item['role'] ?? '';
+                                    $organization = $item['institution'] ?? $item['company'] ?? $item['issuer'] ?? $item['organization'] ?? '';
+                                    $endDate = ($item['current'] ?? false) ? $labels['present'] : ($item['end_date'] ?? $item['date'] ?? null);
+                                    $date = implode(' — ', array_filter([$item['start_date'] ?? null, $endDate]));
+                                    $description = $item['description'] ?? $item['achievements'] ?? '';
+                                @endphp
+                                <article class="cv-item">
+                                    <div class="cv-item-heading">
+                                        <strong>{{ $title }}</strong>
+                                        @if($date)<time>{{ $date }}</time>@endif
+                                    </div>
+                                    @if($organization)<small class="cv-organization">{{ $organization }}</small>@endif
+                                    <div class="cv-item-meta">
+                                        @if($item['major'] ?? null)<span>{{ $labels['major'] }}: {{ $item['major'] }}</span>@endif
+                                        @if($item['location'] ?? null)<span>{{ $labels['location'] }}: {{ $item['location'] }}</span>@endif
+                                        @if($item['grade'] ?? null)<span>{{ $labels['grade'] }}: {{ $item['grade'] }}</span>@endif
+                                        @if($item['technologies'] ?? null)<span>{{ $item['technologies'] }}</span>@endif
+                                    </div>
+                                    @if($description)<div class="cv-body">{{ $description }}</div>@endif
+                                    @if($item['url'] ?? null)<div class="cv-link">{{ $item['url'] }}</div>@endif
+                                </article>
+                            @endforeach
+                        </div>
                     </section>
                 @endif
             @endforeach
         </main>
     </div>
     @unless($paid)
-        <div class="cv-watermark" aria-hidden="true">@for($i=0;$i<24;$i++)<span>معاينة غير مدفوعة — الورّاق</span>@endfor</div>
+        <div class="cv-watermark" aria-hidden="true">@for($i=0;$i<28;$i++)<span>معاينة غير مدفوعة — الورّاق</span>@endfor</div>
     @endunless
 </div>

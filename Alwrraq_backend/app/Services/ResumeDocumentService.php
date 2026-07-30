@@ -31,7 +31,7 @@ class ResumeDocumentService
             'pdfMode' => true,
         ])->render();
         if ($draft->language === 'ar') {
-            $html = (new Arabic())->utf8Glyphs($html, 100, false, true);
+            $html = $this->shapeArabicTextNodes($html);
         }
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
@@ -54,5 +54,18 @@ class ResumeDocumentService
         $draft->order?->forceFill(['status' => 'completed'])->save();
 
         return Storage::disk('local')->path($path);
+    }
+
+    private function shapeArabicTextNodes(string $html): string
+    {
+        $arabic = new Arabic();
+
+        return preg_replace_callback(
+            '/>([^<>]*[\x{0600}-\x{06FF}][^<>]*)</u',
+            static fn (array $match): string => '>'
+                .$arabic->utf8Glyphs($match[1], 500, false, false)
+                .'<',
+            $html
+        ) ?? $html;
     }
 }
