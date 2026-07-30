@@ -71,6 +71,11 @@ class ResumeDocumentService
             return false;
         }
 
+        $fontPath = public_path('fonts/tajawal/Tajawal-Regular.ttf');
+        if (is_file($fontPath) && Storage::disk('local')->lastModified($path) < filemtime($fontPath)) {
+            return false;
+        }
+
         $stream = Storage::disk('local')->readStream($path);
         if (! is_resource($stream)) {
             return false;
@@ -92,7 +97,7 @@ class ResumeDocumentService
         $options = new Options();
         $options->set('isRemoteEnabled', false);
         $options->set('isHtml5ParserEnabled', true);
-        $options->set('defaultFont', 'DejaVu Sans');
+        $options->set('defaultFont', 'Tajawal');
 
         $dompdf = new Dompdf($options);
         $dompdf->setPaper('A4');

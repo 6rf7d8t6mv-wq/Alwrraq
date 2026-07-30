@@ -1,4 +1,6 @@
-.cv-sheet{position:relative;width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#172033;box-shadow:0 18px 55px rgba(15,23,42,.24);overflow:hidden;font-family:Arial,sans-serif}
+@font-face{font-family:Tajawal;src:url('/fonts/tajawal/Tajawal-Regular.ttf') format('truetype');font-style:normal;font-weight:400;font-display:swap}
+@font-face{font-family:Tajawal;src:url('/fonts/tajawal/Tajawal-Bold.ttf') format('truetype');font-style:normal;font-weight:700 900;font-display:swap}
+.cv-sheet{position:relative;width:794px;max-width:100%;min-height:1123px;margin:0 auto;background:#fff;color:#172033;box-shadow:0 18px 55px rgba(15,23,42,.24);overflow:hidden;font-family:Tajawal,Arial,sans-serif}
 .cv-layout{display:grid;grid-template-columns:30% 70%;min-height:1123px}
 .cv-side{background:#456f9f;color:#fff;padding:38px 25px;min-width:0}
 .cv-main{display:flex;flex-direction:column;padding:43px 38px;min-width:0}
@@ -68,13 +70,13 @@
 .template-royal_gold .cv-photo{width:112px;height:112px;border:3px solid #c5a55b;background:#f4ead2;color:#866a2d}
 .template-royal_gold .cv-personal-section{grid-column:1/-1;min-height:112px;padding-inline-end:135px}
 .template-royal_gold .cv-personal-identity{text-align:start;color:#29241d}
-.template-royal_gold .cv-personal-identity h1{font-family:Georgia,"Times New Roman",serif;font-size:36px}
+.template-royal_gold .cv-personal-identity h1{font-family:Tajawal,Arial,sans-serif;font-size:36px}
 .template-royal_gold .cv-personal-identity .cv-job{font-size:18px;color:#9a7628}
 .template-royal_gold .cv-heading{padding:12px 0 25px;text-align:center;border-bottom:3px double #c5a55b}
-.template-royal_gold .cv-heading h1{font-family:Georgia,"Times New Roman",serif;font-size:38px;color:#29241d}
+.template-royal_gold .cv-heading h1{font-family:Tajawal,Arial,sans-serif;font-size:38px;color:#29241d}
 .template-royal_gold .cv-job,.template-royal_gold .cv-organization,.template-royal_gold .cv-link{color:#9a7628}
 .template-royal_gold .cv-main .cv-section{padding:15px 4px}
-.template-royal_gold .cv-main .cv-section h3{justify-content:center;font-family:Georgia,"Times New Roman",serif;color:#73591f}
+.template-royal_gold .cv-main .cv-section h3{justify-content:center;font-family:Tajawal,Arial,sans-serif;color:#73591f}
 .template-royal_gold .cv-side .cv-section h3{color:#73591f;border-color:#d6c294}
 .template-royal_gold .cv-personal-row strong,.template-royal_gold .cv-personal-row span:not(.cv-personal-icon),.template-royal_gold .cv-side .cv-body,.template-royal_gold .cv-side .cv-item small{color:#3f3729}
 .template-royal_gold .cv-personal-icon{background:#c5a55b;color:#fff}

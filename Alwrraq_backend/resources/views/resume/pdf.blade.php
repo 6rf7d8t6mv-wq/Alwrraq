@@ -1,9 +1,15 @@
+@php
+    $tajawalRegular = base64_encode(file_get_contents(public_path('fonts/tajawal/Tajawal-Regular.ttf')));
+    $tajawalBold = base64_encode(file_get_contents(public_path('fonts/tajawal/Tajawal-Bold.ttf')));
+@endphp
 <!DOCTYPE html>
 <html lang="{{ $draft->language }}" dir="{{ $draft->language === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
 <meta charset="utf-8">
 <style>
-    @page{margin:0;size:A4}*{box-sizing:border-box}body{margin:0;font-family:"DejaVu Sans",sans-serif;color:#172033}
+    @font-face{font-family:Tajawal;src:url("data:font/ttf;base64,{{ $tajawalRegular }}") format("truetype");font-style:normal;font-weight:400}
+    @font-face{font-family:Tajawal;src:url("data:font/ttf;base64,{{ $tajawalBold }}") format("truetype");font-style:normal;font-weight:700}
+    @page{margin:0;size:A4}*{box-sizing:border-box}body{margin:0;font-family:Tajawal,sans-serif;color:#172033}
     .cv-sheet{position:relative;width:210mm;min-height:297mm;background:#fff;overflow:hidden}.cv-layout{display:block;width:100%}
     .cv-side{position:fixed;top:0;bottom:0;width:31%;padding:11mm 7mm;background:#456f9f;color:#fff}.cv-main{width:69%;padding:12mm 10mm}
     .cv-sheet[dir=rtl] .cv-side{right:0}.cv-sheet[dir=rtl] .cv-main{margin-right:31%}.cv-sheet[dir=ltr] .cv-side{left:0}.cv-sheet[dir=ltr] .cv-main{margin-left:31%}
@@ -32,7 +38,7 @@
     .template-royal_gold .cv-side{position:fixed!important;top:3mm!important;bottom:3mm!important;left:auto!important;right:3mm!important;width:22%!important;min-height:0!important;padding:12mm 7mm!important;background:#f4ead2!important;border:0!important;border-left:1mm solid #c5a55b!important}
     .template-royal_gold .cv-main{width:61%!important;margin:0!important;padding:15mm 10mm!important}
     .template-royal_gold .cv-profile{float:none!important;margin:0 0 8mm!important}.template-royal_gold .cv-personal-section,.template-royal_gold .cv-side>.cv-section:not(.cv-personal-section){display:block!important;width:auto!important;margin:0 0 6mm!important}
-    .template-royal_gold .cv-personal-row{display:block!important;width:auto!important}.template-royal_gold .cv-heading{text-align:right!important}.template-royal_gold[dir=ltr] .cv-heading{text-align:left!important}.template-royal_gold .cv-heading h1{font-family:"DejaVu Sans",sans-serif!important}
+    .template-royal_gold .cv-personal-row{display:block!important;width:auto!important}.template-royal_gold .cv-heading{text-align:right!important}.template-royal_gold[dir=ltr] .cv-heading{text-align:left!important}.template-royal_gold .cv-heading h1{font-family:Tajawal,sans-serif!important}
 
     .template-midnight_luxury .cv-layout{padding:0!important}
     .template-midnight_luxury .cv-side{position:fixed!important;top:0!important;bottom:0!important;left:auto!important;right:0!important;width:22%!important;min-height:0!important;padding:15mm 9mm!important;background:#07152d!important;border:0!important;border-right:4mm solid #d1aa54!important}

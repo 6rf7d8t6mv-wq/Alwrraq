@@ -44,6 +44,7 @@
 document.getElementById('imageButton')?.addEventListener('click',async function(){
     this.disabled=true;this.textContent='جارٍ إنشاء الصورة...';
     try{
+        await document.fonts?.ready;
         const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,backgroundColor:'#ffffff',useCORS:true});
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
         const form=new FormData();form.append('image',blob,'resume.png');
