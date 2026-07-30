@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\ResumeDraft;
 use App\Models\ServiceDefinition;
 use App\Models\User;
+use App\Services\ResumeDocumentService;
 use App\Services\ServicePricingService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -226,6 +227,20 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('https://example.com');
     }
 
+    public function test_long_resume_name_is_kept_on_one_adaptive_line(): void
+    {
+        [$user, $draft] = $this->createDraft('paid');
+        $content = $draft->content;
+        data_set($content, 'personal.full_name', 'عبدالمحسن عمر الحجيلي');
+        $draft->forceFill(['content' => $content])->save();
+
+        $this->actingAs($user)
+            ->get(route('resume.preview', $draft))
+            ->assertOk()
+            ->assertSee('cv-name-long', false)
+            ->assertSee('white-space:nowrap', false);
+    }
+
     public function test_resume_draft_is_private_to_its_owner(): void
     {
         [, $draft] = $this->createDraft('unpaid');
@@ -423,6 +438,16 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame('completed', $order->status);
         $this->assertNotNull($draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
+
+        $this->mock(ResumeDocumentService::class, function ($mock): void {
+            $mock->shouldReceive('ensurePdf')->once()->andThrow(new \RuntimeException('Simulated renderer failure.'));
+        });
+
+        $this->actingAs($user)
+            ->post(route('cart.free.confirm'), ['order_ids' => [$order->id]])
+            ->assertRedirect(route('orders.index', ['open_order' => $order->id]))
+            ->assertSessionHas('status');
+        $this->assertSame(1, Order::query()->where('service_type', 'resume')->count());
     }
 
     /**

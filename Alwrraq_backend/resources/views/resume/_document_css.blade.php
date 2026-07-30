@@ -50,6 +50,8 @@
 .content-sparse .cv-personal-identity h1{font-size:29px}.content-sparse .cv-personal-identity .cv-job{font-size:18px}
 .content-dense .cv-side{padding:28px 20px}.content-dense .cv-main{padding:30px 28px}.content-dense .cv-section{margin-bottom:17px}.content-dense .cv-section-items{gap:10px}.content-dense .cv-body{font-size:11px;line-height:1.55}.content-dense .cv-item-heading strong{font-size:14px}
 .content-dense .cv-personal-identity h1{font-size:19px}.content-dense .cv-personal-identity .cv-job{font-size:12px}
+.cv-personal-identity h1.cv-name-long{font-size:17px!important;line-height:1.45;white-space:nowrap;letter-spacing:-.35px}
+.cv-personal-identity h1.cv-name-extra-long{font-size:14px!important;line-height:1.45;white-space:nowrap;letter-spacing:-.55px}
 
 /* 1: Reference-inspired professional timeline with a full-height profile rail. */
 .template-executive_classic .cv-side{background:#456f9f}

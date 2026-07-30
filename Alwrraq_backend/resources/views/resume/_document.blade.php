@@ -58,6 +58,11 @@
             : count(is_array($sectionData) ? $sectionData : []);
     }
     $textLength = mb_strlen(json_encode($content, JSON_UNESCAPED_UNICODE) ?: '');
+    $fullName = trim((string) ($personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name')));
+    $compactNameLength = mb_strlen(preg_replace('/\s+/u', '', $fullName) ?? $fullName);
+    $nameSizeClass = $compactNameLength > 22
+        ? 'cv-name-extra-long'
+        : ($compactNameLength > 13 ? 'cv-name-long' : '');
     $density = $visibleItemCount <= 5 && $textLength < 1500
         ? 'sparse'
         : ($visibleItemCount >= 15 || $textLength > 5000 ? 'dense' : 'balanced');
@@ -83,7 +88,7 @@
 
             <section class="cv-section cv-personal-section">
                 <div class="cv-personal-identity">
-                    <h1>{{ $personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name') }}</h1>
+                    <h1 class="{{ $nameSizeClass }}">{{ $fullName }}</h1>
                     <div class="cv-job">{{ $personal['job_title'] ?? ($isArabic ? 'المسمى الوظيفي' : 'Job title') }}</div>
                 </div>
                 <h3>{{ $isArabic ? 'المعلومات الشخصية' : 'Personal Information' }}</h3>

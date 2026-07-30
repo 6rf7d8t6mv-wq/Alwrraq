@@ -11,6 +11,7 @@ use App\Services\ResumeDocumentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
@@ -268,7 +269,15 @@ class CartController extends Controller
             ->get()
             ->each(function (Order $order): void {
                 if ($order->resumeDraft) {
-                    app(ResumeDocumentService::class)->ensurePdf($order->resumeDraft);
+                    try {
+                        app(ResumeDocumentService::class)->ensurePdf($order->resumeDraft);
+                    } catch (\Throwable $exception) {
+                        Log::error('Free checkout completed but resume PDF generation failed.', [
+                            'order_id' => $order->id,
+                            'resume_draft_id' => $order->resumeDraft->id,
+                            'error' => $exception->getMessage(),
+                        ]);
+                    }
                 }
             });
 

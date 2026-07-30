@@ -49,6 +49,7 @@
     .template-modern_silk .cv-personal-row{display:block!important;width:auto!important}.template-modern_silk .cv-heading{text-align:right!important}.template-modern_silk[dir=ltr] .cv-heading{text-align:left!important}
 
     .content-sparse .cv-main .cv-section{margin-bottom:17mm}.content-sparse .cv-main .cv-item{margin-bottom:10mm}.content-sparse .cv-main{padding-top:18mm}
+    .cv-personal-identity h1.cv-name-long{font-size:12pt!important;line-height:1.4;white-space:nowrap;letter-spacing:-.25pt}.cv-personal-identity h1.cv-name-extra-long{font-size:9pt!important;line-height:1.4;white-space:nowrap;letter-spacing:-.4pt}
     .cv-watermark{display:none}
 </style>
 </head>
