@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
 class ServicePricingService
 {
     public const CUSTOM_SERVICE_DEFAULT_PRICE = 1;
-    public const RESUME_SERVICE_PRICE = 5;
+    public const RESUME_SERVICE_DEFAULT_PRICE = 5;
 
     public const DEFINITIONS = [
         'notes_white_pages' => ['group' => 'طباعة المذكرات والملفات', 'label' => 'عدد صفحات الورق الأبيض للمجموعة', 'default' => 12, 'integer' => true, 'suffix' => 'صفحة'],
@@ -100,10 +100,6 @@ class ServicePricingService
             return 0;
         }
 
-        if ($service->workflow_type === 'resume') {
-            return self::RESUME_SERVICE_PRICE;
-        }
-
         return $this->customServicePrices([$service])[$service->id] ?? self::CUSTOM_SERVICE_DEFAULT_PRICE;
     }
 
@@ -125,9 +121,11 @@ class ServicePricingService
             : collect();
 
         return $keysById->mapWithKeys(fn (string $key, int $serviceId) => [
-            $serviceId => $services->firstWhere('id', $serviceId)?->workflow_type === 'resume'
-                ? self::RESUME_SERVICE_PRICE
-                : (float) ($storedPrices[$key] ?? self::CUSTOM_SERVICE_DEFAULT_PRICE),
+            $serviceId => (float) ($storedPrices[$key] ?? (
+                $services->firstWhere('id', $serviceId)?->workflow_type === 'resume'
+                    ? self::RESUME_SERVICE_DEFAULT_PRICE
+                    : self::CUSTOM_SERVICE_DEFAULT_PRICE
+            )),
         ])->all();
     }
 

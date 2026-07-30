@@ -56,7 +56,7 @@
         <div class="pricing-groups">
             @if ($customServices->isNotEmpty())
                 <section class="panel pricing-group">
-                    <h2>الخدمات المضافة من إدارة الخدمات</h2>
+                    <h2>أسعار الخدمات المضافة والسيرة الذاتية</h2>
                     <div class="pricing-fields">
                         @foreach ($customServices as $service)
                             <div class="pricing-field">

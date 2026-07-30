@@ -1,3 +1,6 @@
+@php
+    $resumePriceLabel = rtrim(rtrim(number_format($resumePrice, 2, '.', ''), '0'), '.').' ريال';
+@endphp
 <!DOCTYPE html>
 <html lang="{{ $draft->language }}" dir="{{ $draft->language === 'ar' ? 'rtl' : 'ltr' }}">
 <head>
@@ -44,7 +47,7 @@
         <div class="error-box {{ $errors->any() ? 'show' : '' }}" id="errorBox">
             @if($errors->any()){{ $errors->first() }}@endif
         </div>
-        <div class="footer-actions"><button class="secondary" id="prevButton" type="button">السابق</button><button class="secondary" id="nextButton" type="button">التالي</button><button class="primary" id="checkoutButton" type="submit" form="checkoutForm">إضافة إلى السلة — 5 ريالات</button></div>
+        <div class="footer-actions"><button class="secondary" id="prevButton" type="button">السابق</button><button class="secondary" id="nextButton" type="button">التالي</button><button class="primary" id="checkoutButton" type="submit" form="checkoutForm">إضافة إلى السلة — {{ $resumePriceLabel }}</button></div>
     </section>
     <aside class="panel preview-panel">
         <div class="preview-toolbar"><strong>المعاينة المباشرة</strong><a href="{{ route('resume.preview', $draft) }}" target="_blank">معاينة السيرة الذاتية</a></div>
@@ -59,7 +62,7 @@
 <div class="privacy-curtain">المعاينة محمية حتى إتمام الدفع</div>
 <form id="checkoutForm" method="post" action="{{ route('resume.checkout', $draft) }}" hidden>@csrf</form>
 <script>
-const draftId=@json($draft->id), paid=@json($paid), csrf=document.querySelector('meta[name=csrf-token]').content,checkoutForm=document.getElementById('checkoutForm'),checkoutButton=document.getElementById('checkoutButton');
+const draftId=@json($draft->id), paid=@json($paid), resumePriceLabel=@json($resumePriceLabel), csrf=document.querySelector('meta[name=csrf-token]').content,checkoutForm=document.getElementById('checkoutForm'),checkoutButton=document.getElementById('checkoutButton');
 let state={template_id:@json($draft->template_id),language:@json($draft->language),content:@json($draft->content ?? []),section_order:@json($draft->section_order ?? \App\Models\ResumeDraft::DEFAULT_SECTION_ORDER),hidden_sections:@json($draft->hidden_sections ?? [])};
 const templates=@json(\App\Models\ResumeDraft::TEMPLATES);
 const photoUrl=@json($draft->photo_path ? route('resume.preview', [$draft,'photo'=>1]) : null);
@@ -104,7 +107,7 @@ function attachCropDrag(){const stage=document.getElementById('cropStage');if(!s
 function zoomPhoto(v){drag.scale=Number(v);positionPhoto()}function positionPhoto(){if(!cropImage.naturalWidth)return;const base=Math.max(260/cropImage.naturalWidth,260/cropImage.naturalHeight),w=cropImage.naturalWidth*base*drag.scale,h=cropImage.naturalHeight*base*drag.scale;cropImage.style.width=w+'px';cropImage.style.height=h+'px';cropImage.style.left=((260-w)/2+drag.x)+'px';cropImage.style.top=((260-h)/2+drag.y)+'px'}
 async function savePhoto(){const c=document.createElement('canvas');c.width=c.height=800;const ctx=c.getContext('2d'),img=cropImage,scale=800/260;ctx.drawImage(img,parseFloat(img.style.left)*scale,parseFloat(img.style.top)*scale,parseFloat(img.style.width)*scale,parseFloat(img.style.height)*scale);c.toBlob(async b=>{const fd=new FormData();fd.append('photo',b,'photo.png');const r=await fetch(@json(route('resume.photo',$draft)),{method:'POST',headers:{'X-CSRF-TOKEN':csrf,'Accept':'application/json'},body:fd});const j=await r.json();if(r.ok){previewPhoto.src=j.photo_url+'?v='+Date.now();previewPhotoPlaceholder.style.display='none';photoEditor.classList.remove('active')}} ,'image/png',.95)}
 async function deletePhoto(){await fetch(@json(route('resume.photo.destroy',$draft)),{method:'DELETE',headers:{'X-CSRF-TOKEN':csrf,'Accept':'application/json'}});previewPhoto.removeAttribute('src');previewPhotoPlaceholder.style.display='grid';photoEditor?.classList.remove('active')}
-let addingToCart=false;checkoutForm.addEventListener('submit',async e=>{if(addingToCart)return;e.preventDefault();checkoutButton.disabled=true;checkoutButton.textContent='جارٍ الإضافة إلى السلة...';if(await save()){addingToCart=true;checkoutForm.submit();return}checkoutButton.disabled=false;checkoutButton.textContent='إضافة إلى السلة — 5 ريالات'});
+let addingToCart=false;checkoutForm.addEventListener('submit',async e=>{if(addingToCart)return;e.preventDefault();checkoutButton.disabled=true;checkoutButton.textContent='جارٍ الإضافة إلى السلة...';if(await save()){addingToCart=true;checkoutForm.submit();return}checkoutButton.disabled=false;checkoutButton.textContent='إضافة إلى السلة — '+resumePriceLabel});
 window.addEventListener('beforeunload',()=>secureScreen(false));init();
 </script>
 </body>

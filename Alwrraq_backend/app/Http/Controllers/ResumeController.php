@@ -7,6 +7,7 @@ use App\Models\ResumeDraft;
 use App\Models\ServiceDefinition;
 use App\Services\CartPricingService;
 use App\Services\ResumeDocumentService;
+use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -16,16 +17,17 @@ use Illuminate\Validation\ValidationException;
 
 class ResumeController extends Controller
 {
-    public function landing(Request $request)
+    public function landing(Request $request, ServicePricingService $pricing)
     {
         $draft = ResumeDraft::query()
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['draft', 'pending_payment'])
             ->latest()
             ->first();
+        $resumePrice = $this->resumePrice($pricing);
 
         return response()
-            ->view('resume.landing', compact('draft'))
+            ->view('resume.landing', compact('draft', 'resumePrice'))
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
     }
 
@@ -52,7 +54,7 @@ class ResumeController extends Controller
         return redirect()->route('resume.edit', $draft);
     }
 
-    public function edit(Request $request, ResumeDraft $resumeDraft)
+    public function edit(Request $request, ResumeDraft $resumeDraft, ServicePricingService $pricing)
     {
         $this->authorizeDraft($request, $resumeDraft);
         $resumeDraft->load('order');
@@ -66,6 +68,7 @@ class ResumeController extends Controller
             ->view('resume.editor', [
                 'draft' => $resumeDraft,
                 'paid' => false,
+                'resumePrice' => $this->resumePrice($pricing),
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     }
@@ -285,6 +288,18 @@ class ResumeController extends Controller
         if ($errors) {
             throw ValidationException::withMessages($errors);
         }
+    }
+
+    private function resumePrice(ServicePricingService $pricing): float
+    {
+        $service = ServiceDefinition::query()
+            ->where('code', 'resume')
+            ->where('is_active', true)
+            ->first();
+
+        return $service
+            ? $pricing->customServicePrice($service)
+            : ServicePricingService::RESUME_SERVICE_DEFAULT_PRICE;
     }
 
     private function emptyContent(): array

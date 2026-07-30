@@ -8,6 +8,7 @@ use App\Models\ServiceDefinition;
 use App\Models\User;
 use App\Services\ServicePricingService;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -139,16 +140,25 @@ class ResumeServiceFlowTest extends TestCase
         parent::tearDown();
     }
 
-    public function test_resume_price_is_fixed_at_five_riyals(): void
+    public function test_resume_price_defaults_to_five_riyals_and_uses_the_saved_admin_price(): void
     {
-        $service = new ServiceDefinition();
-        $service->forceFill([
-            'id' => 99,
-            'is_system' => false,
+        $service = ServiceDefinition::query()->create([
+            'code' => 'resume-price-test',
+            'title' => 'إنشاء سيرة ذاتية احترافية',
+            'description' => 'خدمة سيرة ذاتية',
             'workflow_type' => 'resume',
+            'requires_file' => false,
+            'is_active' => true,
+            'is_system' => false,
+            'sort_order' => 85,
         ]);
+        $pricing = app(ServicePricingService::class);
 
-        $this->assertSame(5.0, app(ServicePricingService::class)->customServicePrice($service));
+        $this->assertSame(5.0, $pricing->customServicePrice($service));
+
+        $pricing->updateCustomServicePrices([$service->id => 12.75], 1);
+
+        $this->assertSame(12.75, app(ServicePricingService::class)->customServicePrice($service->refresh()));
     }
 
     public function test_unpaid_resume_preview_has_strong_watermark_and_no_download_buttons(): void
@@ -178,7 +188,7 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('الحقول المعلّمة بنجمة حمراء إلزامية')
             ->assertSee('validateCurrentStep')
             ->assertSee('reportValidity')
-            ->assertSee('إضافة إلى السلة — 5 ريالات')
+            ->assertSee('إضافة إلى السلة — 5 ريال')
             ->assertSee('الرجوع للخدمات')
             ->assertSee('executive_classic')
             ->assertSee('royal_gold')
@@ -236,7 +246,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->actingAs($user)
             ->get(route('resume.edit', $unpaidDraft))
             ->assertOk()
-            ->assertSee('إضافة إلى السلة — 5 ريالات');
+            ->assertSee('إضافة إلى السلة — 5 ريال');
 
         $unpaidDraft->order->forceFill(['payment_status' => 'paid'])->save();
 
@@ -302,7 +312,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($draft->pdf_path));
     }
 
-    public function test_resume_checkout_uses_five_riyal_price_and_full_discount_confirmation(): void
+    public function test_resume_checkout_uses_configured_price_and_full_discount_confirmation(): void
     {
         Storage::fake('local');
         $user = User::query()->create([
@@ -321,6 +331,13 @@ class ResumeServiceFlowTest extends TestCase
             'is_system' => false,
             'sort_order' => 85,
         ]);
+        DB::table('service_price_settings')->insert([
+            'key' => 'service_definition_'.$service->id.'_price',
+            'value' => 7.5,
+            'updated_by' => $user->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
         $draft = ResumeDraft::query()->create([
             'user_id' => $user->id,
             'template_id' => 'executive_classic',
@@ -337,6 +354,15 @@ class ResumeServiceFlowTest extends TestCase
             'status' => 'draft',
         ]);
 
+        $this->actingAs($user)
+            ->get(route('resume.landing'))
+            ->assertOk()
+            ->assertSee('7.5 ريال');
+        $this->actingAs($user)
+            ->get(route('resume.edit', $draft))
+            ->assertOk()
+            ->assertSee('إضافة إلى السلة — 7.5 ريال');
+
         $response = $this->actingAs($user)->post(route('resume.checkout', $draft));
 
         $response->assertRedirect(route('cart.index'));
@@ -346,7 +372,7 @@ class ResumeServiceFlowTest extends TestCase
         $order = Order::query()->findOrFail($draft->order_id);
         $this->assertSame($service->id, $order->service_definition_id);
         $this->assertSame('unpaid', $order->payment_status);
-        $this->assertSame(5.0, (float) $order->grand_total);
+        $this->assertSame(7.5, (float) $order->grand_total);
         $this->assertSame(1, Order::query()->where('service_type', 'resume')->count());
 
         $this->actingAs($user)
@@ -359,7 +385,7 @@ class ResumeServiceFlowTest extends TestCase
 
         $order->forceFill([
             'discount_code' => 'FULL5',
-            'discount_amount' => 5,
+            'discount_amount' => 7.5,
             'discount_applied_at' => now(),
             'grand_total' => 0,
         ])->save();

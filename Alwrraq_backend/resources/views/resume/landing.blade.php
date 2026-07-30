@@ -18,7 +18,7 @@
             <span class="eyebrow">خدمة رقمية احترافية</span>
             <h1>إنشاء سيرة ذاتية احترافية</h1>
             <p>أنشئ سيرتك الذاتية واختر من مجموعة تصاميم فاخرة، ثم أضفها إلى السلة وطبّق كود الخصم وادفع من خلال نظام السلة المعتاد. بعد إتمام الطلب يمكنك عرضها وتحميلها بصيغة PDF أو صورة عالية الجودة من صفحة طلباتي.</p>
-            <div class="price">5 ريالات</div>
+            <div class="price">{{ rtrim(rtrim(number_format($resumePrice, 2, '.', ''), '0'), '.') }} ريال</div>
             <form method="post" action="{{ route('resume.start') }}">
                 @csrf
                 <button class="start" type="submit">{{ $draft ? 'متابعة تعديل سيرتك الذاتية' : 'ابدأ إنشاء سيرتك الذاتية' }}</button>
