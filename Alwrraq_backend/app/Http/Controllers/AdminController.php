@@ -443,7 +443,8 @@ class AdminController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'phone' => ['required', 'string', 'regex:/^05[0-9]{8}$/', Rule::unique('users', 'phone')->ignore($user->id)],
             'email' => ['nullable', 'email:rfc,dns', 'max:255', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', Rule::unique('users', 'email')->ignore($user->id)],
-            'password' => ['nullable', Password::min(6), 'regex:/^[A-Za-z0-9]+$/', 'confirmed'],
+            'change_password' => ['nullable', 'boolean'],
+            'password' => ['exclude_unless:change_password,1', 'required', Password::min(6), 'regex:/^[A-Za-z0-9]+$/', 'confirmed'],
             'role' => ['required', Rule::in(['customer', 'admin'])],
             'is_active' => ['nullable', 'boolean'],
             'login_blocked' => ['nullable', 'boolean'],
@@ -468,14 +469,11 @@ class AdminController extends Controller
             $this->ensurePermission($prefix.'_email_update');
         }
 
-        if (filled($data['password'] ?? null)) {
+        if ($request->boolean('change_password')) {
             $this->ensurePermission($prefix.'_password_reset');
         }
 
-        if (blank($data['password'] ?? null)) {
-            unset($data['password']);
-        }
-        unset($data['first_name'], $data['second_name'], $data['password_confirmation']);
+        unset($data['first_name'], $data['second_name'], $data['password_confirmation'], $data['change_password']);
 
         if ($request->has('is_active')) {
             $this->ensurePermission($prefix.'_status');

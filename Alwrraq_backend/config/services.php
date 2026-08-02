@@ -28,6 +28,12 @@ return [
         'timeout' => env('GOOGLE_TRANSLATE_TIMEOUT', 8),
     ],
 
+    'mymemory_translation' => [
+        'enabled' => env('MYMEMORY_TRANSLATE_ENABLED', true),
+        'endpoint' => env('MYMEMORY_TRANSLATE_ENDPOINT', 'https://api.mymemory.translated.net/get'),
+        'timeout' => env('MYMEMORY_TRANSLATE_TIMEOUT', 8),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

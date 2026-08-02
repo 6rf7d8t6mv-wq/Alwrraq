@@ -207,6 +207,7 @@ Route::middleware('auth')->prefix('resume')->name('resume.')->group(function () 
     Route::post('/start', [ResumeController::class, 'start'])->name('start');
     Route::get('/{resumeDraft}/edit', [ResumeController::class, 'edit'])->name('edit');
     Route::patch('/{resumeDraft}', [ResumeController::class, 'update'])->name('update');
+    Route::post('/{resumeDraft}/translate', [ResumeController::class, 'translate'])->name('translate');
     Route::post('/{resumeDraft}/photo', [ResumeController::class, 'photo'])->name('photo');
     Route::delete('/{resumeDraft}/photo', [ResumeController::class, 'destroyPhoto'])->name('photo.destroy');
     Route::post('/{resumeDraft}/checkout', [ResumeController::class, 'checkout'])->name('checkout');

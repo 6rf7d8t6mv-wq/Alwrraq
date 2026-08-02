@@ -3,7 +3,12 @@
     $nextLocale = $currentLocale === 'en' ? 'ar' : 'en';
 @endphp
 
+@if($currentLocale === 'en')
+    <script>document.documentElement.classList.add('ui-auto-english')</script>
+@endif
+
 <style>
+    html.ui-auto-english body { opacity: 0; }
     .language-switcher-form { margin: 0; width: 100%; }
     .language-switcher-button {
         width: 100%;
@@ -154,3 +159,8 @@
         <span>{{ $currentLocale === 'en' ? 'Arabic' : 'English' }}</span>
     </button>
 </form>
+<script>
+    document.currentScript.previousElementSibling?.addEventListener('submit', () => {
+        document.documentElement.classList.add('ui-auto-english');
+    });
+</script>

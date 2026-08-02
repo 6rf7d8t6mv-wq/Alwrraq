@@ -165,8 +165,9 @@
                     <p class="form-note">اضغط الزر إذا كنت تريد تغيير كلمة مرور هذا العميل.</p>
                     <button class="ghost" type="button" onclick="toggleInlinePasswordPanel(this)">تغيير كلمة المرور</button>
                     <div class="form-grid inline-password-panel" style="display: none; margin-top: 12px;">
-                        <div><label>كلمة المرور الجديدة</label><input name="password" type="password" placeholder="كلمة مرور جديدة"></div>
-                        <div><label>تأكيد كلمة المرور الجديدة</label><input name="password_confirmation" type="password" placeholder="تأكيد كلمة المرور"></div>
+                        <input name="change_password" type="hidden" value="0" disabled>
+                        <div><label>كلمة المرور الجديدة</label><input name="password" type="password" placeholder="كلمة مرور جديدة" autocomplete="new-password" disabled></div>
+                        <div><label>تأكيد كلمة المرور الجديدة</label><input name="password_confirmation" type="password" placeholder="تأكيد كلمة المرور" autocomplete="new-password" disabled></div>
                     </div>
                 </div>
                 @endif

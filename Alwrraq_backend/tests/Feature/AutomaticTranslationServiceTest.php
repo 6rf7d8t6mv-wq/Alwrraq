@@ -54,6 +54,7 @@ class AutomaticTranslationServiceTest extends TestCase
         config([
             'cache.default' => 'array',
             'services.google_translation.api_key' => null,
+            'services.mymemory_translation.enabled' => false,
         ]);
 
         Cache::flush();
@@ -70,6 +71,7 @@ class AutomaticTranslationServiceTest extends TestCase
         config([
             'cache.default' => 'array',
             'services.google_translation.api_key' => null,
+            'services.mymemory_translation.enabled' => false,
         ]);
 
         $this->postJson(route('language.translate'), [
@@ -78,5 +80,28 @@ class AutomaticTranslationServiceTest extends TestCase
             'translations' => [],
             'configured' => false,
         ]);
+    }
+
+    public function test_it_uses_the_keyless_semantic_fallback_when_google_has_no_key(): void
+    {
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => null,
+            'services.mymemory_translation.enabled' => true,
+            'services.mymemory_translation.endpoint' => 'https://api.mymemory.translated.net/get',
+        ]);
+        Cache::flush();
+        Http::fake([
+            'api.mymemory.translated.net/*' => Http::response([
+                'responseStatus' => 200,
+                'responseData' => ['translatedText' => 'Book'],
+            ]),
+        ]);
+
+        $this->assertSame(
+            ['كتاب' => 'Book'],
+            app(AutomaticTranslationService::class)->translateArabicToEnglish(['كتاب'])
+        );
+        $this->assertTrue(app(AutomaticTranslationService::class)->isConfigured());
     }
 }

@@ -104,6 +104,31 @@ class AdminManagementPermissionsTest extends TestCase
         $this->assertSame('new', $order->fresh()->status);
     }
 
+    public function test_admin_can_rename_customer_without_sending_or_changing_password(): void
+    {
+        $employee = $this->employee(['customers_view', 'customers_update']);
+        $customer = User::query()->create([
+            'name' => 'الاسم القديم',
+            'phone' => '0500000011',
+            'password' => 'OriginalPassword1',
+            'role' => 'customer',
+        ]);
+        $originalPassword = $customer->getRawOriginal('password');
+
+        $this->actingAs($employee)
+            ->patch(route('admin.users.update', $customer), [
+                'first_name' => 'الاسم',
+                'second_name' => 'الجديد',
+                'phone' => $customer->phone,
+                'role' => 'customer',
+            ])
+            ->assertRedirect();
+
+        $customer->refresh();
+        $this->assertSame('الاسم الجديد', $customer->name);
+        $this->assertSame($originalPassword, $customer->getRawOriginal('password'));
+    }
+
     private function employee(array $permissions): User
     {
         return User::query()->create([

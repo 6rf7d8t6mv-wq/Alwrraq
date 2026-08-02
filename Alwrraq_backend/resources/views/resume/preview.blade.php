@@ -23,13 +23,10 @@
     @if(! $paid && ! $isAdminViewer)
         <a href="{{ route('resume.edit', $draft) }}">العودة لتعديل السيرة الذاتية</a>
     @endif
-    @if($paid && ! $isAdminViewer)
-        <a class="download" href="{{ route('resume.download.pdf', $draft) }}">تحميل السيرة الذاتية PDF</a>
-        @if($draft->image_path)
-            <a class="download" href="{{ route('resume.download.image', $draft) }}">تحميل السيرة الذاتية كصورة</a>
-        @else
-            <button class="download" id="imageButton" type="button">إنشاء وتحميل السيرة كصورة</button>
-        @endif
+    @if($paid)
+        <button class="download" id="pdfButton" type="button">تحميل السيرة الذاتية PDF</button>
+        <button class="download" id="imageButton" type="button">تحميل السيرة الذاتية كصورة</button>
+        @if($isAdminViewer)<span class="notice">معاينة السيرة الذاتية من لوحة الإدارة</span>@endif
     @elseif(! $paid)
         <span class="notice">معاينة محمية — التنزيل والتصوير متاحان بعد الدفع</span>
     @else
@@ -38,20 +35,30 @@
 </div>
 <div class="stage" id="stage">@include('resume._document', ['pdfMode' => false])</div>
 <div class="capture-guard">المعاينة محمية حتى إتمام الدفع</div>
-@if($paid && ! $isAdminViewer)
+@if($paid)
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-document.getElementById('imageButton')?.addEventListener('click',async function(){
-    this.disabled=true;this.textContent='جارٍ إنشاء الصورة...';
+let finalImageUrl=@json($draft->image_path ? route('resume.download.image',$draft) : null);
+async function ensureFinalImage(){
+    if(finalImageUrl)return finalImageUrl;
     try{
         await document.fonts?.ready;
         const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,backgroundColor:'#ffffff',useCORS:true});
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
         const form=new FormData();form.append('image',blob,'resume.png');
         const response=await fetch(@json(route('resume.final-image.store',$draft)),{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'},body:form});
-        const data=await response.json();if(!response.ok)throw data;location.href=data.download_url;
-    }catch(e){this.disabled=false;this.textContent='إعادة محاولة إنشاء الصورة';alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}
+        const data=await response.json();if(!response.ok)throw data;finalImageUrl=data.download_url;return finalImageUrl;
+    }catch(e){throw e}
+}
+document.getElementById('imageButton')?.addEventListener('click',async function(){
+    this.disabled=true;this.textContent='جارٍ تجهيز الصورة...';
+    try{location.href=await ensureFinalImage()}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل الصورة';alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}
 });
+document.getElementById('pdfButton')?.addEventListener('click',async function(){
+    this.disabled=true;this.textContent='جارٍ تجهيز PDF بنفس التصميم...';
+    try{await ensureFinalImage();location.href=@json(route('resume.download.pdf',$draft))}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل PDF';alert('تعذر إنشاء PDF، حاول مرة أخرى.')}
+});
+if(new URLSearchParams(location.search).get('auto_download')==='pdf')document.getElementById('pdfButton')?.click();
 try{ResumeSecurity.postMessage('open')}catch(e){}
 </script>
 @else

@@ -1,3 +1,6 @@
+@if($draft->language === 'bilingual')
+    @include('resume._document_bilingual')
+@else
 @php
     $content = $draft->content ?? [];
     $personal = $content['personal'] ?? [];
@@ -21,14 +24,14 @@
         'phone' => 'رقم الجوال', 'email' => 'البريد الإلكتروني', 'address' => 'العنوان',
         'birth_date' => 'تاريخ الميلاد', 'nationality' => 'الجنسية',
         'marital_status' => 'الحالة الاجتماعية', 'linkedin' => 'LinkedIn',
-        'website' => 'الموقع الشخصي', 'summary' => 'الملف المهني',
+        'website' => 'الموقع الشخصي', 'summary' => 'الهدف الوظيفي',
         'major' => 'التخصص', 'grade' => 'المعدل', 'location' => 'الموقع',
         'date' => 'التاريخ', 'present' => 'حتى الآن',
     ] : [
         'phone' => 'Phone', 'email' => 'Email', 'address' => 'Address',
         'birth_date' => 'Birth date', 'nationality' => 'Nationality',
         'marital_status' => 'Marital status', 'linkedin' => 'LinkedIn',
-        'website' => 'Website', 'summary' => 'Professional Profile',
+        'website' => 'Website', 'summary' => 'Career Objective',
         'major' => 'Major', 'grade' => 'Grade', 'location' => 'Location',
         'date' => 'Date', 'present' => 'Present',
     ];
@@ -186,3 +189,4 @@
         <div class="cv-watermark" aria-hidden="true">@for($i=0;$i<28;$i++)<span>معاينة غير مدفوعة — الورّاق</span>@endfor</div>
     @endunless
 </div>
+@endif

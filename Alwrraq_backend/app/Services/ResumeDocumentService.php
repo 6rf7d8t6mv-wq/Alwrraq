@@ -27,27 +27,31 @@ class ResumeDocumentService
             $draft->forceFill(['pdf_path' => null])->save();
         }
 
-        $html = view('resume.pdf', [
-            'draft' => $draft,
-            'paid' => true,
-            'pdfMode' => true,
-        ])->render();
+        if ($draft->image_path && Storage::disk('local')->exists($draft->image_path)) {
+            $pdf = $this->renderPdfFromFinalImage($draft);
+        } else {
+            $html = view('resume.pdf', [
+                'draft' => $draft,
+                'paid' => true,
+                'pdfMode' => true,
+            ])->render();
 
-        try {
-            $pdf = $this->renderPdf($html, $draft->language === 'ar');
-        } catch (Throwable $primaryException) {
-            Log::warning('Primary resume PDF rendering failed; retrying without Arabic shaping.', [
-                'resume_draft_id' => $draft->id,
-                'error' => $primaryException->getMessage(),
-            ]);
             try {
-                $pdf = $this->renderPdf($html, false);
-            } catch (Throwable $fallbackException) {
-                Log::warning('Resume HTML PDF fallback failed; retrying from the final image.', [
+                $pdf = $this->renderPdf($html, $draft->language !== 'en');
+            } catch (Throwable $primaryException) {
+                Log::warning('Primary resume PDF rendering failed; retrying without Arabic shaping.', [
                     'resume_draft_id' => $draft->id,
-                    'error' => $fallbackException->getMessage(),
+                    'error' => $primaryException->getMessage(),
                 ]);
-                $pdf = $this->renderPdfFromFinalImage($draft);
+                try {
+                    $pdf = $this->renderPdf($html, false);
+                } catch (Throwable $fallbackException) {
+                    Log::warning('Resume HTML PDF fallback failed; retrying from the final image.', [
+                        'resume_draft_id' => $draft->id,
+                        'error' => $fallbackException->getMessage(),
+                    ]);
+                    $pdf = $this->renderPdfFromFinalImage($draft);
+                }
             }
         }
 
@@ -88,7 +92,7 @@ class ResumeDocumentService
         }
     }
 
-    private function renderPdf(string $html, bool $shapeArabic): string
+    private function renderPdf(string $html, bool $shapeArabic, bool $showPageNumber = true): string
     {
         if ($shapeArabic) {
             $html = $this->shapeArabicTextNodes($html);
@@ -103,14 +107,16 @@ class ResumeDocumentService
         $dompdf->setPaper('A4');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
-        $dompdf->getCanvas()->page_text(
-            540,
-            820,
-            $shapeArabic ? $this->shapeArabicTextNodes('صفحة {PAGE_NUM} من {PAGE_COUNT}') : 'Page {PAGE_NUM} of {PAGE_COUNT}',
-            null,
-            8,
-            [0.39, 0.45, 0.55]
-        );
+        if ($showPageNumber) {
+            $dompdf->getCanvas()->page_text(
+                540,
+                820,
+                $shapeArabic ? $this->shapeArabicTextNodes('صفحة {PAGE_NUM} من {PAGE_COUNT}') : 'Page {PAGE_NUM} of {PAGE_COUNT}',
+                null,
+                8,
+                [0.39, 0.45, 0.55]
+            );
+        }
 
         $pdf = $dompdf->output();
         if (! str_starts_with($pdf, '%PDF-')) {
@@ -136,7 +142,7 @@ class ResumeDocumentService
             .'img{display:block;width:210mm;height:297mm;object-fit:contain}'
             .'</style></head><body><img src="'.$image.'" alt=""></body></html>';
 
-        return $this->renderPdf($html, false);
+        return $this->renderPdf($html, false, false);
     }
 
     private function shapeArabicTextNodes(string $html): string

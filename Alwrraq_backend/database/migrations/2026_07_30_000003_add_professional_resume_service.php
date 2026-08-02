@@ -18,7 +18,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->foreignId('order_id')->nullable()->unique()->constrained()->nullOnDelete();
             $table->string('template_id', 50)->default('executive_classic');
-            $table->string('language', 2)->default('ar');
+            $table->string('language', 20)->default('bilingual');
             $table->json('content')->nullable();
             $table->json('section_order')->nullable();
             $table->json('hidden_sections')->nullable();

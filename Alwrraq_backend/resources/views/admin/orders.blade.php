@@ -488,7 +488,7 @@
                                         <span>العميل في السيرة الذاتية</span>
                                         <strong>{{ data_get($order->resumeDraft->content, 'personal.full_name', $order->user->name) }}</strong>
                                     </div>
-                                    <div class="order-file-field"><span>اللغة</span><strong>{{ $order->resumeDraft->language === 'en' ? 'English' : 'العربية' }}</strong></div>
+                                    <div class="order-file-field"><span>اللغة</span><strong>{{ $order->resumeDraft->language === 'bilingual' ? 'العربية وEnglish' : ($order->resumeDraft->language === 'en' ? 'English' : 'العربية') }}</strong></div>
                                     <div class="order-file-field"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>
                                     @if (auth()->user()->hasAdminPermission('files_download'))
                                         <div class="order-file-field actions-field">

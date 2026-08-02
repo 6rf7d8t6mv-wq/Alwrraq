@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\ResumeDraft;
 use App\Models\ServiceDefinition;
+use App\Services\AutomaticTranslationService;
 use App\Services\CartPricingService;
 use App\Services\ResumeDocumentService;
 use App\Services\ServicePricingService;
@@ -43,7 +44,7 @@ class ResumeController extends Controller
             $draft = ResumeDraft::query()->create([
                 'user_id' => $request->user()->id,
                 'template_id' => 'executive_classic',
-                'language' => 'ar',
+                'language' => 'bilingual',
                 'content' => $this->emptyContent(),
                 'section_order' => ResumeDraft::DEFAULT_SECTION_ORDER,
                 'hidden_sections' => [],
@@ -64,6 +65,10 @@ class ResumeController extends Controller
                 ->with('status', 'تم إقفال التعديل بعد الدفع، وهذه هي النسخة النهائية.');
         }
 
+        if ($resumeDraft->language !== 'bilingual') {
+            $resumeDraft->forceFill(['language' => 'bilingual'])->save();
+        }
+
         return response()
             ->view('resume.editor', [
                 'draft' => $resumeDraft,
@@ -78,7 +83,7 @@ class ResumeController extends Controller
         $this->authorizeEditableDraft($request, $resumeDraft);
         $data = $request->validate([
             'template_id' => ['required', Rule::in(array_keys(ResumeDraft::TEMPLATES))],
-            'language' => ['required', Rule::in(['ar', 'en'])],
+            'language' => ['required', Rule::in(['ar', 'en', 'bilingual'])],
             'content' => ['required', 'array'],
             'content.personal.full_name' => ['nullable', 'string', 'max:150'],
             'content.personal.job_title' => ['nullable', 'string', 'max:150'],
@@ -99,11 +104,48 @@ class ResumeController extends Controller
             'hidden_sections.*' => [Rule::in(ResumeDraft::DEFAULT_SECTION_ORDER), 'distinct'],
         ]);
 
+        $data['language'] = 'bilingual';
         $resumeDraft->update($data);
 
         return response()->json([
             'success' => true,
             'saved_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function translate(Request $request, ResumeDraft $resumeDraft, AutomaticTranslationService $translator)
+    {
+        $this->authorizeEditableDraft($request, $resumeDraft);
+        $content = $resumeDraft->content ?? [];
+        unset($content['content_en']);
+
+        $sourceTexts = [];
+        array_walk_recursive($content, static function ($value) use (&$sourceTexts): void {
+            if (is_string($value) && preg_match('/[\x{0600}-\x{06FF}]/u', $value)) {
+                $sourceTexts[] = trim($value);
+            }
+        });
+
+        $translations = [];
+        foreach (array_chunk(array_values(array_unique(array_filter($sourceTexts))), 100) as $batch) {
+            $translations += $translator->translateArabicToEnglish($batch);
+        }
+
+        $translateValue = function ($value) use (&$translateValue, $translations) {
+            if (! is_array($value)) {
+                return is_string($value) ? ($translations[trim($value)] ?? $value) : $value;
+            }
+
+            return array_map($translateValue, $value);
+        };
+
+        $content['content_en'] = $translateValue($content);
+        $resumeDraft->forceFill(['content' => $content, 'language' => 'bilingual'])->save();
+
+        return response()->json([
+            'success' => true,
+            'content_en' => $content['content_en'],
+            'configured' => $translator->isConfigured(),
         ]);
     }
 
@@ -222,6 +264,13 @@ class ResumeController extends Controller
     public function downloadPdf(Request $request, ResumeDraft $resumeDraft, ResumeDocumentService $documents)
     {
         $this->authorizePaidDraft($request, $resumeDraft);
+        if (! $resumeDraft->image_path || ! Storage::disk('local')->exists($resumeDraft->image_path)) {
+            return redirect()->route('resume.preview', [
+                'resumeDraft' => $resumeDraft,
+                'from' => $request->user()->role === 'admin' ? 'admin' : 'orders',
+                'auto_download' => 'pdf',
+            ]);
+        }
         $path = $documents->ensurePdf($resumeDraft);
 
         return response()->download($path, 'professional-resume-'.$resumeDraft->id.'.pdf');
@@ -248,8 +297,11 @@ class ResumeController extends Controller
         if ($resumeDraft->image_path) {
             Storage::disk('local')->delete($resumeDraft->image_path);
         }
+        if ($resumeDraft->pdf_path) {
+            Storage::disk('local')->delete($resumeDraft->pdf_path);
+        }
         $path = $data['image']->store('private/resumes/final', 'local');
-        $resumeDraft->update(['image_path' => $path]);
+        $resumeDraft->update(['image_path' => $path, 'pdf_path' => null]);
 
         return response()->json(['success' => true, 'download_url' => route('resume.download.image', $resumeDraft)]);
     }

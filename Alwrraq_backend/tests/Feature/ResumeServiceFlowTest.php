@@ -10,6 +10,7 @@ use App\Services\ResumeDocumentService;
 use App\Services\ServicePricingService;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -198,6 +199,40 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('modern_silk');
     }
 
+    public function test_resume_translation_is_saved_and_previewed_beside_arabic(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+        $content = $draft->content;
+        $content['personal']['summary'] = 'أطمح لتطوير مسيرتي المهنية';
+        $draft->forceFill(['content' => $content])->save();
+
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => 'test-key',
+            'services.google_translation.endpoint' => 'https://translation.googleapis.com/language/translate/v2',
+        ]);
+        Http::fake([
+            'translation.googleapis.com/*' => Http::response(['data' => ['translations' => [
+                ['translatedText' => 'Resume Customer'],
+                ['translatedText' => 'Engineer'],
+                ['translatedText' => 'I aspire to develop my career'],
+            ]]]),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('resume.translate', $draft))
+            ->assertOk()
+            ->assertJsonPath('content_en.personal.full_name', 'Resume Customer');
+
+        $this->actingAs($user)
+            ->get(route('resume.preview', $draft->refresh()))
+            ->assertOk()
+            ->assertSee('cv-bilingual-columns', false)
+            ->assertSee('الهدف الوظيفي')
+            ->assertSee('Career Objective')
+            ->assertSee('I aspire to develop my career');
+    }
+
     public function test_resume_preview_displays_complete_personal_details_and_sparse_layout(): void
     {
         [$user, $draft] = $this->createDraft('unpaid');
@@ -337,7 +372,9 @@ class ResumeServiceFlowTest extends TestCase
         [$user, $draft] = $this->createDraft('paid');
         $invalidPath = 'private/resumes/final/resume-'.$draft->id.'.pdf';
         Storage::disk('local')->put($invalidPath, 'invalid cached file');
-        $draft->forceFill(['pdf_path' => $invalidPath])->save();
+        $imagePath = 'private/resumes/final/resume-'.$draft->id.'.png';
+        Storage::disk('local')->put($imagePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL2WQAAAABJRU5ErkJggg=='));
+        $draft->forceFill(['pdf_path' => $invalidPath, 'image_path' => $imagePath])->save();
 
         $response = $this->actingAs($user)->get(route('resume.download.pdf', $draft));
 

@@ -624,7 +624,14 @@
             const panel = button.closest('.form-section')?.querySelector('.inline-password-panel');
             if (!panel) return;
 
-            panel.style.display = panel.style.display === 'none' ? 'grid' : 'none';
+            const opening = panel.style.display === 'none';
+            panel.style.display = opening ? 'grid' : 'none';
+            panel.querySelectorAll('input').forEach((input) => {
+                input.disabled = !opening;
+                if (input.name === 'change_password') input.value = opening ? '1' : '0';
+                if (!opening && input.type === 'password') input.value = '';
+            });
+            button.textContent = opening ? 'إلغاء تغيير كلمة المرور' : 'تغيير كلمة المرور';
         }
 
         document.addEventListener('keydown', (event) => {

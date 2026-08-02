@@ -686,7 +686,7 @@
                                         </div>
                                     @elseif ($order->service_type === 'resume')
                                         <div class="detail-grid">
-                                            <div class="detail-card"><span>اللغة</span><strong>{{ $order->resumeDraft?->language === 'en' ? 'English' : 'العربية' }}</strong></div>
+                                            <div class="detail-card"><span>اللغة</span><strong>{{ $order->resumeDraft?->language === 'bilingual' ? 'العربية وEnglish' : ($order->resumeDraft?->language === 'en' ? 'English' : 'العربية') }}</strong></div>
                                             <div class="detail-card"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>
                                             <div class="detail-card"><span>الحالة</span><strong>{{ $order->payment_status === 'paid' ? 'النسخة النهائية متاحة' : 'معاينة محمية' }}</strong></div>
                                         </div>

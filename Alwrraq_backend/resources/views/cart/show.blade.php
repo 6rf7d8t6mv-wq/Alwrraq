@@ -679,7 +679,7 @@
                                         <div class="detail-table-wrap">
                                             <table><tbody><tr>
                                                 <td data-label="الخدمة"><span class="detail-value">إنشاء سيرة ذاتية احترافية</span></td>
-                                                <td data-label="اللغة"><span class="detail-value">{{ $cartOrder->resumeDraft?->language === 'en' ? 'English' : 'العربية' }}</span></td>
+                                                <td data-label="اللغة"><span class="detail-value">{{ $cartOrder->resumeDraft?->language === 'bilingual' ? 'العربية وEnglish' : ($cartOrder->resumeDraft?->language === 'en' ? 'English' : 'العربية') }}</span></td>
                                                 <td data-label="التصميم"><span class="detail-value">{{ $cartOrder->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</span></td>
                                                 <td data-label="الإجراء">
                                                     <a class="edit-file-button" href="{{ $cartOrder->resumeDraft ? route('resume.edit', $cartOrder->resumeDraft) : route('resume.landing') }}">تعديل</a>
