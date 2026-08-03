@@ -120,29 +120,41 @@ class AutomaticTranslationService
 
         foreach (array_chunk($texts, 20) as $batch) {
             try {
-                $responses = Http::pool(fn (Pool $pool) => collect($batch)
-                    ->mapWithKeys(fn (string $text, int $index) => [
-                        (string) $index => $pool->as((string) $index)
+                $partsByText = collect($batch)->map(fn (string $text) => $this->splitForFallback($text))->all();
+                $responses = Http::pool(fn (Pool $pool) => collect($partsByText)
+                    ->flatMap(fn (array $parts, int $textIndex) => collect($parts)->mapWithKeys(fn (string $part, int $partIndex) => [
+                        $textIndex.'-'.$partIndex => $pool->as($textIndex.'-'.$partIndex)
                             ->acceptJson()
                             ->timeout($timeout)
                             ->get($endpoint, [
-                                'q' => mb_substr($text, 0, 490),
+                                'q' => $part,
                                 'langpair' => $sourceLanguage.'|'.$targetLanguage,
                             ]),
-                    ])->all());
+                    ]))->all());
 
                 foreach ($batch as $index => $sourceText) {
-                    $response = $responses[(string) $index] ?? null;
-                    if (! $response || ! $response->successful()) {
-                        continue;
+                    $translatedParts = [];
+                    foreach ($partsByText[$index] as $partIndex => $part) {
+                        $response = $responses[$index.'-'.$partIndex] ?? null;
+                        if (! $response || ! $response->successful()) {
+                            $translatedParts = [];
+                            break;
+                        }
+                        $translatedPart = html_entity_decode(
+                            trim((string) $response->json('responseData.translatedText', '')),
+                            ENT_QUOTES | ENT_HTML5,
+                            'UTF-8'
+                        );
+                        if ($translatedPart === '') {
+                            $translatedParts = [];
+                            break;
+                        }
+                        $translatedParts[] = $translatedPart;
                     }
-
-                    $translated = html_entity_decode(
-                        trim((string) $response->json('responseData.translatedText', '')),
-                        ENT_QUOTES | ENT_HTML5,
-                        'UTF-8'
-                    );
-                    if ($translated === '' || ($sourceLanguage === 'ar' && preg_match('/[\x{0600}-\x{06FF}]/u', $translated))) {
+                    $translated = trim(implode(' ', $translatedParts));
+                    $wrongScript = ($targetLanguage === 'en' && preg_match('/[\x{0600}-\x{06FF}]/u', $translated))
+                        || ($targetLanguage === 'ar' && ! preg_match('/[\x{0600}-\x{06FF}]/u', $translated));
+                    if ($translated === '' || $wrongScript) {
                         continue;
                     }
 
@@ -156,6 +168,37 @@ class AutomaticTranslationService
         }
 
         return $translations;
+    }
+
+    /** @return array<int, string> */
+    private function splitForFallback(string $text): array
+    {
+        if (strlen($text) <= 450) {
+            return [$text];
+        }
+
+        $parts = [];
+        $current = '';
+        foreach (preg_split('/(\s+)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [$text] as $token) {
+            if ($current !== '' && strlen($current.$token) > 450) {
+                $parts[] = trim($current);
+                $current = '';
+            }
+            if (strlen($token) > 450) {
+                while ($token !== '') {
+                    $chunk = mb_strcut($token, 0, 450, 'UTF-8');
+                    $parts[] = trim($chunk);
+                    $token = (string) mb_strcut($token, strlen($chunk), null, 'UTF-8');
+                }
+                continue;
+            }
+            $current .= $token;
+        }
+        if (trim($current) !== '') {
+            $parts[] = trim($current);
+        }
+
+        return array_values(array_filter($parts));
     }
 
     /** @param array<string, string> $translations */

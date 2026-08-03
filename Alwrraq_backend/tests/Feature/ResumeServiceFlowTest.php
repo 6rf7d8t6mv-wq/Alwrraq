@@ -233,6 +233,47 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('I aspire to develop my career');
     }
 
+    public function test_english_resume_content_is_translated_to_arabic_while_header_keeps_the_original_language(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+        $draft->forceFill(['content' => [
+            'personal' => [
+                'full_name' => 'English Customer',
+                'job_title' => 'Project Manager',
+                'summary' => 'I lead projects and deliver measurable results',
+                'phone' => '0500000000',
+                'email' => 'customer@example.com',
+            ],
+        ]])->save();
+
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => 'test-key',
+            'services.google_translation.endpoint' => 'https://translation.googleapis.com/language/translate/v2',
+            'services.mymemory_translation.enabled' => false,
+        ]);
+        Http::fake([
+            'translation.googleapis.com/*' => Http::response(['data' => ['translations' => [
+                ['translatedText' => 'عميل باللغة الإنجليزية'],
+                ['translatedText' => 'مدير مشاريع'],
+                ['translatedText' => 'أقود المشاريع وأحقق نتائج قابلة للقياس'],
+            ]]]),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('resume.translate', $draft))
+            ->assertOk()
+            ->assertJsonPath('content_ar.personal.summary', 'أقود المشاريع وأحقق نتائج قابلة للقياس')
+            ->assertJsonPath('content_en.personal.summary', 'I lead projects and deliver measurable results');
+
+        $response = $this->actingAs($user)->get(route('resume.preview', $draft->refresh()));
+        $response->assertOk()
+            ->assertSee('Personal Information')
+            ->assertSee('English Customer')
+            ->assertSee('أقود المشاريع وأحقق نتائج قابلة للقياس');
+        $this->assertSame(1, substr_count($response->getContent(), 'English Customer'));
+    }
+
     public function test_resume_preview_displays_complete_personal_details_and_sparse_layout(): void
     {
         [$user, $draft] = $this->createDraft('unpaid');

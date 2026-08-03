@@ -82,6 +82,10 @@
         .detail-card.full { display: flex; grid-column: auto; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; min-height: 48px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 9px 10px; }
         .detail-card span { flex: 0 0 auto; display: block; color: #64748b; font-size: 11px; font-weight: 900; margin: 0; }
         .detail-card strong { min-width: 0; color: #0f172a; font-size: 12px; line-height: 1.6; text-align: left; overflow-wrap: anywhere; }
+        .order-option-highlight,
+        td.order-option-highlight { background: #fff7ed !important; border-color: #fdba74 !important; box-shadow: inset 0 0 0 1px rgba(249,115,22,.08); }
+        .order-option-highlight::before,
+        .order-option-highlight > span { color: #c2410c !important; }
         .files-panel { width: 100%; margin-top: 16px; padding: 16px; box-sizing: border-box; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
         .files-title { margin: 0 0 12px; font-size: 19px; color: #0f172a; }
         .orders-table { display: block; border-radius: 0; overflow: visible; }
@@ -620,6 +624,10 @@
                         }
                         $dayNames = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
                         $createdAtText = $dayNames[$order->created_at->dayOfWeek] . ' - ' . $order->created_at->format('Y-m-d H:i');
+                        $orangeOptionFileId = optional($order->files->first(
+                            fn ($file) => ! (in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word')
+                        ))->id;
+                        $orangeOptionProductId = optional($order->productItems->first())->id;
                     @endphp
                     <div class="modal-backdrop" id="orderModal{{ $order->id }}" tabindex="-1" onclick="closeOrderModal(event, 'orderModal{{ $order->id }}')">
                         <div class="modal" role="dialog" aria-modal="true" onclick="event.stopPropagation()">
@@ -675,7 +683,7 @@
                                                         <tr>
                                                             <td data-label="المنتج">{{ $item->product_name }}</td>
                                                             <td data-label="الشركة">{{ $item->company_name }}</td>
-                                                            <td data-label="النوع">{{ $item->product_type }}</td>
+                                                            <td class="{{ $item->id === $orangeOptionProductId ? 'order-option-highlight' : '' }}" data-label="النوع">{{ $item->product_type }}</td>
                                                             <td data-label="سعر الوحدة">{{ $item->unit_price }} ريال</td>
                                                             <td data-label="الكمية">{{ $item->quantity }}</td>
                                                             <td data-label="الإجمالي">{{ $item->total_price }} ريال</td>
@@ -687,7 +695,7 @@
                                     @elseif ($order->service_type === 'resume')
                                         <div class="detail-grid">
                                             <div class="detail-card"><span>اللغة</span><strong>{{ $order->resumeDraft?->language === 'bilingual' ? 'العربية وEnglish' : ($order->resumeDraft?->language === 'en' ? 'English' : 'العربية') }}</strong></div>
-                                            <div class="detail-card"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>
+                                            <div class="detail-card order-option-highlight"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>
                                             <div class="detail-card"><span>الحالة</span><strong>{{ $order->payment_status === 'paid' ? 'النسخة النهائية متاحة' : 'معاينة محمية' }}</strong></div>
                                         </div>
                                         @if($order->resumeDraft)
@@ -770,7 +778,7 @@
                                                     @foreach ($order->files as $file)
                                                     @php($isAcademicWord = in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word')
                                                     <tr>
-                                                        <td data-label="الملف">
+                                                        <td class="{{ $order->service_type === 'research' && $file->id === $orangeOptionFileId ? 'order-option-highlight' : '' }}" data-label="الملف">
                                                             <div class="uploaded-file-name">
                                                                 <span>{{ $file->original_name }}</span>
                                                                 <div class="uploaded-file-actions {{ $file->file_type === 'image' ? 'image-action-buttons' : '' }}">
@@ -802,10 +810,10 @@
                                                             </td>
                                                         @else
                                                         @if ($order->service_type !== 'research')
-                                                            <td data-label="النوع">{{ strtoupper($file->file_type) }}</td>
+                                                            <td class="{{ $file->id === $orangeOptionFileId && ! in_array($order->service_type, ['images', 'notes', 'books', 'color_printing', 'thesis', 'phd'], true) ? 'order-option-highlight' : '' }}" data-label="النوع">{{ strtoupper($file->file_type) }}</td>
                                                         @endif
                                                         @if ($order->service_type === 'images')
-                                                            <td data-label="نوع التصوير">{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</td>
+                                                            <td class="{{ $file->id === $orangeOptionFileId ? 'order-option-highlight' : '' }}" data-label="نوع التصوير">{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</td>
                                                         @endif
                                                         @if ($order->service_type === 'thesis')
                                                             <td data-label="مشروع الرسالة">{{ $projectNames[$file->thesis_project_type] ?? '-' }}</td>
@@ -825,7 +833,7 @@
                                                             <td data-label="النسخ">{{ $file->copies }}</td>
                                                         @endif
                                                         @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
-                                                            <td data-label="نوع الطباعة">{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
+                                                            <td class="{{ $file->id === $orangeOptionFileId ? 'order-option-highlight' : '' }}" data-label="نوع الطباعة">{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</td>
                                                         @endif
                                                         @if (in_array($order->service_type, ['notes', 'books', 'color_printing'], true))
                                                             <td data-label="حجم الصفحة">{{ ['A4' => 'A4', 'A3' => 'A3', 'A5' => 'A5', 'B5' => 'B5'][$file->page_size] ?? 'A4' }}</td>

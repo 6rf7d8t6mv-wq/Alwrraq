@@ -57,10 +57,12 @@
 
 /* One unified bilingual document: English and Arabic share the same A4 design. */
 .cv-bilingual-sheet{--cv-accent:#456f9f;display:block;min-height:1123px;background:#fff}
-.cv-bilingual-top{min-height:128px;padding:20px 34px;display:flex;align-items:center;justify-content:center;gap:22px;background:var(--cv-accent);color:#fff;text-align:center}
-.cv-bilingual-top>div:last-child{display:grid;gap:5px}.cv-bilingual-top strong{font-size:24px;line-height:1.35}.cv-bilingual-top span{font-size:13px;opacity:.88}
+.cv-bilingual-top{min-height:168px;padding:20px 34px;display:flex;align-items:center;justify-content:flex-start;gap:26px;background:var(--cv-accent);color:#fff}
+.cv-header-personal{min-width:0;flex:1;text-align:start}.cv-header-personal small{display:block;margin-bottom:3px;font-size:10px;font-weight:800;opacity:.8}.cv-header-personal h1{margin:0;font-size:25px;line-height:1.35;overflow-wrap:anywhere}.cv-header-job{margin-top:3px;font-size:14px;font-weight:800;opacity:.92}
+.cv-header-personal h1.cv-name-long{font-size:21px;white-space:nowrap}.cv-header-personal h1.cv-name-extra-long{font-size:17px;white-space:nowrap;letter-spacing:-.35px}
+.cv-header-contacts{display:flex;flex-wrap:wrap;gap:4px 13px;margin-top:10px;font-size:9px;line-height:1.45}.cv-header-contacts span{min-width:0;overflow-wrap:anywhere}.cv-header-contacts strong{font-size:inherit}
 .cv-bilingual-photo{display:grid;place-items:center;width:88px;height:88px;flex:0 0 88px;border-radius:50%;object-fit:cover;border:4px solid rgba(255,255,255,.9);background:#dbeafe;color:var(--cv-accent);font-size:34px;font-weight:900}
-.cv-bilingual-columns{display:grid;grid-template-columns:1fr 1fr;min-height:995px}
+.cv-bilingual-columns{display:grid;grid-template-columns:1fr 1fr;min-height:955px}
 .cv-language-column{min-width:0;padding:25px 27px;color:#172033}.cv-language-column[dir=ltr]{border-right:1px solid #cbd5e1;font-family:Arial,Tajawal,sans-serif}
 .cv-language-heading{min-height:118px;margin-bottom:17px;padding-bottom:13px;border-bottom:2px solid var(--cv-accent)}
 .cv-language-heading h1{margin:0;color:#172033;font-size:22px;line-height:1.35;overflow-wrap:anywhere}.cv-language-heading .cv-job{margin:4px 0 8px;color:var(--cv-accent);font-size:14px}
@@ -69,7 +71,7 @@
 .cv-language-column .cv-section-mark{width:16px;height:16px;flex-basis:16px;border-width:1.5px}.cv-language-column .cv-section-mark:after{inset:4px}
 .cv-language-column .cv-section-items{gap:8px}.cv-language-column .cv-item{margin:0}.cv-language-column .cv-item-heading{gap:5px}.cv-language-column .cv-item-heading strong{font-size:11px;line-height:1.45}.cv-language-column .cv-item-heading time{font-size:8px}
 .cv-language-column .cv-organization{font-size:9px}.cv-language-column .cv-item-meta{margin-top:2px;gap:2px 6px;font-size:8px}.cv-language-column .cv-body{margin-top:3px;font-size:9px;line-height:1.55}.cv-language-column .cv-link,.cv-language-column .cv-level{font-size:8px}
-.cv-bilingual-sheet.content-dense .cv-bilingual-top{min-height:108px;padding-block:12px}.cv-bilingual-sheet.content-dense .cv-bilingual-photo{width:76px;height:76px;flex-basis:76px}.cv-bilingual-sheet.content-dense .cv-language-column{padding:18px 22px}.cv-bilingual-sheet.content-dense .cv-language-heading{min-height:96px;margin-bottom:11px}.cv-bilingual-sheet.content-dense .cv-language-column .cv-section{margin-bottom:9px}.cv-bilingual-sheet.content-dense .cv-language-column .cv-section h3{font-size:12px}.cv-bilingual-sheet.content-dense .cv-language-column .cv-body{font-size:7.5px;line-height:1.42}.cv-bilingual-sheet.content-dense .cv-language-column .cv-item-heading strong{font-size:9px}
+.cv-bilingual-sheet.content-dense .cv-bilingual-top{min-height:140px;padding-block:12px}.cv-bilingual-sheet.content-dense .cv-bilingual-photo{width:76px;height:76px;flex-basis:76px}.cv-bilingual-sheet.content-dense .cv-header-personal h1{font-size:20px}.cv-bilingual-sheet.content-dense .cv-header-contacts{font-size:8px}.cv-bilingual-sheet.content-dense .cv-language-column{padding:18px 22px}.cv-bilingual-sheet.content-dense .cv-language-column .cv-section{margin-bottom:9px}.cv-bilingual-sheet.content-dense .cv-language-column .cv-section h3{font-size:12px}.cv-bilingual-sheet.content-dense .cv-language-column .cv-body{font-size:7.5px;line-height:1.42}.cv-bilingual-sheet.content-dense .cv-language-column .cv-item-heading strong{font-size:9px}
 .cv-bilingual-sheet.template-royal_gold{--cv-accent:#9a7628}.cv-bilingual-sheet.template-midnight_luxury{--cv-accent:#07152d}.cv-bilingual-sheet.template-emerald_signature{--cv-accent:#0b5d4b}.cv-bilingual-sheet.template-modern_silk{--cv-accent:#6551a5}
 
 /* 1: Reference-inspired professional timeline with a full-height profile rail. */
@@ -170,8 +172,8 @@
     .template-emerald_signature .cv-personal-identity h1{font-size:3vw}
     .template-modern_silk .cv-side{grid-template-columns:13vw minmax(0,1fr);padding:3vw 5vw}.template-modern_silk .cv-personal-list{grid-template-columns:repeat(2,minmax(0,1fr))}.template-modern_silk .cv-photo{width:12vw;height:12vw}.template-modern_silk .cv-main{padding:4vw 6vw}
     .template-modern_silk .cv-personal-identity h1{font-size:3.8vw}.template-modern_silk .cv-personal-identity .cv-job{font-size:2.1vw}
-    .cv-bilingual-top{min-height:15vw;padding:2.5vw 4vw;gap:2.5vw}.cv-bilingual-top strong{font-size:3vw}.cv-bilingual-top span{font-size:1.7vw}.cv-bilingual-photo{width:11vw;height:11vw;flex-basis:11vw}
-    .cv-language-column{padding:3vw}.cv-language-heading{min-height:14vw;margin-bottom:2vw;padding-bottom:1.6vw}.cv-language-heading h1{font-size:2.8vw}.cv-language-heading .cv-job{font-size:1.9vw}.cv-bilingual-contacts{font-size:1.2vw}
+    .cv-bilingual-top{min-height:21vw;padding:2.5vw 4vw;gap:2.5vw}.cv-bilingual-photo{width:11vw;height:11vw;flex-basis:11vw}.cv-header-personal h1{font-size:3.1vw}.cv-header-job{font-size:1.8vw}.cv-header-personal small,.cv-header-contacts{font-size:1.2vw}
+    .cv-language-column{padding:3vw}
     .cv-language-column .cv-section{margin-bottom:1.8vw}.cv-language-column .cv-section h3{font-size:1.8vw}.cv-language-column .cv-item-heading strong{font-size:1.4vw}.cv-language-column .cv-item-heading time,.cv-language-column .cv-organization,.cv-language-column .cv-item-meta,.cv-language-column .cv-body{font-size:1.1vw}
 }
 @media(max-width:520px){

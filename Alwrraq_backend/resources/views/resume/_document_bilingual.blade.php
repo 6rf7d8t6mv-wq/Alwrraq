@@ -1,6 +1,23 @@
 @php
-    $contentAr = $draft->content ?? [];
-    $contentEn = $contentAr['content_en'] ?? [];
+    $contentOriginal = $draft->content ?? [];
+    $contentAr = $contentOriginal['content_ar'] ?? $contentOriginal;
+    $contentEn = $contentOriginal['content_en'] ?? [];
+    $personalOriginal = $contentOriginal['personal'] ?? [];
+    $personalIsArabic = (bool) preg_match('/[\x{0600}-\x{06FF}]/u', implode(' ', array_filter($personalOriginal, 'is_string')));
+    $personalAddress = implode($personalIsArabic ? '، ' : ', ', array_filter([$personalOriginal['city'] ?? null, $personalOriginal['country'] ?? null]));
+    $personalContacts = array_filter([
+        $personalIsArabic ? 'رقم الجوال' : 'Phone' => $personalOriginal['phone'] ?? null,
+        $personalIsArabic ? 'البريد الإلكتروني' : 'Email' => $personalOriginal['email'] ?? null,
+        $personalIsArabic ? 'العنوان' : 'Address' => $personalAddress ?: null,
+        $personalIsArabic ? 'تاريخ الميلاد' : 'Birth date' => $personalOriginal['birth_date'] ?? null,
+        $personalIsArabic ? 'الجنسية' : 'Nationality' => $personalOriginal['nationality'] ?? null,
+        $personalIsArabic ? 'الحالة الاجتماعية' : 'Marital status' => $personalOriginal['marital_status'] ?? null,
+        'LinkedIn' => $personalOriginal['linkedin'] ?? null,
+        $personalIsArabic ? 'الموقع الشخصي' : 'Website' => $personalOriginal['website'] ?? null,
+    ]);
+    $personalName = $personalOriginal['full_name'] ?? ($personalIsArabic ? 'الاسم الكامل' : 'Full name');
+    $personalNameLength = mb_strlen(preg_replace('/\s+/u', '', $personalName) ?? $personalName);
+    $personalNameClass = $personalNameLength > 22 ? 'cv-name-extra-long' : ($personalNameLength > 13 ? 'cv-name-long' : '');
     $order = $draft->section_order ?? \App\Models\ResumeDraft::DEFAULT_SECTION_ORDER;
     $hidden = $draft->hidden_sections ?? [];
     $photoSource = null;
@@ -23,33 +40,21 @@
 @endphp
 <div class="cv-sheet cv-bilingual-sheet template-{{ $draft->template_id }} content-{{ $density }}" dir="ltr">
     <div class="cv-bilingual-top">
-        @if($photoSource)<img class="cv-bilingual-photo" src="{{ $photoSource }}" alt="">@else<div class="cv-bilingual-photo cv-photo-placeholder">{{ mb_substr(data_get($contentAr, 'personal.full_name', 'CV'), 0, 1) }}</div>@endif
-        <div><strong>السيرة الذاتية | CURRICULUM VITAE</strong><span>العربية وEnglish</span></div>
+        @if($photoSource)<img class="cv-bilingual-photo" src="{{ $photoSource }}" alt="">@else<div class="cv-bilingual-photo cv-photo-placeholder">{{ mb_substr($personalOriginal['full_name'] ?? 'CV', 0, 1) }}</div>@endif
+        <div class="cv-header-personal" dir="{{ $personalIsArabic ? 'rtl' : 'ltr' }}">
+            <small>{{ $personalIsArabic ? 'المعلومات الشخصية' : 'Personal Information' }}</small>
+            <h1 class="{{ $personalNameClass }}">{{ $personalName }}</h1>
+            @if($personalOriginal['job_title'] ?? null)<div class="cv-header-job">{{ $personalOriginal['job_title'] }}</div>@endif
+            @if($personalContacts)<div class="cv-header-contacts">@foreach($personalContacts as $label => $value)<span><strong>{{ $label }}:</strong> {{ $value }}</span>@endforeach</div>@endif
+        </div>
     </div>
     <div class="cv-bilingual-columns">
         @foreach(['en' => $contentEn, 'ar' => $contentAr] as $lang => $content)
             @php
                 $isArabic = $lang === 'ar';
                 $personal = $content['personal'] ?? [];
-                $address = implode($isArabic ? '، ' : ', ', array_filter([$personal['city'] ?? null, $personal['country'] ?? null]));
-                $contacts = array_filter([
-                    $isArabic ? 'رقم الجوال' : 'Phone' => $personal['phone'] ?? null,
-                    $isArabic ? 'البريد الإلكتروني' : 'Email' => $personal['email'] ?? null,
-                    $isArabic ? 'العنوان' : 'Address' => $address ?: null,
-                    $isArabic ? 'تاريخ الميلاد' : 'Birth date' => $personal['birth_date'] ?? null,
-                    $isArabic ? 'الجنسية' : 'Nationality' => $personal['nationality'] ?? null,
-                    $isArabic ? 'الحالة الاجتماعية' : 'Marital status' => $personal['marital_status'] ?? null,
-                ]);
-                $fullName = $personal['full_name'] ?? ($isArabic ? 'الاسم الكامل' : 'Full name');
-                $compactNameLength = mb_strlen(preg_replace('/\s+/u', '', $fullName) ?? $fullName);
-                $nameSizeClass = $compactNameLength > 22 ? 'cv-name-extra-long' : ($compactNameLength > 13 ? 'cv-name-long' : '');
             @endphp
             <div class="cv-language-column" dir="{{ $isArabic ? 'rtl' : 'ltr' }}">
-                <header class="cv-language-heading">
-                    <h1 class="{{ $nameSizeClass }}">{{ $fullName }}</h1>
-                    <div class="cv-job">{{ $personal['job_title'] ?? ($isArabic ? 'المسمى الوظيفي' : 'Job title') }}</div>
-                    @if($contacts)<div class="cv-bilingual-contacts">@foreach($contacts as $label => $value)<span><strong>{{ $label }}:</strong> {{ $value }}</span>@endforeach</div>@endif
-                </header>
                 @if($personal['summary'] ?? null)
                     <section class="cv-section cv-summary"><h3>{{ $isArabic ? 'الهدف الوظيفي' : 'Career Objective' }}</h3><div class="cv-body">{{ $personal['summary'] }}</div></section>
                 @endif

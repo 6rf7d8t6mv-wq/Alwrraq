@@ -51,6 +51,8 @@
         #adminModalBody .panel[data-order-id] .order-file-card { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; padding: 6px; border-radius: 9px; }
         #adminModalBody .panel[data-order-id] .order-file-field,
         #adminModalBody .panel[data-order-id] .order-file-field:nth-child(3n) { display: flex; align-items: center; justify-content: space-between; gap: 4px; min-width: 0; min-height: 38px; padding: 5px 6px; border: 1px solid #edf2f7; border-radius: 7px; background: #f8fafc; }
+        #adminModalBody .panel[data-order-id] .order-file-field.order-option-highlight { background: #fff7ed !important; border-color: #fdba74 !important; box-shadow: inset 0 0 0 1px rgba(249,115,22,.08); }
+        #adminModalBody .panel[data-order-id] .order-file-field.order-option-highlight > span { color: #c2410c; font-weight: 900; }
         #adminModalBody .panel[data-order-id] .order-file-field.file-name,
         #adminModalBody .panel[data-order-id] .order-file-field.actions-field { grid-column: 1 / -1; }
         #adminModalBody .panel[data-order-id] .order-file-field span { flex: 0 1 43%; min-width: 0; margin: 0; font-size: 7.5px; line-height: 1.2; word-break: normal; overflow-wrap: normal; }
@@ -412,6 +414,10 @@
                             ? 'green'
                             : (blank($order->admin_opened_at) ? 'red' : 'yellow');
                         $orderCreatedAtText = $dayNames[$order->created_at->dayOfWeek] . ' - ' . $order->created_at->format('Y-m-d H:i');
+                        $orangeOptionFileId = optional($order->files->first(
+                            fn ($file) => ! (in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word')
+                        ))->id;
+                        $orangeOptionProductId = optional($order->productItems->first())->id;
                     @endphp
 
                     <div class="panel order-detail-section" data-order-id="{{ $order->id }}" data-order-paid="{{ $isPaid ? '1' : '0' }}" data-open-order-url="{{ route('admin.orders.open', $order) }}" style="margin-bottom: 16px;">
@@ -489,7 +495,7 @@
                                         <strong>{{ data_get($order->resumeDraft->content, 'personal.full_name', $order->user->name) }}</strong>
                                     </div>
                                     <div class="order-file-field"><span>اللغة</span><strong>{{ $order->resumeDraft->language === 'bilingual' ? 'العربية وEnglish' : ($order->resumeDraft->language === 'en' ? 'English' : 'العربية') }}</strong></div>
-                                    <div class="order-file-field"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>
+                                    <div class="order-file-field order-option-highlight"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>
                                     @if (auth()->user()->hasAdminPermission('files_download'))
                                         <div class="order-file-field actions-field">
                                             <span>السيرة الذاتية</span>
@@ -517,7 +523,7 @@
                                         </div>
                                     </div>
                                     <div class="order-file-field"><span>الشركة</span><strong>{{ $item->company_name }}</strong></div>
-                                    <div class="order-file-field"><span>النوع</span><strong>{{ $item->product_type }}</strong></div>
+                                    <div class="order-file-field {{ $item->id === $orangeOptionProductId ? 'order-option-highlight' : '' }}"><span>النوع</span><strong>{{ $item->product_type }}</strong></div>
                                     <div class="order-file-field price"><span>سعر الوحدة</span><strong>{{ $item->unit_price }} ريال</strong></div>
                                     <div class="order-file-field"><span>الكمية</span><strong>{{ $item->quantity }}</strong></div>
                                     <div class="order-file-field price total product-total-field"><span>الإجمالي</span><strong>{{ $item->total_price }} ريال</strong></div>
@@ -536,7 +542,7 @@
                             @foreach ($order->files as $file)
                                 @php($isAcademicWord = in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word')
                                 <div class="order-file-card">
-                                    <div class="order-file-field file-name">
+                                    <div class="order-file-field file-name {{ $order->service_type === 'research' && $file->id === $orangeOptionFileId ? 'order-option-highlight' : '' }}">
                                         <span>{{ $order->service_type === 'research' ? 'عنوان البحث المطلوب' : 'الملف' }}</span>
                                         <strong>{{ $order->service_type === 'research' ? ($file->research_title ?: $file->original_name) : $file->original_name }}</strong>
                                     </div>
@@ -555,7 +561,7 @@
                                         </div>
                                     @endif
                                     @if ($order->service_type !== 'research')
-                                        <div class="order-file-field">
+                                        <div class="order-file-field {{ $file->id === $orangeOptionFileId && ! in_array($order->service_type, ['images', 'notes', 'books', 'color_printing', 'thesis', 'phd'], true) ? 'order-option-highlight' : '' }}">
                                             <span>النوع</span>
                                             <strong>{{ strtoupper($file->file_type) }}</strong>
                                         </div>
@@ -569,7 +575,7 @@
                                             <span>الحجم</span>
                                             <strong>{{ number_format($file->size / 1024, 1) }} KB</strong>
                                         </div>
-                                        <div class="order-file-field">
+                                        <div class="order-file-field {{ $file->id === $orangeOptionFileId ? 'order-option-highlight' : '' }}">
                                             <span>نوع التصوير</span>
                                             <strong>{{ ['color' => 'ملون', 'black_white' => 'أبيض وأسود', 'personal' => 'صورة شخصية'][$file->image_print_type] ?? 'غير محدد' }}</strong>
                                         </div>
@@ -634,7 +640,7 @@
                                         </div>
                                     @endif
                                     @if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true))
-                                        <div class="order-file-field">
+                                        <div class="order-file-field {{ $file->id === $orangeOptionFileId ? 'order-option-highlight' : '' }}">
                                             <span>نوع الطباعة</span>
                                             <strong>{{ in_array($order->service_type, ['thesis', 'phd'], true) && $file->file_type === 'word' ? 'للعرض فقط' : (['one_side' => 'وجه واحد', 'two_sides' => 'وجهين'][$file->print_sides] ?? 'وجهين') }}</strong>
                                         </div>

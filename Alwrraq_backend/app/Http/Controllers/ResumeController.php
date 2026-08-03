@@ -117,33 +117,81 @@ class ResumeController extends Controller
     {
         $this->authorizeEditableDraft($request, $resumeDraft);
         $content = $resumeDraft->content ?? [];
-        unset($content['content_en']);
+        unset($content['content_ar'], $content['content_en']);
 
-        $sourceTexts = [];
-        array_walk_recursive($content, static function ($value) use (&$sourceTexts): void {
-            if (is_string($value) && preg_match('/[\x{0600}-\x{06FF}]/u', $value)) {
-                $sourceTexts[] = trim($value);
+        $nonTranslatableKeys = [
+            'phone', 'email', 'birth_date', 'linkedin', 'website', 'url',
+            'start_date', 'end_date', 'date', 'current',
+        ];
+        $shouldTranslate = static fn ($value, $key): bool => is_string($value)
+            && trim($value) !== ''
+            && ! in_array((string) $key, $nonTranslatableKeys, true)
+            && ! filter_var($value, FILTER_VALIDATE_URL)
+            && ! filter_var($value, FILTER_VALIDATE_EMAIL);
+
+        $arabicTexts = [];
+        $englishTexts = [];
+        $collectTexts = function ($value, $key = null) use (&$collectTexts, &$arabicTexts, &$englishTexts, $shouldTranslate): void {
+            if (is_array($value)) {
+                foreach ($value as $childKey => $childValue) {
+                    $collectTexts($childValue, $childKey);
+                }
+
+                return;
             }
-        });
+            if (! $shouldTranslate($value, $key)) {
+                return;
+            }
 
-        $translations = [];
-        foreach (array_chunk(array_values(array_unique(array_filter($sourceTexts))), 100) as $batch) {
-            $translations += $translator->translateArabicToEnglish($batch);
+            $text = trim($value);
+            if (preg_match('/[\x{0600}-\x{06FF}]/u', $text)) {
+                $arabicTexts[] = $text;
+            } elseif (preg_match('/[A-Za-z]/', $text)) {
+                $englishTexts[] = $text;
+            }
+        };
+        $collectTexts($content);
+
+        $arToEn = [];
+        foreach (array_chunk(array_values(array_unique($arabicTexts)), 100) as $batch) {
+            $arToEn += $translator->translate($batch, 'ar', 'en');
+        }
+        $enToAr = [];
+        foreach (array_chunk(array_values(array_unique($englishTexts)), 100) as $batch) {
+            $enToAr += $translator->translate($batch, 'en', 'ar');
         }
 
-        $translateValue = function ($value) use (&$translateValue, $translations) {
-            if (! is_array($value)) {
-                return is_string($value) ? ($translations[trim($value)] ?? $value) : $value;
+        $translateValue = function ($value, string $targetLanguage, $key = null) use (&$translateValue, $arToEn, $enToAr, $shouldTranslate) {
+            if (is_array($value)) {
+                $translated = [];
+                foreach ($value as $childKey => $childValue) {
+                    $translated[$childKey] = $translateValue($childValue, $targetLanguage, $childKey);
+                }
+
+                return $translated;
+            }
+            if (! $shouldTranslate($value, $key)) {
+                return $value;
             }
 
-            return array_map($translateValue, $value);
+            $text = trim($value);
+            if (preg_match('/[\x{0600}-\x{06FF}]/u', $text)) {
+                return $targetLanguage === 'en' ? ($arToEn[$text] ?? $value) : $value;
+            }
+            if (preg_match('/[A-Za-z]/', $text)) {
+                return $targetLanguage === 'ar' ? ($enToAr[$text] ?? $value) : $value;
+            }
+
+            return $value;
         };
 
-        $content['content_en'] = $translateValue($content);
+        $content['content_ar'] = $translateValue($content, 'ar');
+        $content['content_en'] = $translateValue($content, 'en');
         $resumeDraft->forceFill(['content' => $content, 'language' => 'bilingual'])->save();
 
         return response()->json([
             'success' => true,
+            'content_ar' => $content['content_ar'],
             'content_en' => $content['content_en'],
             'configured' => $translator->isConfigured(),
         ]);
