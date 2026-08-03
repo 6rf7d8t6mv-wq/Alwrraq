@@ -274,6 +274,35 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame(1, substr_count($response->getContent(), 'English Customer'));
     }
 
+    public function test_missing_translation_can_be_generated_for_an_existing_paid_resume(): void
+    {
+        [$user, $draft] = $this->createDraft('paid');
+        $content = $draft->content;
+        $content['personal']['summary'] = 'أطمح لتطوير مسيرتي المهنية';
+        unset($content['content_ar'], $content['content_en']);
+        $draft->forceFill(['content' => $content])->save();
+
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => 'test-key',
+            'services.google_translation.endpoint' => 'https://translation.googleapis.com/language/translate/v2',
+            'services.mymemory_translation.enabled' => false,
+        ]);
+        Http::fake([
+            'translation.googleapis.com/*' => Http::response(['data' => ['translations' => [
+                ['translatedText' => 'Resume Customer'],
+                ['translatedText' => 'Engineer'],
+                ['translatedText' => 'I aspire to develop my career'],
+            ]]]),
+        ]);
+
+        $this->actingAs($user)
+            ->postJson(route('resume.translate', $draft))
+            ->assertOk()
+            ->assertJsonPath('translated', true)
+            ->assertJsonPath('content_en.personal.summary', 'I aspire to develop my career');
+    }
+
     public function test_resume_preview_displays_complete_personal_details_and_sparse_layout(): void
     {
         [$user, $draft] = $this->createDraft('unpaid');

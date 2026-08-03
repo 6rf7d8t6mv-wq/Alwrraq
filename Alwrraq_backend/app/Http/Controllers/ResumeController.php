@@ -115,7 +115,10 @@ class ResumeController extends Controller
 
     public function translate(Request $request, ResumeDraft $resumeDraft, AutomaticTranslationService $translator)
     {
-        $this->authorizeEditableDraft($request, $resumeDraft);
+        // Translation only fills the generated language copies. It does not
+        // modify the customer's original content, so an older paid resume may
+        // safely generate missing translations when it is opened again.
+        $this->authorizeDraft($request, $resumeDraft);
         $content = $resumeDraft->content ?? [];
         unset($content['content_ar'], $content['content_en']);
 
@@ -189,11 +192,15 @@ class ResumeController extends Controller
         $content['content_en'] = $translateValue($content, 'en');
         $resumeDraft->forceFill(['content' => $content, 'language' => 'bilingual'])->save();
 
+        $translationSucceeded = count($arToEn) === count(array_unique($arabicTexts))
+            && count($enToAr) === count(array_unique($englishTexts));
+
         return response()->json([
             'success' => true,
             'content_ar' => $content['content_ar'],
             'content_en' => $content['content_en'],
             'configured' => $translator->isConfigured(),
+            'translated' => $translationSucceeded,
         ]);
     }
 
