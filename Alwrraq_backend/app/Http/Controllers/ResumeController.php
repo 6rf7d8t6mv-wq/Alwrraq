@@ -18,6 +18,9 @@ use Illuminate\Validation\ValidationException;
 
 class ResumeController extends Controller
 {
+    private const TRANSLATION_VERSION = 2;
+    private const EXPORT_VERSION = 2;
+
     public function landing(Request $request, ServicePricingService $pricing)
     {
         $draft = ResumeDraft::query()
@@ -104,7 +107,10 @@ class ResumeController extends Controller
             'hidden_sections.*' => [Rule::in(ResumeDraft::DEFAULT_SECTION_ORDER), 'distinct'],
         ]);
 
+        $this->deleteGeneratedDocuments($resumeDraft);
         $data['language'] = 'bilingual';
+        $data['image_path'] = null;
+        $data['pdf_path'] = null;
         $resumeDraft->update($data);
 
         return response()->json([
@@ -119,6 +125,20 @@ class ResumeController extends Controller
         // modify the customer's original content, so an older paid resume may
         // safely generate missing translations when it is opened again.
         $this->authorizeDraft($request, $resumeDraft);
+        $translation = $this->generateBilingualContent($resumeDraft, $translator);
+
+        return response()->json([
+            'success' => true,
+            'content_ar' => $translation['content_ar'],
+            'content_en' => $translation['content_en'],
+            'configured' => $translator->isConfigured(),
+            'translated' => $translation['translated'],
+        ]);
+    }
+
+    /** @return array{content_ar: array, content_en: array, translated: bool} */
+    private function generateBilingualContent(ResumeDraft $resumeDraft, AutomaticTranslationService $translator): array
+    {
         $content = $resumeDraft->content ?? [];
         unset($content['content_ar'], $content['content_en']);
 
@@ -188,20 +208,31 @@ class ResumeController extends Controller
             return $value;
         };
 
-        $content['content_ar'] = $translateValue($content, 'ar');
-        $content['content_en'] = $translateValue($content, 'en');
-        $resumeDraft->forceFill(['content' => $content, 'language' => 'bilingual'])->save();
+        $contentAr = $translateValue($content, 'ar');
+        $contentEn = $translateValue($content, 'en');
 
         $translationSucceeded = count($arToEn) === count(array_unique($arabicTexts))
             && count($enToAr) === count(array_unique($englishTexts));
 
-        return response()->json([
-            'success' => true,
-            'content_ar' => $content['content_ar'],
-            'content_en' => $content['content_en'],
-            'configured' => $translator->isConfigured(),
+        if ($translationSucceeded) {
+            $contentAr['_translation_version'] = self::TRANSLATION_VERSION;
+            $contentEn['_translation_version'] = self::TRANSLATION_VERSION;
+            $content['content_ar'] = $contentAr;
+            $content['content_en'] = $contentEn;
+            $this->deleteGeneratedDocuments($resumeDraft);
+            $resumeDraft->forceFill([
+                'content' => $content,
+                'language' => 'bilingual',
+                'image_path' => null,
+                'pdf_path' => null,
+            ])->save();
+        }
+
+        return [
+            'content_ar' => $contentAr,
+            'content_en' => $contentEn,
             'translated' => $translationSucceeded,
-        ]);
+        ];
     }
 
     public function photo(Request $request, ResumeDraft $resumeDraft)
@@ -276,7 +307,7 @@ class ResumeController extends Controller
         );
     }
 
-    public function preview(Request $request, ResumeDraft $resumeDraft)
+    public function preview(Request $request, ResumeDraft $resumeDraft, AutomaticTranslationService $translator)
     {
         $this->authorizeDraft($request, $resumeDraft);
 
@@ -290,6 +321,11 @@ class ResumeController extends Controller
         }
 
         $resumeDraft->load('order');
+        $translationReady = $this->hasCurrentTranslations($resumeDraft);
+        if (! $translationReady) {
+            $translationReady = $this->generateBilingualContent($resumeDraft, $translator)['translated'];
+            $resumeDraft->refresh()->load('order');
+        }
         $paid = $resumeDraft->isPaid();
         $isAdminViewer = (int) $resumeDraft->user_id !== (int) $request->user()->id
             && $request->user()->role === 'admin';
@@ -311,6 +347,7 @@ class ResumeController extends Controller
                 'backUrl' => $backUrl,
                 'backLabel' => $backLabel,
                 'isAdminViewer' => $isAdminViewer,
+                'translationReady' => $translationReady,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('X-Frame-Options', 'SAMEORIGIN');
@@ -319,7 +356,7 @@ class ResumeController extends Controller
     public function downloadPdf(Request $request, ResumeDraft $resumeDraft, ResumeDocumentService $documents)
     {
         $this->authorizePaidDraft($request, $resumeDraft);
-        if (! $resumeDraft->image_path || ! Storage::disk('local')->exists($resumeDraft->image_path)) {
+        if (! $this->hasCurrentTranslations($resumeDraft) || ! $this->hasCurrentFinalImage($resumeDraft)) {
             return redirect()->route('resume.preview', [
                 'resumeDraft' => $resumeDraft,
                 'from' => $request->user()->role === 'admin' ? 'admin' : 'orders',
@@ -334,7 +371,12 @@ class ResumeController extends Controller
     public function downloadImage(Request $request, ResumeDraft $resumeDraft)
     {
         $this->authorizePaidDraft($request, $resumeDraft);
-        abort_unless($resumeDraft->image_path && Storage::disk('local')->exists($resumeDraft->image_path), 404);
+        if (! $this->hasCurrentTranslations($resumeDraft) || ! $this->hasCurrentFinalImage($resumeDraft)) {
+            return redirect()->route('resume.preview', [
+                'resumeDraft' => $resumeDraft,
+                'from' => $request->user()->role === 'admin' ? 'admin' : 'orders',
+            ]);
+        }
 
         return response()->download(
             Storage::disk('local')->path($resumeDraft->image_path),
@@ -345,8 +387,9 @@ class ResumeController extends Controller
     public function storeFinalImage(Request $request, ResumeDraft $resumeDraft)
     {
         $this->authorizePaidDraft($request, $resumeDraft);
+        abort_unless($this->hasCurrentTranslations($resumeDraft), 409, 'يجب إكمال ترجمة السيرة قبل إنشاء النسخة النهائية.');
         $data = $request->validate([
-            'image' => ['required', 'image', 'mimes:png', 'max:20480'],
+            'image' => ['required', 'image', 'mimes:png', 'dimensions:width=2382,height=3369', 'max:20480'],
         ]);
 
         if ($resumeDraft->image_path) {
@@ -355,7 +398,11 @@ class ResumeController extends Controller
         if ($resumeDraft->pdf_path) {
             Storage::disk('local')->delete($resumeDraft->pdf_path);
         }
-        $path = $data['image']->store('private/resumes/final', 'local');
+        $path = $data['image']->storeAs(
+            'private/resumes/final',
+            'resume-'.$resumeDraft->id.'-v'.self::EXPORT_VERSION.'-'.now()->format('YmdHis').'.png',
+            'local'
+        );
         $resumeDraft->update(['image_path' => $path, 'pdf_path' => null]);
 
         return response()->json(['success' => true, 'download_url' => route('resume.download.image', $resumeDraft)]);
@@ -367,6 +414,26 @@ class ResumeController extends Controller
         $isAuthorizedAdmin = $request->user()->role === 'admin'
             && $request->user()->hasAdminPermission('files_download');
         abort_unless($isOwner || $isAuthorizedAdmin, 403);
+    }
+
+    private function deleteGeneratedDocuments(ResumeDraft $draft): void
+    {
+        foreach (array_filter([$draft->image_path, $draft->pdf_path]) as $path) {
+            Storage::disk('local')->delete($path);
+        }
+    }
+
+    private function hasCurrentFinalImage(ResumeDraft $draft): bool
+    {
+        return filled($draft->image_path)
+            && str_contains(basename($draft->image_path), 'resume-'.$draft->id.'-v'.self::EXPORT_VERSION.'-')
+            && Storage::disk('local')->exists($draft->image_path);
+    }
+
+    private function hasCurrentTranslations(ResumeDraft $draft): bool
+    {
+        return data_get($draft->content, 'content_ar._translation_version') === self::TRANSLATION_VERSION
+            && data_get($draft->content, 'content_en._translation_version') === self::TRANSLATION_VERSION;
     }
 
     private function authorizeEditableDraft(Request $request, ResumeDraft $draft): void

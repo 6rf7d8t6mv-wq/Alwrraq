@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\ResumeDraft;
 use App\Models\ServiceDefinition;
 use App\Models\User;
+use App\Services\AutomaticTranslationService;
 use App\Services\ResumeDocumentService;
 use App\Services\ServicePricingService;
 use Illuminate\Database\Schema\Blueprint;
@@ -233,6 +234,25 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('I aspire to develop my career');
     }
 
+    public function test_translation_uses_the_second_keyless_provider_when_the_first_one_fails(): void
+    {
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => null,
+            'services.mymemory_translation.enabled' => true,
+            'services.google_keyless_translation.enabled' => true,
+        ]);
+        Http::fake([
+            'api.mymemory.translated.net/*' => Http::response([], 503),
+            'translate.googleapis.com/*' => Http::response([[['Project Management', 'إدارة المشاريع']]], 200),
+        ]);
+
+        $translations = app(AutomaticTranslationService::class)
+            ->translate(['إدارة المشاريع'], 'ar', 'en');
+
+        $this->assertSame('Project Management', $translations['إدارة المشاريع']);
+    }
+
     public function test_english_resume_content_is_translated_to_arabic_while_header_keeps_the_original_language(): void
     {
         [$user, $draft] = $this->createDraft('unpaid');
@@ -276,11 +296,16 @@ class ResumeServiceFlowTest extends TestCase
 
     public function test_missing_translation_can_be_generated_for_an_existing_paid_resume(): void
     {
+        Storage::fake('local');
         [$user, $draft] = $this->createDraft('paid');
         $content = $draft->content;
         $content['personal']['summary'] = 'أطمح لتطوير مسيرتي المهنية';
         unset($content['content_ar'], $content['content_en']);
-        $draft->forceFill(['content' => $content])->save();
+        $oldImage = 'private/resumes/final/old-resume.png';
+        $oldPdf = 'private/resumes/final/old-resume.pdf';
+        Storage::disk('local')->put($oldImage, 'old image');
+        Storage::disk('local')->put($oldPdf, 'old pdf');
+        $draft->forceFill(['content' => $content, 'image_path' => $oldImage, 'pdf_path' => $oldPdf])->save();
 
         config([
             'cache.default' => 'array',
@@ -296,11 +321,20 @@ class ResumeServiceFlowTest extends TestCase
             ]]]),
         ]);
 
-        $this->actingAs($user)
-            ->postJson(route('resume.translate', $draft))
+        $response = $this->actingAs($user)
+            ->get(route('resume.preview', $draft))
             ->assertOk()
-            ->assertJsonPath('translated', true)
-            ->assertJsonPath('content_en.personal.summary', 'I aspire to develop my career');
+            ->assertSee('I aspire to develop my career')
+            ->assertSee('width:794,height:1123', false)
+            ->assertDontSee('if(finalImageUrl)', false);
+
+        $draft->refresh();
+        $this->assertSame(2, data_get($draft->content, 'content_ar._translation_version'));
+        $this->assertSame(2, data_get($draft->content, 'content_en._translation_version'));
+        $this->assertNull($draft->image_path);
+        $this->assertNull($draft->pdf_path);
+        Storage::disk('local')->assertMissing($oldImage);
+        Storage::disk('local')->assertMissing($oldPdf);
     }
 
     public function test_resume_preview_displays_complete_personal_details_and_sparse_layout(): void
@@ -442,9 +476,18 @@ class ResumeServiceFlowTest extends TestCase
         [$user, $draft] = $this->createDraft('paid');
         $invalidPath = 'private/resumes/final/resume-'.$draft->id.'.pdf';
         Storage::disk('local')->put($invalidPath, 'invalid cached file');
-        $imagePath = 'private/resumes/final/resume-'.$draft->id.'.png';
+        $imagePath = 'private/resumes/final/resume-'.$draft->id.'-v2-20260804000000.png';
         Storage::disk('local')->put($imagePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL2WQAAAABJRU5ErkJggg=='));
-        $draft->forceFill(['pdf_path' => $invalidPath, 'image_path' => $imagePath])->save();
+        $originalContent = $draft->content;
+        $content = $originalContent;
+        $content['content_ar'] = array_merge($originalContent, ['_translation_version' => 2]);
+        $content['content_en'] = array_merge($originalContent, ['_translation_version' => 2]);
+        $draft->forceFill([
+            'language' => 'bilingual',
+            'content' => $content,
+            'pdf_path' => $invalidPath,
+            'image_path' => $imagePath,
+        ])->save();
 
         $response = $this->actingAs($user)->get(route('resume.download.pdf', $draft));
 

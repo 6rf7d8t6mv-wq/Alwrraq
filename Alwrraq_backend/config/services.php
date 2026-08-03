@@ -34,6 +34,12 @@ return [
         'timeout' => env('MYMEMORY_TRANSLATE_TIMEOUT', 8),
     ],
 
+    'google_keyless_translation' => [
+        'enabled' => env('GOOGLE_KEYLESS_TRANSLATE_ENABLED', true),
+        'endpoint' => env('GOOGLE_KEYLESS_TRANSLATE_ENDPOINT', 'https://translate.googleapis.com/translate_a/single'),
+        'timeout' => env('GOOGLE_KEYLESS_TRANSLATE_TIMEOUT', 8),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

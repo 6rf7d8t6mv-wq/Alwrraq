@@ -55,6 +55,7 @@ class AutomaticTranslationServiceTest extends TestCase
             'cache.default' => 'array',
             'services.google_translation.api_key' => null,
             'services.mymemory_translation.enabled' => false,
+            'services.google_keyless_translation.enabled' => false,
         ]);
 
         Cache::flush();
@@ -72,6 +73,7 @@ class AutomaticTranslationServiceTest extends TestCase
             'cache.default' => 'array',
             'services.google_translation.api_key' => null,
             'services.mymemory_translation.enabled' => false,
+            'services.google_keyless_translation.enabled' => false,
         ]);
 
         $this->postJson(route('language.translate'), [

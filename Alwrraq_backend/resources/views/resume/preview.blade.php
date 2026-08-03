@@ -15,6 +15,8 @@
             .toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:8px;position:sticky}.toolbar a,.toolbar button{width:100%;min-width:0;padding:10px 8px;font-size:13px;text-align:center}.toolbar .notice{grid-column:1/-1;text-align:center;font-size:12px;line-height:1.6}
             .stage{width:100%;padding:4px;overflow:hidden}.cv-sheet{width:100%;box-shadow:none}
         }
+        body.exporting .stage{width:794px!important;padding:0!important;overflow:visible!important}
+        body.exporting .cv-sheet{width:794px!important;min-width:794px!important;max-width:794px!important;height:1123px!important;min-height:1123px!important;max-height:1123px!important;margin:0!important;box-shadow:none!important;overflow:hidden!important}
     </style>
 </head>
 <body>
@@ -23,9 +25,12 @@
     @if(! $paid && ! $isAdminViewer)
         <a href="{{ route('resume.edit', $draft) }}">العودة لتعديل السيرة الذاتية</a>
     @endif
-    @if($paid)
+    @if($paid && $translationReady)
         <button class="download" id="pdfButton" type="button">تحميل السيرة الذاتية PDF</button>
         <button class="download" id="imageButton" type="button">تحميل السيرة الذاتية كصورة</button>
+        @if($isAdminViewer)<span class="notice">معاينة السيرة الذاتية من لوحة الإدارة</span>@endif
+    @elseif($paid)
+        <span class="notice">تعذرت الترجمة التلقائية الآن — أعد تحميل الصفحة للمحاولة مرة أخرى</span>
         @if($isAdminViewer)<span class="notice">معاينة السيرة الذاتية من لوحة الإدارة</span>@endif
     @elseif(! $paid)
         <span class="notice">معاينة محمية — التنزيل والتصوير متاحان بعد الدفع</span>
@@ -35,20 +40,20 @@
 </div>
 <div class="stage" id="stage">@include('resume._document', ['pdfMode' => false])</div>
 <div class="capture-guard">المعاينة محمية حتى إتمام الدفع</div>
-@if($paid)
+@if($paid && $translationReady)
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
-let finalImageUrl=@json($draft->image_path ? route('resume.download.image',$draft) : null);
 async function ensureFinalImage(){
-    if(finalImageUrl)return finalImageUrl;
     try{
         await document.fonts?.ready;
-        const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,backgroundColor:'#ffffff',useCORS:true});
+        document.body.classList.add('exporting');
+        await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+        const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,width:794,height:1123,windowWidth:1200,windowHeight:1400,scrollX:0,scrollY:0,backgroundColor:'#ffffff',useCORS:true});
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
         const form=new FormData();form.append('image',blob,'resume.png');
         const response=await fetch(@json(route('resume.final-image.store',$draft)),{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'},body:form});
-        const data=await response.json();if(!response.ok)throw data;finalImageUrl=data.download_url;return finalImageUrl;
-    }catch(e){throw e}
+        const data=await response.json();if(!response.ok)throw data;return data.download_url;
+    }catch(e){throw e}finally{document.body.classList.remove('exporting')}
 }
 document.getElementById('imageButton')?.addEventListener('click',async function(){
     this.disabled=true;this.textContent='جارٍ تجهيز الصورة...';
@@ -61,7 +66,7 @@ document.getElementById('pdfButton')?.addEventListener('click',async function(){
 if(new URLSearchParams(location.search).get('auto_download')==='pdf')document.getElementById('pdfButton')?.click();
 try{ResumeSecurity.postMessage('open')}catch(e){}
 </script>
-@else
+@elseif(! $paid)
 <script>
 try{ResumeSecurity.postMessage('secure')}catch(e){}
 document.addEventListener('contextmenu',e=>e.preventDefault());
