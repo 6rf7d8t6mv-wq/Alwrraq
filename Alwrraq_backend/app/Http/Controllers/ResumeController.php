@@ -19,7 +19,7 @@ use Illuminate\Validation\ValidationException;
 class ResumeController extends Controller
 {
     private const TRANSLATION_VERSION = 2;
-    private const EXPORT_VERSION = 2;
+    private const EXPORT_VERSION = 3;
 
     public function landing(Request $request, ServicePricingService $pricing)
     {
@@ -365,7 +365,7 @@ class ResumeController extends Controller
         }
         $path = $documents->ensurePdf($resumeDraft);
 
-        return response()->download($path, 'professional-resume-'.$resumeDraft->id.'.pdf');
+        return $this->freshDownloadResponse($path, $this->downloadFilename($resumeDraft, 'pdf'));
     }
 
     public function downloadImage(Request $request, ResumeDraft $resumeDraft)
@@ -378,9 +378,9 @@ class ResumeController extends Controller
             ]);
         }
 
-        return response()->download(
+        return $this->freshDownloadResponse(
             Storage::disk('local')->path($resumeDraft->image_path),
-            'professional-resume-'.$resumeDraft->id.'.png'
+            $this->downloadFilename($resumeDraft, 'png')
         );
     }
 
@@ -400,12 +400,19 @@ class ResumeController extends Controller
         }
         $path = $data['image']->storeAs(
             'private/resumes/final',
-            'resume-'.$resumeDraft->id.'-v'.self::EXPORT_VERSION.'-'.now()->format('YmdHis').'.png',
+            'resume-'.$resumeDraft->id.'-v'.self::EXPORT_VERSION.'-'.now()->format('YmdHisv').'-'.str()->random(8).'.png',
             'local'
         );
         $resumeDraft->update(['image_path' => $path, 'pdf_path' => null]);
 
-        return response()->json(['success' => true, 'download_url' => route('resume.download.image', $resumeDraft)]);
+        $resumeDraft->refresh();
+
+        return response()->json([
+            'success' => true,
+            'download_url' => $this->versionedDownloadUrl($resumeDraft, 'image'),
+            'image_download_url' => $this->versionedDownloadUrl($resumeDraft, 'image'),
+            'pdf_download_url' => $this->versionedDownloadUrl($resumeDraft, 'pdf'),
+        ]);
     }
 
     private function authorizeDraft(Request $request, ResumeDraft $draft): void
@@ -428,6 +435,39 @@ class ResumeController extends Controller
         return filled($draft->image_path)
             && str_contains(basename($draft->image_path), 'resume-'.$draft->id.'-v'.self::EXPORT_VERSION.'-')
             && Storage::disk('local')->exists($draft->image_path);
+    }
+
+    private function versionedDownloadUrl(ResumeDraft $draft, string $format): string
+    {
+        $extension = $format === 'image' ? 'png' : 'pdf';
+        $version = pathinfo((string) $draft->image_path, PATHINFO_FILENAME);
+
+        return route('resume.download.'.$format, [
+            'resumeDraft' => $draft,
+            'download' => 1,
+            'filename' => $this->downloadFilename($draft, $extension),
+            'v' => $version,
+        ]);
+    }
+
+    private function downloadFilename(ResumeDraft $draft, string $extension): string
+    {
+        $version = pathinfo((string) $draft->image_path, PATHINFO_FILENAME);
+        $version = $version !== '' ? $version : 'resume-'.$draft->id.'-'.now()->format('YmdHis');
+
+        return 'professional-'.$version.'.'.$extension;
+    }
+
+    private function freshDownloadResponse(string $path, string $filename)
+    {
+        $response = response()->download($path, $filename, [
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
+        $response->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
+
+        return $response;
     }
 
     private function hasCurrentTranslations(ResumeDraft $draft): bool

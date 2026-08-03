@@ -475,8 +475,9 @@ class ResumeServiceFlowTest extends TestCase
         Storage::fake('local');
         [$user, $draft] = $this->createDraft('paid');
         $invalidPath = 'private/resumes/final/resume-'.$draft->id.'.pdf';
-        Storage::disk('local')->put($invalidPath, 'invalid cached file');
-        $imagePath = 'private/resumes/final/resume-'.$draft->id.'-v2-20260804000000.png';
+        Storage::disk('local')->put($invalidPath, '%PDF-'.str_repeat('old cached pdf', 100));
+        $imageVersion = 'resume-'.$draft->id.'-v3-20260804000000000-test1234';
+        $imagePath = 'private/resumes/final/'.$imageVersion.'.png';
         Storage::disk('local')->put($imagePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL2WQAAAABJRU5ErkJggg=='));
         $originalContent = $draft->content;
         $content = $originalContent;
@@ -493,11 +494,46 @@ class ResumeServiceFlowTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertDownload('professional-resume-'.$draft->id.'.pdf');
+            ->assertDownload('professional-'.$imageVersion.'.pdf')
+            ->assertHeader('Pragma', 'no-cache');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $draft->refresh();
         $this->assertNotNull($draft->pdf_path);
+        $this->assertSame('private/resumes/final/'.$imageVersion.'.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($draft->pdf_path));
+    }
+
+    public function test_old_resume_exports_are_regenerated_and_current_images_are_never_cached(): void
+    {
+        Storage::fake('local');
+        [$user, $draft] = $this->createDraft('paid');
+        $content = $draft->content;
+        $content['content_ar'] = array_merge($content, ['_translation_version' => 2]);
+        $content['content_en'] = array_merge($content, ['_translation_version' => 2]);
+        $oldImage = 'private/resumes/final/resume-'.$draft->id.'-v2-old.png';
+        Storage::disk('local')->put($oldImage, 'old image');
+        $draft->forceFill(['content' => $content, 'image_path' => $oldImage])->save();
+
+        $this->actingAs($user)
+            ->get(route('resume.download.pdf', $draft))
+            ->assertRedirect(route('resume.preview', [
+                'resumeDraft' => $draft,
+                'from' => 'orders',
+                'auto_download' => 'pdf',
+            ]));
+
+        $imageVersion = 'resume-'.$draft->id.'-v3-current-test';
+        $currentImage = 'private/resumes/final/'.$imageVersion.'.png';
+        Storage::disk('local')->put($currentImage, 'current image');
+        $draft->forceFill(['image_path' => $currentImage])->save();
+
+        $response = $this->actingAs($user)->get(route('resume.download.image', $draft));
+
+        $response->assertOk()->assertDownload('professional-'.$imageVersion.'.png');
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
+        $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
     }
 
     public function test_resume_checkout_uses_configured_price_and_full_discount_confirmation(): void

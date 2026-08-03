@@ -502,7 +502,8 @@
                                             <div class="file-action-buttons">
                                                 <a class="file-action-button view" href="{{ route('resume.preview', ['resumeDraft' => $order->resumeDraft, 'from' => 'admin']) }}">معاينة السيرة الذاتية</a>
                                                 @if ($order->payment_status === 'paid')
-                                                    <a class="file-action-button download" href="{{ route('resume.download.pdf', $order->resumeDraft) }}" data-direct-file-download>تحميل PDF</a>
+                                                    @php($resumeExportVersion = pathinfo((string) $order->resumeDraft->image_path, PATHINFO_FILENAME))
+                                                    <a class="file-action-button download" href="{{ route('resume.download.pdf', ['resumeDraft' => $order->resumeDraft, 'download' => 1, 'filename' => 'professional-'.($resumeExportVersion ?: 'resume-'.$order->resumeDraft->id).'.pdf', 'v' => $resumeExportVersion]) }}" data-direct-file-download>تحميل PDF</a>
                                                 @endif
                                             </div>
                                         </div>

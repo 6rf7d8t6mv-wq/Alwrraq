@@ -702,9 +702,10 @@
                                             <div class="modal-actions">
                                                 <a class="action ghost" href="{{ route('resume.preview', ['resumeDraft' => $order->resumeDraft, 'from' => 'orders']) }}">معاينة السيرة الذاتية</a>
                                                 @if($order->payment_status === 'paid')
-                                                    <a class="action secondary" href="{{ route('resume.download.pdf', $order->resumeDraft) }}">تحميل السيرة الذاتية PDF</a>
+                                                    @php($resumeExportVersion = pathinfo((string) $order->resumeDraft->image_path, PATHINFO_FILENAME))
+                                                    <a class="action secondary" href="{{ route('resume.download.pdf', ['resumeDraft' => $order->resumeDraft, 'download' => 1, 'filename' => 'professional-'.($resumeExportVersion ?: 'resume-'.$order->resumeDraft->id).'.pdf', 'v' => $resumeExportVersion]) }}">تحميل السيرة الذاتية PDF</a>
                                                     @if($order->resumeDraft->image_path)
-                                                        <a class="action secondary" href="{{ route('resume.download.image', $order->resumeDraft) }}">تحميل السيرة الذاتية كصورة</a>
+                                                        <a class="action secondary" href="{{ route('resume.download.image', ['resumeDraft' => $order->resumeDraft, 'download' => 1, 'filename' => 'professional-'.$resumeExportVersion.'.png', 'v' => $resumeExportVersion]) }}">تحميل السيرة الذاتية كصورة</a>
                                                     @else
                                                         <a class="action secondary" href="{{ route('resume.preview', ['resumeDraft' => $order->resumeDraft, 'from' => 'orders']) }}">إنشاء نسخة الصورة</a>
                                                     @endif

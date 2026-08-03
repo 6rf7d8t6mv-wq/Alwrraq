@@ -52,16 +52,16 @@ async function ensureFinalImage(){
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
         const form=new FormData();form.append('image',blob,'resume.png');
         const response=await fetch(@json(route('resume.final-image.store',$draft)),{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'},body:form});
-        const data=await response.json();if(!response.ok)throw data;return data.download_url;
+        const data=await response.json();if(!response.ok)throw data;return data;
     }catch(e){throw e}finally{document.body.classList.remove('exporting')}
 }
 document.getElementById('imageButton')?.addEventListener('click',async function(){
     this.disabled=true;this.textContent='جارٍ تجهيز الصورة...';
-    try{location.href=await ensureFinalImage()}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل الصورة';alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}
+    try{const downloads=await ensureFinalImage();location.href=downloads.image_download_url}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل الصورة';alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}
 });
 document.getElementById('pdfButton')?.addEventListener('click',async function(){
     this.disabled=true;this.textContent='جارٍ تجهيز PDF بنفس التصميم...';
-    try{await ensureFinalImage();location.href=@json(route('resume.download.pdf',$draft))}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل PDF';alert('تعذر إنشاء PDF، حاول مرة أخرى.')}
+    try{const downloads=await ensureFinalImage();location.href=downloads.pdf_download_url}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل PDF';alert('تعذر إنشاء PDF، حاول مرة أخرى.')}
 });
 if(new URLSearchParams(location.search).get('auto_download')==='pdf')document.getElementById('pdfButton')?.click();
 try{ResumeSecurity.postMessage('open')}catch(e){}
