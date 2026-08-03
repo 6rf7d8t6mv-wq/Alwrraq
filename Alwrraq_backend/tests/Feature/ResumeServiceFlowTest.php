@@ -186,6 +186,11 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('المعلومات الشخصية')
             ->assertSee('المؤهلات العلمية')
             ->assertSee('الخبرات العملية')
+            ->assertSee('سنة التخرج')
+            ->assertSee('سنة البداية')
+            ->assertSee('سنة النهاية')
+            ->assertSee("['graduation_year','سنة التخرج','Graduation year','year']", false)
+            ->assertSee("['start_year','سنة البداية','Start year','year']", false)
             ->assertSee('الدورات والشهادات')
             ->assertSee('العمل التطوعي')
             ->assertSee('الحقول المعلّمة بنجمة حمراء إلزامية')
@@ -198,6 +203,62 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('midnight_luxury')
             ->assertSee('emerald_signature')
             ->assertSee('modern_silk');
+    }
+
+    public function test_resume_education_and_experience_dates_are_saved_as_years_only(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+        $content = $draft->content;
+        $content['education'] = [[
+            'qualification' => 'بكالوريوس',
+            'start_date' => '2017-09',
+            'end_date' => '2021-06',
+        ]];
+        $content['experience'] = [[
+            'job_title' => 'مهندس',
+            'start_date' => '2021-08',
+            'end_date' => '2025-12',
+        ]];
+
+        $this->actingAs($user)->patchJson(route('resume.update', $draft), [
+            'template_id' => 'executive_classic',
+            'language' => 'bilingual',
+            'content' => $content,
+            'section_order' => ResumeDraft::DEFAULT_SECTION_ORDER,
+            'hidden_sections' => [],
+        ])->assertOk();
+
+        $saved = $draft->refresh()->content;
+        $this->assertSame('2021', data_get($saved, 'education.0.graduation_year'));
+        $this->assertArrayNotHasKey('start_date', $saved['education'][0]);
+        $this->assertArrayNotHasKey('end_date', $saved['education'][0]);
+        $this->assertSame('2021', data_get($saved, 'experience.0.start_year'));
+        $this->assertSame('2025', data_get($saved, 'experience.0.end_year'));
+        $this->assertArrayNotHasKey('start_date', $saved['experience'][0]);
+        $this->assertArrayNotHasKey('end_date', $saved['experience'][0]);
+    }
+
+    public function test_start_keeps_unpaid_draft_and_only_creates_a_blank_draft_after_payment(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+        $draft->forceFill(['content' => array_replace_recursive($draft->content, [
+            'personal' => ['full_name' => 'بيانات يجب ألا تحذف'],
+        ])])->save();
+
+        $this->actingAs($user)
+            ->post(route('resume.start'))
+            ->assertRedirect(route('resume.edit', $draft));
+        $this->assertSame(1, ResumeDraft::query()->where('user_id', $user->id)->count());
+        $this->assertSame('بيانات يجب ألا تحذف', data_get($draft->refresh()->content, 'personal.full_name'));
+
+        $draft->order->forceFill(['payment_status' => 'paid'])->save();
+        $response = $this->actingAs($user)->post(route('resume.start'));
+        $newDraft = ResumeDraft::query()->where('user_id', $user->id)->latest('id')->firstOrFail();
+
+        $response->assertRedirect(route('resume.edit', $newDraft));
+        $this->assertNotSame($draft->id, $newDraft->id);
+        $this->assertSame([], data_get($newDraft->content, 'personal'));
+        $this->assertSame('بيانات يجب ألا تحذف', data_get($draft->refresh()->content, 'personal.full_name'));
     }
 
     public function test_resume_translation_is_saved_and_previewed_beside_arabic(): void

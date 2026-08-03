@@ -11,7 +11,6 @@ use App\Services\ResumeDocumentService;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -19,15 +18,12 @@ use Illuminate\Validation\ValidationException;
 class ResumeController extends Controller
 {
     private const TRANSLATION_VERSION = 2;
+
     private const EXPORT_VERSION = 3;
 
     public function landing(Request $request, ServicePricingService $pricing)
     {
-        $draft = ResumeDraft::query()
-            ->where('user_id', $request->user()->id)
-            ->whereIn('status', ['draft', 'pending_payment'])
-            ->latest()
-            ->first();
+        $draft = $this->latestEditableDraft($request);
         $resumePrice = $this->resumePrice($pricing);
 
         return response()
@@ -37,11 +33,7 @@ class ResumeController extends Controller
 
     public function start(Request $request)
     {
-        $draft = ResumeDraft::query()
-            ->where('user_id', $request->user()->id)
-            ->where('status', 'draft')
-            ->latest()
-            ->first();
+        $draft = $this->latestEditableDraft($request);
 
         if (! $draft) {
             $draft = ResumeDraft::query()->create([
@@ -84,6 +76,9 @@ class ResumeController extends Controller
     public function update(Request $request, ResumeDraft $resumeDraft)
     {
         $this->authorizeEditableDraft($request, $resumeDraft);
+        $request->merge([
+            'content' => $this->normalizeResumeYears($request->input('content', [])),
+        ]);
         $data = $request->validate([
             'template_id' => ['required', Rule::in(array_keys(ResumeDraft::TEMPLATES))],
             'language' => ['required', Rule::in(['ar', 'en', 'bilingual'])],
@@ -100,6 +95,9 @@ class ResumeController extends Controller
             'content.personal.marital_status' => ['nullable', 'string', 'max:100'],
             'content.personal.linkedin' => ['nullable', 'url', 'max:500'],
             'content.personal.website' => ['nullable', 'url', 'max:500'],
+            'content.education.*.graduation_year' => ['nullable', 'regex:/^\d{4}$/'],
+            'content.experience.*.start_year' => ['nullable', 'regex:/^\d{4}$/'],
+            'content.experience.*.end_year' => ['nullable', 'regex:/^\d{4}$/'],
             'content.*' => ['array'],
             'section_order' => ['required', 'array', 'size:9'],
             'section_order.*' => [Rule::in(ResumeDraft::DEFAULT_SECTION_ORDER), 'distinct'],
@@ -144,7 +142,7 @@ class ResumeController extends Controller
 
         $nonTranslatableKeys = [
             'phone', 'email', 'birth_date', 'linkedin', 'website', 'url',
-            'start_date', 'end_date', 'date', 'current',
+            'start_date', 'end_date', 'date', 'graduation_year', 'start_year', 'end_year', 'current',
         ];
         $shouldTranslate = static fn ($value, $key): bool => is_string($value)
             && trim($value) !== ''
@@ -509,6 +507,51 @@ class ResumeController extends Controller
         if ($errors) {
             throw ValidationException::withMessages($errors);
         }
+    }
+
+    private function latestEditableDraft(Request $request): ?ResumeDraft
+    {
+        return ResumeDraft::query()
+            ->where('user_id', $request->user()->id)
+            ->whereIn('status', ['draft', 'pending_payment'])
+            ->where(function ($query): void {
+                $query->whereNull('order_id')
+                    ->orWhereHas('order', fn ($order) => $order->whereNotIn(
+                        'payment_status',
+                        ['paid', 'voided', 'refunded']
+                    ));
+            })
+            ->latest()
+            ->first();
+    }
+
+    private function normalizeResumeYears(array $content): array
+    {
+        foreach ($content['education'] ?? [] as $index => $item) {
+            $content['education'][$index]['graduation_year'] = $this->yearFrom(
+                $item['graduation_year'] ?? $item['end_date'] ?? $item['date'] ?? null
+            );
+            unset($content['education'][$index]['start_date'], $content['education'][$index]['end_date'], $content['education'][$index]['date']);
+        }
+
+        foreach ($content['experience'] ?? [] as $index => $item) {
+            $content['experience'][$index]['start_year'] = $this->yearFrom(
+                $item['start_year'] ?? $item['start_date'] ?? null
+            );
+            $content['experience'][$index]['end_year'] = $this->yearFrom(
+                $item['end_year'] ?? $item['end_date'] ?? null
+            );
+            unset($content['experience'][$index]['start_date'], $content['experience'][$index]['end_date']);
+        }
+
+        return $content;
+    }
+
+    private function yearFrom(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+
+        return preg_match('/^(\d{4})/', $value, $matches) ? $matches[1] : null;
     }
 
     private function resumePrice(ServicePricingService $pricing): float

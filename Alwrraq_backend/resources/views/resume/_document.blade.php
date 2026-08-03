@@ -159,8 +159,16 @@
                                 @php
                                     $title = $item['qualification'] ?? $item['job_title'] ?? $item['name'] ?? $item['title'] ?? $item['role'] ?? '';
                                     $organization = $item['institution'] ?? $item['company'] ?? $item['issuer'] ?? $item['organization'] ?? '';
-                                    $endDate = ($item['current'] ?? false) ? $labels['present'] : ($item['end_date'] ?? $item['date'] ?? null);
-                                    $date = implode(' — ', array_filter([$item['start_date'] ?? null, $endDate]));
+                                    $yearOnly = static fn ($value) => preg_match('/^(\d{4})/', (string) $value, $matches) ? $matches[1] : null;
+                                    if ($section === 'education') {
+                                        $date = $yearOnly($item['graduation_year'] ?? $item['end_date'] ?? $item['date'] ?? null);
+                                    } elseif ($section === 'experience') {
+                                        $endDate = ($item['current'] ?? false) ? $labels['present'] : $yearOnly($item['end_year'] ?? $item['end_date'] ?? null);
+                                        $date = implode(' — ', array_filter([$yearOnly($item['start_year'] ?? $item['start_date'] ?? null), $endDate]));
+                                    } else {
+                                        $endDate = ($item['current'] ?? false) ? $labels['present'] : ($item['end_date'] ?? $item['date'] ?? null);
+                                        $date = implode(' — ', array_filter([$item['start_date'] ?? null, $endDate]));
+                                    }
                                     $description = $item['description'] ?? $item['achievements'] ?? '';
                                 @endphp
                                 <article class="cv-item">
