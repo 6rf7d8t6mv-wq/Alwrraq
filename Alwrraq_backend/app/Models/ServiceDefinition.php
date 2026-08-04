@@ -10,7 +10,7 @@ class ServiceDefinition extends Model
     public const WORKFLOWS = [
         'notes' => 'طباعة مذكرات وPDF',
         'color_printing' => 'طباعة ملفات بالألوان',
-        'books' => 'طباعة وتجليد كتب',
+        'books' => 'تصوير وتجليد الكتب كعب جلد طبيعي',
         'thesis' => 'رسالة ماجستير وبحث تخرج',
         'phd' => 'رسالة دكتوراه',
         'formatting' => 'تنسيق وتدقيق ملف Word',

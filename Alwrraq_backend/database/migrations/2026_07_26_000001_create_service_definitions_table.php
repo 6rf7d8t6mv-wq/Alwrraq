@@ -53,7 +53,7 @@ return new class extends Migration
             ],
             [
                 'code' => 'books',
-                'title' => 'طباعة وتجليد كتب كعب جلد طبيعي',
+                'title' => 'تصوير وتجليد الكتب كعب جلد طبيعي',
                 'description' => 'طباعة ملفات PDF والكتب بجميع أحجامها والتغليف وتجليد كعب جلد طبيعي.',
                 'icon' => '📘',
                 'workflow_type' => 'books',

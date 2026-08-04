@@ -27,6 +27,7 @@ class ExampleTest extends TestCase
             ->assertSee('max-image-preview:large', false)
             ->assertSee('جميع مناطق المملكة', false)
             ->assertSee('RedBox', false)
+            ->assertSee('الطباعة والتصوير وتجليد الرسائل', false)
             ->assertSee('داخل الجامعة الإسلامية', false)
             ->assertSee('من ساعة إلى 3 ساعات عمل', false)
             ->assertSee('من 3 إلى 8 أيام عمل', false);
@@ -175,6 +176,17 @@ class ExampleTest extends TestCase
 
         $this->assertSame(1.0, $pricing->customServicePrice($customService));
         $this->assertSame(0.0, $pricing->customServicePrice($systemService));
+    }
+
+    public function test_books_service_uses_the_photocopying_and_natural_leather_title(): void
+    {
+        $expectedTitle = 'تصوير وتجليد الكتب كعب جلد طبيعي';
+
+        $this->assertSame($expectedTitle, ServiceDefinition::WORKFLOWS['books']);
+        $this->assertSame(
+            $expectedTitle,
+            ServicePricingService::DEFINITIONS['books_white_pages']['group']
+        );
     }
 
     public function test_admin_order_pages_are_private(): void

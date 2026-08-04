@@ -24,12 +24,12 @@ class ServicePricingService
         'notes_binding_wire_up_to_600' => ['group' => 'تغليف المذكرات والملفات', 'label' => 'السلك من 300 إلى 600 صفحة', 'default' => 9, 'suffix' => 'ريال'],
         'notes_binding_wire_over_600' => ['group' => 'تغليف المذكرات والملفات', 'label' => 'السلك لأكثر من 600 صفحة', 'default' => 14, 'suffix' => 'ريال'],
 
-        'books_white_pages' => ['group' => 'طباعة وتجليد الكتب', 'label' => 'عدد صفحات الورق الأبيض للمجموعة', 'default' => 15, 'integer' => true, 'suffix' => 'صفحة'],
-        'books_white_group_price' => ['group' => 'طباعة وتجليد الكتب', 'label' => 'سعر مجموعة الورق الأبيض', 'default' => 1, 'suffix' => 'ريال'],
-        'books_yellow_pages' => ['group' => 'طباعة وتجليد الكتب', 'label' => 'عدد صفحات الورق الأصفر للمجموعة', 'default' => 10, 'integer' => true, 'suffix' => 'صفحة'],
-        'books_yellow_group_price' => ['group' => 'طباعة وتجليد الكتب', 'label' => 'سعر مجموعة الورق الأصفر', 'default' => 1, 'suffix' => 'ريال'],
-        'books_binding_a4' => ['group' => 'طباعة وتجليد الكتب', 'label' => 'تجليد الكعب الجلد الطبيعي A4 للنسخة', 'default' => 55, 'suffix' => 'ريال'],
-        'books_binding_small' => ['group' => 'طباعة وتجليد الكتب', 'label' => 'تجليد الكعب الجلد الطبيعي للمقاس الصغير للنسخة', 'default' => 45, 'suffix' => 'ريال'],
+        'books_white_pages' => ['group' => 'تصوير وتجليد الكتب كعب جلد طبيعي', 'label' => 'عدد صفحات الورق الأبيض للمجموعة', 'default' => 15, 'integer' => true, 'suffix' => 'صفحة'],
+        'books_white_group_price' => ['group' => 'تصوير وتجليد الكتب كعب جلد طبيعي', 'label' => 'سعر مجموعة الورق الأبيض', 'default' => 1, 'suffix' => 'ريال'],
+        'books_yellow_pages' => ['group' => 'تصوير وتجليد الكتب كعب جلد طبيعي', 'label' => 'عدد صفحات الورق الأصفر للمجموعة', 'default' => 10, 'integer' => true, 'suffix' => 'صفحة'],
+        'books_yellow_group_price' => ['group' => 'تصوير وتجليد الكتب كعب جلد طبيعي', 'label' => 'سعر مجموعة الورق الأصفر', 'default' => 1, 'suffix' => 'ريال'],
+        'books_binding_a4' => ['group' => 'تصوير وتجليد الكتب كعب جلد طبيعي', 'label' => 'تجليد الكعب الجلد الطبيعي A4 للنسخة', 'default' => 55, 'suffix' => 'ريال'],
+        'books_binding_small' => ['group' => 'تصوير وتجليد الكتب كعب جلد طبيعي', 'label' => 'تجليد الكعب الجلد الطبيعي للمقاس الصغير للنسخة', 'default' => 45, 'suffix' => 'ريال'],
 
         'academic_print_pages' => ['group' => 'الماجستير والدكتوراه', 'label' => 'عدد صفحات الطباعة للمجموعة', 'default' => 15, 'integer' => true, 'suffix' => 'صفحة'],
         'academic_print_group_price' => ['group' => 'الماجستير والدكتوراه', 'label' => 'سعر مجموعة الطباعة', 'default' => 1, 'suffix' => 'ريال'],
