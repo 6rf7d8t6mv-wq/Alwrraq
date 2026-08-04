@@ -69,7 +69,7 @@
                     @endphp
                     @continue(!$available && !count($items))
                     <section class="cv-section cv-section-{{ $section }}">
-                        <h3><span class="cv-section-mark"></span>{{ $sectionNames[$lang][$section] }}</h3>
+                        <h3><span class="cv-section-mark">@if($pdfMode ?? false)<span class="cv-section-mark-core"></span>@endif</span>{{ $sectionNames[$lang][$section] }}</h3>
                         @if($available)<div class="cv-body">{{ $isArabic ? 'المراجع متاحة عند الطلب' : 'References available upon request' }}</div>@endif
                         <div class="cv-section-items">
                         @foreach($items as $item)

@@ -396,7 +396,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame(2, data_get($draft->content, 'content_en._translation_version'));
         $this->assertNull($draft->image_path);
         $this->assertNotNull($draft->pdf_path);
-        $this->assertStringEndsWith('-ar-vector-v4.pdf', $draft->pdf_path);
+        $this->assertStringEndsWith('-ar-vector-v5.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         Storage::disk('local')->assertMissing($oldImage);
         Storage::disk('local')->assertMissing($oldPdf);
@@ -591,7 +591,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $draft->refresh();
         $this->assertNotNull($draft->pdf_path);
-        $this->assertSame('private/resumes/final/'.$imageVersion.'-ar-vector-v4.pdf', $draft->pdf_path);
+        $this->assertSame('private/resumes/final/'.$imageVersion.'-ar-vector-v5.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         $generatedPdf = Storage::disk('local')->get($draft->pdf_path);
         $this->assertStringStartsWith('%PDF-', $generatedPdf);
@@ -613,7 +613,7 @@ class ResumeServiceFlowTest extends TestCase
             ->get(route('resume.download.pdf', $draft))
             ->assertOk()
             ->assertDownload();
-        $this->assertStringEndsWith('-ar-vector-v4.pdf', (string) $draft->refresh()->pdf_path);
+        $this->assertStringEndsWith('-ar-vector-v5.pdf', (string) $draft->refresh()->pdf_path);
 
         $imageVersion = 'resume-'.$draft->id.'-v4-ar-current-test';
         $currentImage = 'private/resumes/final/'.$imageVersion.'.png';
