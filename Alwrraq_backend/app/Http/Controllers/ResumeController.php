@@ -325,6 +325,9 @@ class ResumeController extends Controller
             $resumeDraft->refresh()->load('order');
         }
         $paid = $resumeDraft->isPaid();
+        $finalImageReady = $paid && $translationReady && $this->hasCurrentFinalImage($resumeDraft);
+        $imageDownloadUrl = $finalImageReady ? $this->versionedDownloadUrl($resumeDraft, 'image') : null;
+        $pdfDownloadUrl = $finalImageReady ? $this->versionedDownloadUrl($resumeDraft, 'pdf') : null;
         $isAdminViewer = (int) $resumeDraft->user_id !== (int) $request->user()->id
             && $request->user()->role === 'admin';
         $source = $request->string('from')->toString();
@@ -346,6 +349,9 @@ class ResumeController extends Controller
                 'backLabel' => $backLabel,
                 'isAdminViewer' => $isAdminViewer,
                 'translationReady' => $translationReady,
+                'finalImageReady' => $finalImageReady,
+                'imageDownloadUrl' => $imageDownloadUrl,
+                'pdfDownloadUrl' => $pdfDownloadUrl,
             ])
             ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
             ->header('X-Frame-Options', 'SAMEORIGIN');
@@ -462,8 +468,14 @@ class ResumeController extends Controller
             'Pragma' => 'no-cache',
             'Expires' => '0',
             'X-Content-Type-Options' => 'nosniff',
+            'Accept-Ranges' => 'bytes',
         ]);
-        $response->headers->set('Cache-Control', 'private, no-store, no-cache, must-revalidate, max-age=0');
+        $response->headers->set(
+            'Cache-Control',
+            request()->filled('v')
+                ? 'private, max-age=31536000, immutable'
+                : 'private, no-store, no-cache, must-revalidate, max-age=0'
+        );
 
         return $response;
     }

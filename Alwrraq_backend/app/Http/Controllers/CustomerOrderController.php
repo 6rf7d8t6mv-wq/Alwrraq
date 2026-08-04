@@ -32,7 +32,11 @@ class CustomerOrderController extends Controller
     {
         $this->authorizeInvoice($order);
 
-        return view('orders.invoice', compact('order'));
+        $backUrl = Auth::user()->role === 'admin'
+            ? route('admin.orders', ['open_order' => $order->id])
+            : route('orders.index');
+
+        return view('orders.invoice', compact('order', 'backUrl'));
     }
 
     public function destroy(Order $order)
@@ -211,9 +215,13 @@ class CustomerOrderController extends Controller
 
     private function authorizeInvoice(Order $order): void
     {
-        abort_unless($order->user_id === Auth::id(), 403);
+        $user = Auth::user();
+        $canViewAsAdmin = $user->role === 'admin'
+            && $user->hasAdminPermission('invoices_view');
+
+        abort_unless($order->user_id === $user->id || $canViewAsAdmin, 403);
         abort_unless($order->payment_status === 'paid', 404);
 
-        $order->load(['user', 'files', 'productItems']);
+        $order->load(['user', 'files', 'productItems', 'serviceDefinition']);
     }
 }

@@ -763,7 +763,12 @@
     @foreach ($orders as $order)
         @if ($order->payment_status === 'paid' && auth()->user()->hasAdminPermission('invoices_view'))
             <template id="invoice-admin-{{ $order->id }}">
-                @include('shared.invoice', ['order' => $order, 'invoiceId' => 'adminInvoice' . $order->id])
+                @include('shared.invoice', [
+                    'order' => $order,
+                    'invoiceId' => 'adminInvoice' . $order->id,
+                    'invoicePrintUrl' => route('orders.invoice', ['order' => $order, 'print' => 1]),
+                    'invoiceViewUrl' => route('orders.invoice', $order),
+                ])
             </template>
         @endif
     @endforeach

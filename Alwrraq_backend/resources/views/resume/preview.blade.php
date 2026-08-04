@@ -43,25 +43,63 @@
 @if($paid && $translationReady)
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script>
+const resumeExport = {
+    imageDownloadUrl: @json($imageDownloadUrl),
+    pdfDownloadUrl: @json($pdfDownloadUrl),
+};
+let finalImageRequest = null;
+
 async function ensureFinalImage(){
+    if(resumeExport.imageDownloadUrl&&resumeExport.pdfDownloadUrl)return resumeExport;
+    if(finalImageRequest)return finalImageRequest;
+    finalImageRequest=(async()=>{
     try{
         await document.fonts?.ready;
         document.body.classList.add('exporting');
         await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-        const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,width:794,height:1123,windowWidth:1200,windowHeight:1400,scrollX:0,scrollY:0,backgroundColor:'#ffffff',useCORS:true});
+        const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,width:794,height:1123,windowWidth:1200,windowHeight:1400,scrollX:0,scrollY:0,backgroundColor:'#ffffff',useCORS:true,logging:false,removeContainer:true,imageTimeout:15000});
+        const context=canvas.getContext('2d');
+        if(context){context.imageSmoothingEnabled=true;context.imageSmoothingQuality='high'}
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));
+        if(!blob)throw new Error('image export failed');
         const form=new FormData();form.append('image',blob,'resume.png');
         const response=await fetch(@json(route('resume.final-image.store',$draft)),{method:'POST',headers:{'X-CSRF-TOKEN':document.querySelector('meta[name=csrf-token]').content,'Accept':'application/json'},body:form});
-        const data=await response.json();if(!response.ok)throw data;return data;
+        const data=await response.json();if(!response.ok)throw data;
+        resumeExport.imageDownloadUrl=data.image_download_url;
+        resumeExport.pdfDownloadUrl=data.pdf_download_url;
+        return resumeExport;
     }catch(e){throw e}finally{document.body.classList.remove('exporting')}
+    })();
+    try{return await finalImageRequest}finally{finalImageRequest=null}
+}
+
+function isMobileDownload(){
+    return matchMedia('(pointer: coarse)').matches||/Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+async function deliverResume(format,url){
+    if(format==='image'&&isMobileDownload()&&navigator.share){
+        const response=await fetch(url,{credentials:'same-origin'});
+        if(!response.ok)throw new Error('image download failed');
+        const blob=await response.blob();
+        const file=new File([blob],'professional-resume.png',{type:'image/png'});
+        if(!navigator.canShare||navigator.canShare({files:[file]})){
+            await navigator.share({files:[file],title:'السيرة الذاتية'});
+            return;
+        }
+    }
+
+    // An attachment response lets mobile browsers place PDF in Files and lets
+    // desktop browsers use their normal Downloads directory.
+    window.location.assign(url);
 }
 document.getElementById('imageButton')?.addEventListener('click',async function(){
     this.disabled=true;this.textContent='جارٍ تجهيز الصورة...';
-    try{const downloads=await ensureFinalImage();location.href=downloads.image_download_url}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل الصورة';alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}
+    try{const downloads=await ensureFinalImage();await deliverResume('image',downloads.imageDownloadUrl)}catch(e){if(e?.name!=='AbortError')alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}finally{this.disabled=false;this.textContent='تحميل السيرة الذاتية كصورة'}
 });
 document.getElementById('pdfButton')?.addEventListener('click',async function(){
     this.disabled=true;this.textContent='جارٍ تجهيز PDF بنفس التصميم...';
-    try{const downloads=await ensureFinalImage();location.href=downloads.pdf_download_url}catch(e){this.disabled=false;this.textContent='إعادة محاولة تحميل PDF';alert('تعذر إنشاء PDF، حاول مرة أخرى.')}
+    try{const downloads=await ensureFinalImage();await deliverResume('pdf',downloads.pdfDownloadUrl)}catch(e){alert('تعذر إنشاء PDF، حاول مرة أخرى.');this.disabled=false;this.textContent='إعادة محاولة تحميل PDF'}
 });
 if(new URLSearchParams(location.search).get('auto_download')==='pdf')document.getElementById('pdfButton')?.click();
 try{ResumeSecurity.postMessage('open')}catch(e){}

@@ -597,7 +597,8 @@
                         .invoice-document { border: 0; padding: 0; }
                         .invoice-head { display: flex; justify-content: space-between; gap: 16px; border-bottom: 3px solid #0f172a; margin-bottom: 16px; padding-bottom: 14px; }
                         .invoice-brand { display: flex; align-items: center; gap: 10px; }
-                        .invoice-logo { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: #0f172a; color: #fff; font-size: 22px; font-weight: 900; }
+                        .invoice-logo { width: 42px; height: 42px; flex: 0 0 42px; border-radius: 10px; overflow: hidden; background: #fff; }
+                        .invoice-logo img { display: block; width: 100%; height: 100%; object-fit: cover; }
                         .invoice-head h2 { margin: 0; font-size: 28px; }
                         .invoice-number { text-align: left; }
                         .invoice-grid, .invoice-totals, .invoice-summary { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 14px 0; }

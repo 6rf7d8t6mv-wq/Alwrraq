@@ -98,6 +98,8 @@
             let pollTimer = null;
             let previousUnreadTotal = null;
             let initialMessagesLoaded = false;
+            let renderedConversationId = null;
+            let renderedMessagesFingerprint = '';
             let viewportFrame = null;
             let expandedViewportHeight = window.visualViewport?.height || window.innerHeight;
             const notifiedReadMessages = new Set();
@@ -251,6 +253,7 @@
 
             const syncChatViewport = () => {
                 if (viewportFrame) cancelAnimationFrame(viewportFrame);
+                const keepAtBottom = messagesEl.scrollHeight - messagesEl.scrollTop - messagesEl.clientHeight < 80;
 
                 viewportFrame = requestAnimationFrame(() => {
                     viewportFrame = null;
@@ -270,7 +273,7 @@
                     panel.style.setProperty('--chat-viewport-top', `${Math.round(viewportTop)}px`);
                     panel.classList.toggle('keyboard-visible', panel.classList.contains('active') && keyboardInset > 100);
 
-                    if (panel.classList.contains('active')) {
+                    if (panel.classList.contains('active') && keepAtBottom) {
                         messagesEl.scrollTop = messagesEl.scrollHeight;
                     }
                 });
@@ -293,7 +296,25 @@
                 `).join('');
             };
 
-            const renderMessages = (messages) => {
+            const renderMessages = (messages, { forceBottom = false } = {}) => {
+                const fingerprint = (messages || []).map((message) => [
+                    message.id,
+                    message.message,
+                    message.read_at,
+                    message.created_at,
+                ].join(':')).join('|');
+                const sameConversation = renderedConversationId === currentConversationId;
+
+                // Polling runs every three seconds. Avoid replacing an unchanged
+                // message list because doing so resets a customer's reading position.
+                if (sameConversation && fingerprint === renderedMessagesFingerprint) return;
+
+                const previousScrollTop = messagesEl.scrollTop;
+                const wasNearBottom = messagesEl.scrollHeight - previousScrollTop - messagesEl.clientHeight < 80;
+                const shouldScrollToBottom = forceBottom || !sameConversation || !initialMessagesLoaded || wasNearBottom;
+                renderedConversationId = currentConversationId;
+                renderedMessagesFingerprint = fingerprint;
+
                 if (!messages || messages.length === 0) {
                     messagesEl.innerHTML = '<div class="support-chat-empty">لا توجد رسائل بعد. ابدأ المحادثة الآن.</div>';
                     initialMessagesLoaded = true;
@@ -324,7 +345,11 @@
                 messagesEl.querySelectorAll('.support-message-text').forEach((node, index) => {
                     node.textContent = messages[index]?.message || '';
                 });
-                messagesEl.scrollTop = messagesEl.scrollHeight;
+                if (shouldScrollToBottom) {
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                } else {
+                    messagesEl.scrollTop = previousScrollTop;
+                }
             };
 
             const loadConversations = async () => {
@@ -342,17 +367,18 @@
                 return conversations;
             };
 
-            const loadMessages = async (conversationId = currentConversationId) => {
+            const loadMessages = async (conversationId = currentConversationId, { forceBottom = false } = {}) => {
                 if (!conversationId) {
                     messagesEl.innerHTML = '<div class="support-chat-empty">لا توجد محادثة مختارة</div>';
                     return;
                 }
 
+                const changedConversation = Number(currentConversationId) !== Number(conversationId);
                 currentConversationId = conversationId;
                 const response = await fetch(`${baseUrl}/${conversationId}`, { headers: { Accept: 'application/json' } });
                 if (!response.ok) throw new Error('chat messages failed');
                 const data = await response.json();
-                renderMessages(data.messages || []);
+                renderMessages(data.messages || [], { forceBottom: forceBottom || changedConversation });
 
                 const item = conversations.find((conversation) => conversation.id === conversationId);
                 if (item) item.unread_count = 0;
@@ -397,7 +423,7 @@
             threadsEl.addEventListener('click', async (event) => {
                 const button = event.target.closest('[data-chat-thread]');
                 if (!button) return;
-                await loadMessages(Number(button.dataset.chatThread));
+                await loadMessages(Number(button.dataset.chatThread), { forceBottom: true });
                 focusChatInput();
             });
 
@@ -419,7 +445,7 @@
 
                 if (response.ok) {
                     await loadConversations();
-                    await loadMessages(currentConversationId);
+                    await loadMessages(currentConversationId, { forceBottom: true });
                     focusChatInput();
                 }
             });

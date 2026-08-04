@@ -89,7 +89,7 @@
     <main class="invoice-page">
         <div class="page-toolbar">
             <h1 class="page-title">فاتورة الطلب #{{ $order->id }}</h1>
-            <a class="action back-button" href="{{ route('orders.index') }}">رجوع لصفحة الطلبات</a>
+            <a class="action back-button" href="{{ $backUrl ?? route('orders.index') }}">رجوع لصفحة الطلبات</a>
         </div>
 
         @include('shared.invoice', ['order' => $order, 'invoiceId' => 'paperInvoice' . $order->id])
