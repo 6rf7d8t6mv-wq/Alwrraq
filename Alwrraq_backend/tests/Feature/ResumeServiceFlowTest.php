@@ -393,7 +393,9 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame(2, data_get($draft->content, 'content_ar._translation_version'));
         $this->assertSame(2, data_get($draft->content, 'content_en._translation_version'));
         $this->assertNull($draft->image_path);
-        $this->assertNull($draft->pdf_path);
+        $this->assertNotNull($draft->pdf_path);
+        $this->assertStringEndsWith('-vector-v1.pdf', $draft->pdf_path);
+        Storage::disk('local')->assertExists($draft->pdf_path);
         Storage::disk('local')->assertMissing($oldImage);
         Storage::disk('local')->assertMissing($oldPdf);
     }
@@ -579,11 +581,9 @@ class ResumeServiceFlowTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('resume.download.pdf', $draft))
-            ->assertRedirect(route('resume.preview', [
-                'resumeDraft' => $draft,
-                'from' => 'orders',
-                'auto_download' => 'pdf',
-            ]));
+            ->assertOk()
+            ->assertDownload();
+        $this->assertStringEndsWith('-vector-v1.pdf', (string) $draft->refresh()->pdf_path);
 
         $imageVersion = 'resume-'.$draft->id.'-v4-current-test';
         $currentImage = 'private/resumes/final/'.$imageVersion.'.png';

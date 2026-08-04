@@ -26,7 +26,7 @@
         <a href="{{ route('resume.edit', $draft) }}">العودة لتعديل السيرة الذاتية</a>
     @endif
     @if($paid && $translationReady)
-        <button class="download" id="pdfButton" type="button">تحميل السيرة الذاتية PDF</button>
+        <a class="download" id="pdfButton" href="{{ $pdfDownloadUrl }}">تحميل السيرة الذاتية PDF</a>
         <button class="download" id="imageButton" type="button">تحميل السيرة الذاتية كصورة</button>
         @if($isAdminViewer)<span class="notice">معاينة السيرة الذاتية من لوحة الإدارة</span>@endif
     @elseif($paid)
@@ -97,11 +97,7 @@ document.getElementById('imageButton')?.addEventListener('click',async function(
     this.disabled=true;this.textContent='جارٍ تجهيز الصورة...';
     try{const downloads=await ensureFinalImage();await deliverResume('image',downloads.imageDownloadUrl)}catch(e){if(e?.name!=='AbortError')alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}finally{this.disabled=false;this.textContent='تحميل السيرة الذاتية كصورة'}
 });
-document.getElementById('pdfButton')?.addEventListener('click',async function(){
-    this.disabled=true;this.textContent='جارٍ تجهيز PDF بنفس التصميم...';
-    try{const downloads=await ensureFinalImage();await deliverResume('pdf',downloads.pdfDownloadUrl)}catch(e){alert('تعذر إنشاء PDF، حاول مرة أخرى.');this.disabled=false;this.textContent='إعادة محاولة تحميل PDF'}
-});
-if(new URLSearchParams(location.search).get('auto_download')==='pdf')document.getElementById('pdfButton')?.click();
+if(new URLSearchParams(location.search).get('auto_download')==='pdf'&&resumeExport.pdfDownloadUrl)window.location.assign(resumeExport.pdfDownloadUrl);
 try{ResumeSecurity.postMessage('open')}catch(e){}
 </script>
 @elseif(! $paid)

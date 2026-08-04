@@ -21,7 +21,7 @@ class ResumeDocumentService
         abort_unless($draft->isPaid(), 403);
 
         if ($draft->pdf_path
-            && $this->pdfMatchesCurrentImage($draft)
+            && $this->pdfIsCurrentVectorVersion($draft)
             && $this->storedPdfIsValid($draft->pdf_path)) {
             return Storage::disk('local')->path($draft->pdf_path);
         }
@@ -100,17 +100,12 @@ class ResumeDocumentService
         }
     }
 
-    private function pdfMatchesCurrentImage(ResumeDraft $draft): bool
+    private function pdfIsCurrentVectorVersion(ResumeDraft $draft): bool
     {
-        if (! $draft->image_path) {
-            return str_ends_with(
-                pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME),
-                '-vector-v'.self::VECTOR_PDF_VERSION
-            );
-        }
-
-        return pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME)
-            === pathinfo($draft->image_path, PATHINFO_FILENAME).'-vector-v'.self::VECTOR_PDF_VERSION;
+        return str_ends_with(
+            pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME),
+            '-vector-v'.self::VECTOR_PDF_VERSION
+        );
     }
 
     private function renderPdf(string $html, bool $shapeArabic, bool $showPageNumber = true): string

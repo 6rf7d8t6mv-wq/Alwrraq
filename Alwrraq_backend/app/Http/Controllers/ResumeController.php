@@ -305,7 +305,12 @@ class ResumeController extends Controller
         );
     }
 
-    public function preview(Request $request, ResumeDraft $resumeDraft, AutomaticTranslationService $translator)
+    public function preview(
+        Request $request,
+        ResumeDraft $resumeDraft,
+        AutomaticTranslationService $translator,
+        ResumeDocumentService $documents
+    )
     {
         $this->authorizeDraft($request, $resumeDraft);
 
@@ -325,9 +330,15 @@ class ResumeController extends Controller
             $resumeDraft->refresh()->load('order');
         }
         $paid = $resumeDraft->isPaid();
+        if ($paid && $translationReady) {
+            // Payment normally prepares this document. This also upgrades older
+            // raster exports while the preview opens, so the download click is instant.
+            $documents->ensurePdf($resumeDraft);
+            $resumeDraft->refresh()->load('order');
+        }
         $finalImageReady = $paid && $translationReady && $this->hasCurrentFinalImage($resumeDraft);
         $imageDownloadUrl = $finalImageReady ? $this->versionedDownloadUrl($resumeDraft, 'image') : null;
-        $pdfDownloadUrl = $finalImageReady ? $this->versionedDownloadUrl($resumeDraft, 'pdf') : null;
+        $pdfDownloadUrl = $paid && $translationReady ? $this->versionedDownloadUrl($resumeDraft, 'pdf') : null;
         $isAdminViewer = (int) $resumeDraft->user_id !== (int) $request->user()->id
             && $request->user()->role === 'admin';
         $source = $request->string('from')->toString();
@@ -360,7 +371,7 @@ class ResumeController extends Controller
     public function downloadPdf(Request $request, ResumeDraft $resumeDraft, ResumeDocumentService $documents)
     {
         $this->authorizePaidDraft($request, $resumeDraft);
-        if (! $this->hasCurrentTranslations($resumeDraft) || ! $this->hasCurrentFinalImage($resumeDraft)) {
+        if (! $this->hasCurrentTranslations($resumeDraft)) {
             return redirect()->route('resume.preview', [
                 'resumeDraft' => $resumeDraft,
                 'from' => $request->user()->role === 'admin' ? 'admin' : 'orders',
@@ -399,15 +410,12 @@ class ResumeController extends Controller
         if ($resumeDraft->image_path) {
             Storage::disk('local')->delete($resumeDraft->image_path);
         }
-        if ($resumeDraft->pdf_path) {
-            Storage::disk('local')->delete($resumeDraft->pdf_path);
-        }
         $path = $data['image']->storeAs(
             'private/resumes/final',
             'resume-'.$resumeDraft->id.'-v'.self::EXPORT_VERSION.'-'.now()->format('YmdHisv').'-'.str()->random(8).'.png',
             'local'
         );
-        $resumeDraft->update(['image_path' => $path, 'pdf_path' => null]);
+        $resumeDraft->update(['image_path' => $path]);
 
         $resumeDraft->refresh();
 
@@ -444,7 +452,10 @@ class ResumeController extends Controller
     private function versionedDownloadUrl(ResumeDraft $draft, string $format): string
     {
         $extension = $format === 'image' ? 'png' : 'pdf';
-        $version = pathinfo((string) $draft->image_path, PATHINFO_FILENAME);
+        $version = pathinfo(
+            (string) ($format === 'pdf' ? $draft->pdf_path : $draft->image_path),
+            PATHINFO_FILENAME
+        );
 
         return route('resume.download.'.$format, [
             'resumeDraft' => $draft,
