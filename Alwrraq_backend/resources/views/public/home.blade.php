@@ -464,6 +464,9 @@
         .about-box, .showcase-copy, .card, .step, .feature, .contact { overflow-wrap: anywhere; }
         html[dir="ltr"] .nav { direction: rtl; }
         html[dir="ltr"] .nav > * { direction: ltr; }
+        html[dir="ltr"] .brand { order: 1; }
+        html[dir="ltr"] .nav-actions { order: 2; }
+        html[dir="ltr"] .nav-links { order: 3; }
         html[dir="ltr"] .hero-grid,
         html[dir="ltr"] .about-box,
         html[dir="ltr"] .showcase-stage,
