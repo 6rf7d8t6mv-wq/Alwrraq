@@ -151,6 +151,24 @@
             white-space: nowrap !important;
             overflow: hidden !important;
         }
+        html[dir="ltr"] body.customer-app-page .header .header-inner,
+        html[dir="ltr"] body.customer-app-page .page-header .header-inner,
+        html[dir="ltr"] body.customer-app-page .header-brand,
+        html[dir="ltr"] body.customer-app-page .header-identity,
+        html[dir="ltr"] body.customer-app-page .header-actions,
+        html[dir="ltr"] body.customer-app-page .header-actions > * {
+            direction: ltr !important;
+        }
+        html[dir="ltr"] body.customer-app-page .header-identity {
+            text-align: right !important;
+        }
+        html[dir="ltr"] body.customer-app-page .header-actions .header-link,
+        html[dir="ltr"] body.customer-app-page .header-actions .home-button,
+        html[dir="ltr"] body.customer-app-page .header-actions .settings-button,
+        html[dir="ltr"] body.customer-app-page .header-actions .logout-button,
+        html[dir="ltr"] body.customer-app-page .header-actions .language-switcher-button {
+            direction: ltr !important;
+        }
     }
     @media (min-width: 1100px) {
         .customer-app-page .header-identity strong { font-size: 15px !important; }
