@@ -56,6 +56,25 @@
 
     .content-sparse .cv-main .cv-section{margin-bottom:17mm}.content-sparse .cv-main .cv-item{margin-bottom:10mm}.content-sparse .cv-main{padding-top:18mm}
     .cv-personal-identity h1.cv-name-long{font-size:12pt!important;line-height:1.4;white-space:nowrap;letter-spacing:-.25pt}.cv-personal-identity h1.cv-name-extra-long{font-size:9pt!important;line-height:1.4;white-space:nowrap;letter-spacing:-.4pt}
+
+    /* Dompdf-compatible bilingual A4 layout. Tables and absolute positioning
+       keep the browser design stable while all text remains vector text. */
+    .cv-bilingual-sheet{display:block;width:210mm;height:297mm;min-height:0!important;background:#fff;overflow:hidden;color:#172033}
+    .cv-bilingual-top{position:relative;display:block;height:38mm;padding:6mm 10mm 5mm 39mm;background:#456f9f;color:#fff}
+    .cv-bilingual-photo{position:absolute;top:7mm;left:10mm;display:block;width:25mm;height:25mm;border:1mm solid #fff;border-radius:50%;background:#dbeafe;color:#456f9f;text-align:center;font-size:22pt;font-weight:bold;line-height:25mm}
+    .cv-header-personal{display:block;width:100%;color:#fff}.cv-header-personal small{display:block;margin:0 0 1mm;font-size:7pt;font-weight:bold;color:#e9f2fc}.cv-header-personal h1{margin:0;color:#fff;font-size:18pt;line-height:1.25}.cv-header-job{margin-top:.6mm;color:#fff;font-size:9.5pt;font-weight:bold}
+    .cv-header-contacts{display:block;margin-top:2.3mm;color:#fff;font-size:6.5pt;line-height:1.45}.cv-header-contacts span{display:inline-block;margin:0 0 1mm 4mm;white-space:nowrap}.cv-header-contacts strong{color:#fff;font-size:inherit}
+    .cv-bilingual-columns{display:table;width:100%;height:259mm;table-layout:fixed;direction:ltr;border-collapse:collapse}
+    .cv-language-column{display:table-cell;width:50%;padding:5mm 6mm;vertical-align:top;color:#172033;overflow:hidden}.cv-language-column[dir=ltr]{border-right:.35mm solid #cbd5e1;font-family:Tajawal,sans-serif}
+    .cv-language-column .cv-section{margin:0 0 3.4mm;page-break-inside:avoid}.cv-language-column .cv-section h3{margin:0 0 1.6mm;padding:0 0 1mm;border-bottom:.3mm solid #d9dee5;color:#243449;font-size:9.2pt;line-height:1.35;font-weight:bold}
+    .cv-language-column .cv-section-mark{display:inline-block;width:3.2mm;height:3.2mm;margin:0 0 0 1.3mm;border:.4mm solid currentColor;border-radius:50%;vertical-align:middle}.cv-language-column[dir=ltr] .cv-section-mark{margin:0 1.3mm 0 0}
+    .cv-language-column .cv-section-items{display:block}.cv-language-column .cv-item{display:block;margin:0 0 2.2mm;page-break-inside:avoid}.cv-language-column .cv-item-heading{display:block;line-height:1.35}.cv-language-column .cv-item-heading strong{font-size:7.4pt;line-height:1.4}.cv-language-column .cv-item-heading time{float:none;display:inline-block;margin:0 2mm;color:#526174;font-size:5.8pt;font-weight:bold}.cv-language-column .cv-level{float:none;display:inline-block;margin:0 1mm;padding:.4mm 1mm;background:#eef2f7;color:#334155;font-size:5.5pt}
+    .cv-language-column .cv-organization{display:block;margin-top:.3mm;color:#456f9f;font-size:6.4pt;font-weight:bold}.cv-language-column .cv-item-meta{margin-top:.5mm;color:#64748b;font-size:5.6pt;line-height:1.4}.cv-language-column .cv-item-meta span{display:inline-block;margin:0 0 0 2mm}.cv-language-column .cv-body{margin-top:.7mm;color:#425168;font-size:6.3pt;line-height:1.48;white-space:pre-line;word-wrap:break-word}.cv-language-column .cv-link{margin-top:.5mm;color:#456f9f;font-size:5.5pt;word-wrap:break-word}
+    .cv-bilingual-sheet.content-dense .cv-bilingual-top{height:34mm;padding-top:4mm}.cv-bilingual-sheet.content-dense .cv-bilingual-photo{top:5mm;width:23mm;height:23mm;line-height:23mm}.cv-bilingual-sheet.content-dense .cv-bilingual-columns{height:263mm}.cv-bilingual-sheet.content-dense .cv-language-column{padding:3.8mm 5mm}.cv-bilingual-sheet.content-dense .cv-language-column .cv-section{margin-bottom:2mm}.cv-bilingual-sheet.content-dense .cv-language-column .cv-section h3{margin-bottom:1mm;font-size:7.8pt}.cv-bilingual-sheet.content-dense .cv-language-column .cv-item{margin-bottom:1.2mm}.cv-bilingual-sheet.content-dense .cv-language-column .cv-body{font-size:5.3pt;line-height:1.35}.cv-bilingual-sheet.content-dense .cv-language-column .cv-item-heading strong{font-size:6.2pt}
+    .cv-bilingual-sheet.template-royal_gold .cv-bilingual-top{background:#9a7628}.cv-bilingual-sheet.template-royal_gold .cv-language-column .cv-organization{color:#9a7628}
+    .cv-bilingual-sheet.template-midnight_luxury .cv-bilingual-top{background:#07152d}.cv-bilingual-sheet.template-midnight_luxury .cv-language-column .cv-organization{color:#8a6b28}
+    .cv-bilingual-sheet.template-emerald_signature .cv-bilingual-top{background:#0b5d4b}.cv-bilingual-sheet.template-emerald_signature .cv-language-column .cv-organization{color:#0b8065}
+    .cv-bilingual-sheet.template-modern_silk .cv-bilingual-top{background:#6551a5}.cv-bilingual-sheet.template-modern_silk .cv-language-column .cv-organization{color:#6551a5}
     .cv-watermark{display:none}
 </style>
 </head>

@@ -19,7 +19,7 @@ class ResumeController extends Controller
 {
     private const TRANSLATION_VERSION = 2;
 
-    private const EXPORT_VERSION = 3;
+    private const EXPORT_VERSION = 4;
 
     public function landing(Request $request, ServicePricingService $pricing)
     {
@@ -393,7 +393,7 @@ class ResumeController extends Controller
         $this->authorizePaidDraft($request, $resumeDraft);
         abort_unless($this->hasCurrentTranslations($resumeDraft), 409, 'يجب إكمال ترجمة السيرة قبل إنشاء النسخة النهائية.');
         $data = $request->validate([
-            'image' => ['required', 'image', 'mimes:png', 'dimensions:width=2382,height=3369', 'max:20480'],
+            'image' => ['required', 'image', 'mimes:png', 'dimensions:width=3176,height=4492', 'max:30720'],
         ]);
 
         if ($resumeDraft->image_path) {

@@ -57,7 +57,7 @@ async function ensureFinalImage(){
         await document.fonts?.ready;
         document.body.classList.add('exporting');
         await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
-        const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:3,width:794,height:1123,windowWidth:1200,windowHeight:1400,scrollX:0,scrollY:0,backgroundColor:'#ffffff',useCORS:true,logging:false,removeContainer:true,imageTimeout:15000});
+        const canvas=await html2canvas(document.querySelector('.cv-sheet'),{scale:4,width:794,height:1123,windowWidth:1200,windowHeight:1400,scrollX:0,scrollY:0,backgroundColor:'#ffffff',useCORS:true,logging:false,removeContainer:true,imageTimeout:15000});
         const context=canvas.getContext('2d');
         if(context){context.imageSmoothingEnabled=true;context.imageSmoothingQuality='high'}
         const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png',1));

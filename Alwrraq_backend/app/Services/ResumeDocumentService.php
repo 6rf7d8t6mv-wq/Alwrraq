@@ -13,6 +13,8 @@ use Throwable;
 
 class ResumeDocumentService
 {
+    private const VECTOR_PDF_VERSION = 1;
+
     public function ensurePdf(ResumeDraft $draft): string
     {
         $draft->loadMissing('order');
@@ -29,38 +31,39 @@ class ResumeDocumentService
             $draft->forceFill(['pdf_path' => null])->save();
         }
 
-        if ($draft->image_path && Storage::disk('local')->exists($draft->image_path)) {
-            $pdf = $this->renderPdfFromFinalImage($draft);
-        } else {
-            $html = view('resume.pdf', [
-                'draft' => $draft,
-                'paid' => true,
-                'pdfMode' => true,
-            ])->render();
+        $html = view('resume.pdf', [
+            'draft' => $draft,
+            'paid' => true,
+            'pdfMode' => true,
+        ])->render();
 
+        try {
+            // Keep text and rules as PDF vectors. Rendering the saved PNG here
+            // makes every letter pixelated as soon as the customer zooms in.
+            $pdf = $this->renderPdf($html, $draft->language !== 'en', false);
+        } catch (Throwable $primaryException) {
+            Log::warning('Vector resume PDF rendering failed; retrying without Arabic shaping.', [
+                'resume_draft_id' => $draft->id,
+                'error' => $primaryException->getMessage(),
+            ]);
             try {
-                $pdf = $this->renderPdf($html, $draft->language !== 'en');
-            } catch (Throwable $primaryException) {
-                Log::warning('Primary resume PDF rendering failed; retrying without Arabic shaping.', [
+                $pdf = $this->renderPdf($html, false, false);
+            } catch (Throwable $fallbackException) {
+                Log::error('Resume vector PDF fallback failed.', [
                     'resume_draft_id' => $draft->id,
-                    'error' => $primaryException->getMessage(),
+                    'error' => $fallbackException->getMessage(),
                 ]);
-                try {
-                    $pdf = $this->renderPdf($html, false);
-                } catch (Throwable $fallbackException) {
-                    Log::warning('Resume HTML PDF fallback failed; retrying from the final image.', [
-                        'resume_draft_id' => $draft->id,
-                        'error' => $fallbackException->getMessage(),
-                    ]);
-                    $pdf = $this->renderPdfFromFinalImage($draft);
-                }
+                throw new RuntimeException(
+                    'تعذر إنشاء ملف PDF المتجهي. حاول مرة أخرى.',
+                    previous: $fallbackException
+                );
             }
         }
 
         $sourceVersion = $draft->image_path
             ? pathinfo($draft->image_path, PATHINFO_FILENAME)
             : 'resume-'.$draft->id.'-'.now()->format('YmdHisv');
-        $path = 'private/resumes/final/'.$sourceVersion.'.pdf';
+        $path = 'private/resumes/final/'.$sourceVersion.'-vector-v'.self::VECTOR_PDF_VERSION.'.pdf';
         if (! Storage::disk('local')->put($path, $pdf)) {
             throw new RuntimeException('Unable to store the generated resume PDF.');
         }
@@ -100,11 +103,14 @@ class ResumeDocumentService
     private function pdfMatchesCurrentImage(ResumeDraft $draft): bool
     {
         if (! $draft->image_path) {
-            return true;
+            return str_ends_with(
+                pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME),
+                '-vector-v'.self::VECTOR_PDF_VERSION
+            );
         }
 
         return pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME)
-            === pathinfo($draft->image_path, PATHINFO_FILENAME);
+            === pathinfo($draft->image_path, PATHINFO_FILENAME).'-vector-v'.self::VECTOR_PDF_VERSION;
     }
 
     private function renderPdf(string $html, bool $shapeArabic, bool $showPageNumber = true): string
@@ -139,25 +145,6 @@ class ResumeDocumentService
         }
 
         return $pdf;
-    }
-
-    private function renderPdfFromFinalImage(ResumeDraft $draft): string
-    {
-        abort_unless(
-            $draft->image_path && Storage::disk('local')->exists($draft->image_path),
-            500,
-            'تعذر إنشاء ملف PDF. أنشئ نسخة الصورة أولًا ثم أعد المحاولة.'
-        );
-
-        $absoluteImage = Storage::disk('local')->path($draft->image_path);
-        $mime = mime_content_type($absoluteImage) ?: 'image/png';
-        $image = 'data:'.$mime.';base64,'.base64_encode(file_get_contents($absoluteImage));
-        $html = '<!doctype html><html><head><meta charset="utf-8"><style>'
-            .'@page{margin:0;size:A4}html,body{margin:0;padding:0;width:210mm;height:297mm;overflow:hidden}'
-            .'img{display:block;width:210mm;height:297mm;object-fit:contain}'
-            .'</style></head><body><img src="'.$image.'" alt=""></body></html>';
-
-        return $this->renderPdf($html, false, false);
     }
 
     private function shapeArabicTextNodes(string $html): string
