@@ -32,6 +32,19 @@ class ExampleTest extends TestCase
             ->assertSee('من 3 إلى 8 أيام عمل', false);
     }
 
+    public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
+    {
+        $response = $this->withSession(['ui_locale' => 'en'])->get('/');
+
+        $response
+            ->assertOk()
+            ->assertSee('<html lang="en" dir="ltr">', false)
+            ->assertSee('html[dir="ltr"] .hero-title-line { white-space: normal; }', false)
+            ->assertSee('overflow-x: hidden; overflow-x: clip;', false)
+            ->assertSee('html[dir="ltr"] .hero-grid', false)
+            ->assertSee('overflow-wrap: anywhere;', false);
+    }
+
     public function test_the_public_sitemap_is_available(): void
     {
         $response = $this->get('/sitemap.xml');

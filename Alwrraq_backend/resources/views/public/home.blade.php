@@ -455,6 +455,39 @@
             .nav-links a { min-height: 39px; display: inline-flex; align-items: center; justify-content: center; padding: 7px 12px; border: 1px solid #dbe3ef; border-radius: 9px; background: #ffffff; color: #334155; box-shadow: 0 5px 14px rgba(15, 23, 42, 0.05); }
             .nav-links a:hover { border-color: #60a5fa; background: #eff6ff; color: #0f4c81; }
         }
+
+        /* English copy is longer than Arabic and must use a true mirrored LTR layout. */
+        html, body { max-width: 100%; overflow-x: hidden; overflow-x: clip; }
+        .nav > *, .hero-grid > *, .about-box > *, .showcase-stage > *, .contact > *,
+        .stationery-announcement-copy, .hero-card, .card, .step, .feature { min-width: 0; }
+        .stationery-announcement-copy, .hero-title, .hero p, .hero-list li span,
+        .about-box, .showcase-copy, .card, .step, .feature, .contact { overflow-wrap: anywhere; }
+        html[dir="ltr"] .nav,
+        html[dir="ltr"] .hero-grid,
+        html[dir="ltr"] .about-box,
+        html[dir="ltr"] .showcase-stage,
+        html[dir="ltr"] .contact,
+        html[dir="ltr"] .footer-inner { direction: ltr; }
+        html[dir="ltr"] .hero-title,
+        html[dir="ltr"] .hero p,
+        html[dir="ltr"] .hero-card,
+        html[dir="ltr"] .about-box,
+        html[dir="ltr"] .showcase-copy,
+        html[dir="ltr"] .section-head,
+        html[dir="ltr"] .card,
+        html[dir="ltr"] .step,
+        html[dir="ltr"] .feature,
+        html[dir="ltr"] .contact { text-align: left; }
+        html[dir="ltr"] .hero-title-line { white-space: normal; }
+        html[dir="ltr"] .device-desktop { right: 0; left: auto; transform: rotate(3deg); }
+        html[dir="ltr"] .device-phone { right: auto; left: 0; transform: rotate(-3deg); }
+        @media (max-width: 560px) {
+            html[dir="ltr"] .nav-actions .btn,
+            html[dir="ltr"] .nav-actions .language-switcher-button,
+            html[dir="ltr"] .nav-links a { white-space: normal; overflow-wrap: anywhere; }
+            html[dir="ltr"] .device-desktop,
+            html[dir="ltr"] .device-phone { inset: auto; transform: none; }
+        }
     </style>
 </head>
 <body>
