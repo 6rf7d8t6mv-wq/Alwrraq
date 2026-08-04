@@ -467,6 +467,12 @@
         html[dir="ltr"] .brand { order: 1; }
         html[dir="ltr"] .nav-actions { order: 2; }
         html[dir="ltr"] .nav-links { order: 3; }
+        @media (min-width: 901px) {
+            html[dir="ltr"] .nav { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; direction: ltr; }
+            html[dir="ltr"] .nav-links { grid-column: 1; grid-row: 1; justify-self: start; }
+            html[dir="ltr"] .nav-actions { grid-column: 2; grid-row: 1; justify-self: center; }
+            html[dir="ltr"] .brand { grid-column: 3; grid-row: 1; justify-self: end; }
+        }
         html[dir="ltr"] .hero-grid,
         html[dir="ltr"] .about-box,
         html[dir="ltr"] .showcase-stage,
