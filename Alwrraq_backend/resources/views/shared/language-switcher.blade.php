@@ -41,6 +41,18 @@
     .customer-app-page .header-identity strong { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; line-height: 1.3; }
     .customer-app-page .header-identity strong::before { content: '👤'; flex: 0 0 auto; font-size: 13px; line-height: 1; }
     .customer-app-page .header-identity small { color: #94a3b8; font-size: 10px; font-weight: 800; }
+    @media (min-width: 821px) {
+        html[dir="ltr"] body.customer-app-page {
+            padding-right: var(--page-gap) !important;
+            padding-left: calc(var(--sidebar-width) + var(--page-gap)) !important;
+        }
+        html[dir="ltr"] body.customer-app-page .header,
+        html[dir="ltr"] body.customer-app-page .page-header {
+            right: auto !important;
+            left: 0 !important;
+            box-shadow: 10px 0 30px rgba(15, 23, 42, 0.15) !important;
+        }
+    }
     @media (max-width: 820px) {
         body.customer-app-page { padding: 88px 0 0 !important; }
         .customer-app-page .header,
