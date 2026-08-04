@@ -13,7 +13,7 @@ use Throwable;
 
 class ResumeDocumentService
 {
-    private const VECTOR_PDF_VERSION = 3;
+    private const VECTOR_PDF_VERSION = 4;
 
     public function ensurePdf(ResumeDraft $draft): string
     {
