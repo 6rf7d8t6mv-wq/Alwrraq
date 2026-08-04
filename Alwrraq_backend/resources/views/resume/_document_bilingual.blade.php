@@ -3,7 +3,9 @@
     $contentAr = $contentOriginal['content_ar'] ?? $contentOriginal;
     $contentEn = $contentOriginal['content_en'] ?? [];
     $personalOriginal = $contentOriginal['personal'] ?? [];
-    $personalIsArabic = (bool) preg_match('/[\x{0600}-\x{06FF}]/u', implode(' ', array_filter($personalOriginal, 'is_string')));
+    // The top identity follows the application's active UI language. The two
+    // resume columns keep their own fixed Arabic/English directions below.
+    $personalIsArabic = session('ui_locale', 'ar') !== 'en';
     $personalAddress = implode($personalIsArabic ? '، ' : ', ', array_filter([$personalOriginal['city'] ?? null, $personalOriginal['country'] ?? null]));
     $personalContacts = array_filter([
         $personalIsArabic ? 'رقم الجوال' : 'Phone' => $personalOriginal['phone'] ?? null,

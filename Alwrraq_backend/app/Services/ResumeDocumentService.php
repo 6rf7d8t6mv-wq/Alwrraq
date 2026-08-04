@@ -13,7 +13,7 @@ use Throwable;
 
 class ResumeDocumentService
 {
-    private const VECTOR_PDF_VERSION = 2;
+    private const VECTOR_PDF_VERSION = 3;
 
     public function ensurePdf(ResumeDraft $draft): string
     {
@@ -63,7 +63,7 @@ class ResumeDocumentService
         $sourceVersion = $draft->image_path
             ? pathinfo($draft->image_path, PATHINFO_FILENAME)
             : 'resume-'.$draft->id.'-'.now()->format('YmdHisv');
-        $path = 'private/resumes/final/'.$sourceVersion.'-vector-v'.self::VECTOR_PDF_VERSION.'.pdf';
+        $path = 'private/resumes/final/'.$sourceVersion.'-'.$this->uiLocale().'-vector-v'.self::VECTOR_PDF_VERSION.'.pdf';
         if (! Storage::disk('local')->put($path, $pdf)) {
             throw new RuntimeException('Unable to store the generated resume PDF.');
         }
@@ -104,8 +104,13 @@ class ResumeDocumentService
     {
         return str_ends_with(
             pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME),
-            '-vector-v'.self::VECTOR_PDF_VERSION
+            '-'.$this->uiLocale().'-vector-v'.self::VECTOR_PDF_VERSION
         );
+    }
+
+    private function uiLocale(): string
+    {
+        return session('ui_locale', 'ar') === 'en' ? 'en' : 'ar';
     }
 
     private function renderPdf(string $html, bool $shapeArabic, bool $showPageNumber = true): string

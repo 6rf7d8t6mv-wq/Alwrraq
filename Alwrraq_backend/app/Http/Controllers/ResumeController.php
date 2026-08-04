@@ -412,7 +412,7 @@ class ResumeController extends Controller
         }
         $path = $data['image']->storeAs(
             'private/resumes/final',
-            'resume-'.$resumeDraft->id.'-v'.self::EXPORT_VERSION.'-'.now()->format('YmdHisv').'-'.str()->random(8).'.png',
+            'resume-'.$resumeDraft->id.'-v'.self::EXPORT_VERSION.'-'.$this->uiLocale().'-'.now()->format('YmdHisv').'-'.str()->random(8).'.png',
             'local'
         );
         $resumeDraft->update(['image_path' => $path]);
@@ -445,8 +445,16 @@ class ResumeController extends Controller
     private function hasCurrentFinalImage(ResumeDraft $draft): bool
     {
         return filled($draft->image_path)
-            && str_contains(basename($draft->image_path), 'resume-'.$draft->id.'-v'.self::EXPORT_VERSION.'-')
+            && str_contains(
+                basename($draft->image_path),
+                'resume-'.$draft->id.'-v'.self::EXPORT_VERSION.'-'.$this->uiLocale().'-'
+            )
             && Storage::disk('local')->exists($draft->image_path);
+    }
+
+    private function uiLocale(): string
+    {
+        return session('ui_locale', 'ar') === 'en' ? 'en' : 'ar';
     }
 
     private function versionedDownloadUrl(ResumeDraft $draft, string $format): string

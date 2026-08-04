@@ -314,7 +314,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame('Project Management', $translations['إدارة المشاريع']);
     }
 
-    public function test_english_resume_content_is_translated_to_arabic_while_header_keeps_the_original_language(): void
+    public function test_english_resume_content_is_translated_to_arabic_while_header_follows_the_arabic_ui(): void
     {
         [$user, $draft] = $this->createDraft('unpaid');
         $draft->forceFill(['content' => [
@@ -347,9 +347,11 @@ class ResumeServiceFlowTest extends TestCase
             ->assertJsonPath('content_ar.personal.summary', 'أقود المشاريع وأحقق نتائج قابلة للقياس')
             ->assertJsonPath('content_en.personal.summary', 'I lead projects and deliver measurable results');
 
-        $response = $this->actingAs($user)->get(route('resume.preview', $draft->refresh()));
+        $response = $this->actingAs($user)
+            ->withSession(['ui_locale' => 'ar'])
+            ->get(route('resume.preview', $draft->refresh()));
         $response->assertOk()
-            ->assertSee('Personal Information')
+            ->assertSee('المعلومات الشخصية')
             ->assertSee('English Customer')
             ->assertSee('أقود المشاريع وأحقق نتائج قابلة للقياس');
         $this->assertSame(1, substr_count($response->getContent(), 'English Customer'));
@@ -394,7 +396,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame(2, data_get($draft->content, 'content_en._translation_version'));
         $this->assertNull($draft->image_path);
         $this->assertNotNull($draft->pdf_path);
-        $this->assertStringEndsWith('-vector-v2.pdf', $draft->pdf_path);
+        $this->assertStringEndsWith('-ar-vector-v3.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         Storage::disk('local')->assertMissing($oldImage);
         Storage::disk('local')->assertMissing($oldPdf);
@@ -427,6 +429,32 @@ class ResumeServiceFlowTest extends TestCase
             ->assertSee('resume@example.com')
             ->assertSee('https://www.linkedin.com/in/resume')
             ->assertSee('https://example.com');
+    }
+
+    public function test_top_personal_information_direction_follows_the_ui_locale(): void
+    {
+        [$user, $draft] = $this->createDraft('unpaid');
+        $content = $draft->content;
+        $content['content_ar'] = array_merge($content, ['_translation_version' => 2]);
+        $content['content_en'] = array_merge($content, ['_translation_version' => 2]);
+        $draft->forceFill([
+            'language' => 'bilingual',
+            'content' => $content,
+        ])->save();
+
+        $this->actingAs($user)
+            ->withSession(['ui_locale' => 'ar'])
+            ->get(route('resume.preview', $draft))
+            ->assertOk()
+            ->assertSee('class="cv-header-personal" dir="rtl"', false)
+            ->assertSee('المعلومات الشخصية');
+
+        $this->actingAs($user)
+            ->withSession(['ui_locale' => 'en'])
+            ->get(route('resume.preview', $draft))
+            ->assertOk()
+            ->assertSee('class="cv-header-personal" dir="ltr"', false)
+            ->assertSee('Personal Information');
     }
 
     public function test_long_resume_name_is_kept_on_one_adaptive_line(): void
@@ -563,7 +591,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $draft->refresh();
         $this->assertNotNull($draft->pdf_path);
-        $this->assertSame('private/resumes/final/'.$imageVersion.'-vector-v2.pdf', $draft->pdf_path);
+        $this->assertSame('private/resumes/final/'.$imageVersion.'-ar-vector-v3.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         $generatedPdf = Storage::disk('local')->get($draft->pdf_path);
         $this->assertStringStartsWith('%PDF-', $generatedPdf);
@@ -585,9 +613,9 @@ class ResumeServiceFlowTest extends TestCase
             ->get(route('resume.download.pdf', $draft))
             ->assertOk()
             ->assertDownload();
-        $this->assertStringEndsWith('-vector-v2.pdf', (string) $draft->refresh()->pdf_path);
+        $this->assertStringEndsWith('-ar-vector-v3.pdf', (string) $draft->refresh()->pdf_path);
 
-        $imageVersion = 'resume-'.$draft->id.'-v4-current-test';
+        $imageVersion = 'resume-'.$draft->id.'-v4-ar-current-test';
         $currentImage = 'private/resumes/final/'.$imageVersion.'.png';
         Storage::disk('local')->put($currentImage, 'current image');
         $draft->forceFill(['image_path' => $currentImage])->save();
