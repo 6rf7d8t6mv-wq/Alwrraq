@@ -394,7 +394,7 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame(2, data_get($draft->content, 'content_en._translation_version'));
         $this->assertNull($draft->image_path);
         $this->assertNotNull($draft->pdf_path);
-        $this->assertStringEndsWith('-vector-v1.pdf', $draft->pdf_path);
+        $this->assertStringEndsWith('-vector-v2.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         Storage::disk('local')->assertMissing($oldImage);
         Storage::disk('local')->assertMissing($oldPdf);
@@ -563,9 +563,11 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $draft->refresh();
         $this->assertNotNull($draft->pdf_path);
-        $this->assertSame('private/resumes/final/'.$imageVersion.'-vector-v1.pdf', $draft->pdf_path);
+        $this->assertSame('private/resumes/final/'.$imageVersion.'-vector-v2.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
-        $this->assertStringStartsWith('%PDF-', Storage::disk('local')->get($draft->pdf_path));
+        $generatedPdf = Storage::disk('local')->get($draft->pdf_path);
+        $this->assertStringStartsWith('%PDF-', $generatedPdf);
+        $this->assertStringContainsString('/Count 1', $generatedPdf);
     }
 
     public function test_old_resume_exports_are_regenerated_and_current_images_are_never_cached(): void
@@ -583,7 +585,7 @@ class ResumeServiceFlowTest extends TestCase
             ->get(route('resume.download.pdf', $draft))
             ->assertOk()
             ->assertDownload();
-        $this->assertStringEndsWith('-vector-v1.pdf', (string) $draft->refresh()->pdf_path);
+        $this->assertStringEndsWith('-vector-v2.pdf', (string) $draft->refresh()->pdf_path);
 
         $imageVersion = 'resume-'.$draft->id.'-v4-current-test';
         $currentImage = 'private/resumes/final/'.$imageVersion.'.png';

@@ -13,7 +13,7 @@ use Throwable;
 
 class ResumeDocumentService
 {
-    private const VECTOR_PDF_VERSION = 1;
+    private const VECTOR_PDF_VERSION = 2;
 
     public function ensurePdf(ResumeDraft $draft): string
     {
@@ -123,6 +123,9 @@ class ResumeDocumentService
         $dompdf->setPaper('A4');
         $dompdf->loadHtml($html, 'UTF-8');
         $dompdf->render();
+        if (! $showPageNumber && $dompdf->getCanvas()->get_page_count() !== 1) {
+            throw new RuntimeException('The generated resume PDF must contain exactly one page.');
+        }
         if ($showPageNumber) {
             $dompdf->getCanvas()->page_text(
                 540,
