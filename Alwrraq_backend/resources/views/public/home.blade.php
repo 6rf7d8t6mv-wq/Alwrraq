@@ -462,7 +462,8 @@
         .stationery-announcement-copy, .hero-card, .card, .step, .feature { min-width: 0; }
         .stationery-announcement-copy, .hero-title, .hero p, .hero-list li span,
         .about-box, .showcase-copy, .card, .step, .feature, .contact { overflow-wrap: anywhere; }
-        html[dir="ltr"] .nav,
+        html[dir="ltr"] .nav { direction: rtl; }
+        html[dir="ltr"] .nav > * { direction: ltr; }
         html[dir="ltr"] .hero-grid,
         html[dir="ltr"] .about-box,
         html[dir="ltr"] .showcase-stage,

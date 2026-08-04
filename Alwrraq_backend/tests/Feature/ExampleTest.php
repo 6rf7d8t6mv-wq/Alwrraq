@@ -41,6 +41,8 @@ class ExampleTest extends TestCase
             ->assertSee('<html lang="en" dir="ltr">', false)
             ->assertSee('html[dir="ltr"] .hero-title-line { white-space: normal; }', false)
             ->assertSee('overflow-x: hidden; overflow-x: clip;', false)
+            ->assertSee('html[dir="ltr"] .nav { direction: rtl; }', false)
+            ->assertSee('html[dir="ltr"] .nav > * { direction: ltr; }', false)
             ->assertSee('html[dir="ltr"] .hero-grid', false)
             ->assertSee('overflow-wrap: anywhere;', false);
     }
