@@ -7,9 +7,9 @@ use App\Models\ResumeDraft;
 use App\Models\ServiceDefinition;
 use App\Models\User;
 use App\Services\AutomaticTranslationService;
-use App\Services\ResumeDocumentService;
 use App\Services\ServicePricingService;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
@@ -389,15 +389,13 @@ class ResumeServiceFlowTest extends TestCase
             ->assertOk()
             ->assertSee('I aspire to develop my career')
             ->assertSee('width:794,height:1123', false)
-            ->assertDontSee('if(finalImageUrl)', false);
+            ->assertSee('setTimeout(()=>ensureFinalImage()', false);
 
         $draft->refresh();
         $this->assertSame(2, data_get($draft->content, 'content_ar._translation_version'));
         $this->assertSame(2, data_get($draft->content, 'content_en._translation_version'));
         $this->assertNull($draft->image_path);
-        $this->assertNotNull($draft->pdf_path);
-        $this->assertStringEndsWith('-ar-vector-v5.pdf', $draft->pdf_path);
-        Storage::disk('local')->assertExists($draft->pdf_path);
+        $this->assertNull($draft->pdf_path);
         Storage::disk('local')->assertMissing($oldImage);
         Storage::disk('local')->assertMissing($oldPdf);
     }
@@ -567,9 +565,9 @@ class ResumeServiceFlowTest extends TestCase
         [$user, $draft] = $this->createDraft('paid');
         $invalidPath = 'private/resumes/final/resume-'.$draft->id.'.pdf';
         Storage::disk('local')->put($invalidPath, '%PDF-'.str_repeat('old cached pdf', 100));
-        $imageVersion = 'resume-'.$draft->id.'-v4-20260804000000000-test1234';
+        $imageVersion = 'resume-'.$draft->id.'-v4-ar-20260804000000000-test1234';
         $imagePath = 'private/resumes/final/'.$imageVersion.'.png';
-        Storage::disk('local')->put($imagePath, base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL2WQAAAABJRU5ErkJggg=='));
+        Storage::disk('local')->put($imagePath, $this->highResolutionPng());
         $originalContent = $draft->content;
         $content = $originalContent;
         $content['content_ar'] = array_merge($originalContent, ['_translation_version' => 2]);
@@ -591,11 +589,39 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertStringContainsString('private', (string) $response->headers->get('Cache-Control'));
         $draft->refresh();
         $this->assertNotNull($draft->pdf_path);
-        $this->assertSame('private/resumes/final/'.$imageVersion.'-ar-vector-v5.pdf', $draft->pdf_path);
+        $this->assertSame('private/resumes/final/'.$imageVersion.'-image-v1.pdf', $draft->pdf_path);
         Storage::disk('local')->assertExists($draft->pdf_path);
         $generatedPdf = Storage::disk('local')->get($draft->pdf_path);
         $this->assertStringStartsWith('%PDF-', $generatedPdf);
         $this->assertStringContainsString('/Count 1', $generatedPdf);
+    }
+
+    public function test_final_high_resolution_image_prepares_an_identical_single_page_pdf(): void
+    {
+        Storage::fake('local');
+        [$user, $draft] = $this->createDraft('paid');
+        $content = $draft->content;
+        $content['content_ar'] = array_merge($content, ['_translation_version' => 2]);
+        $content['content_en'] = array_merge($content, ['_translation_version' => 2]);
+        $draft->forceFill(['language' => 'bilingual', 'content' => $content])->save();
+
+        $this->actingAs($user)
+            ->post(route('resume.final-image.store', $draft), [
+                'image' => $this->highResolutionImageUpload(),
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonStructure(['image_download_url', 'pdf_download_url']);
+
+        $draft->refresh();
+        $this->assertStringContainsString('-v4-ar-', (string) $draft->image_path);
+        $this->assertStringEndsWith('-image-v1.pdf', (string) $draft->pdf_path);
+        Storage::disk('local')->assertExists($draft->image_path);
+        Storage::disk('local')->assertExists($draft->pdf_path);
+        $generatedPdf = Storage::disk('local')->get($draft->pdf_path);
+        $this->assertStringContainsString('/Count 1', $generatedPdf);
+        $this->assertStringContainsString('/Width 3176', $generatedPdf);
+        $this->assertStringContainsString('/Height 4492', $generatedPdf);
     }
 
     public function test_old_resume_exports_are_regenerated_and_current_images_are_never_cached(): void
@@ -611,14 +637,23 @@ class ResumeServiceFlowTest extends TestCase
 
         $this->actingAs($user)
             ->get(route('resume.download.pdf', $draft))
-            ->assertOk()
-            ->assertDownload();
-        $this->assertStringEndsWith('-ar-vector-v5.pdf', (string) $draft->refresh()->pdf_path);
+            ->assertRedirect(route('resume.preview', [
+                'resumeDraft' => $draft,
+                'from' => 'orders',
+                'auto_download' => 'pdf',
+            ]));
+        $this->assertNull($draft->refresh()->pdf_path);
 
         $imageVersion = 'resume-'.$draft->id.'-v4-ar-current-test';
         $currentImage = 'private/resumes/final/'.$imageVersion.'.png';
-        Storage::disk('local')->put($currentImage, 'current image');
+        Storage::disk('local')->put($currentImage, $this->highResolutionPng());
         $draft->forceFill(['image_path' => $currentImage])->save();
+
+        $this->actingAs($user)
+            ->get(route('resume.download.pdf', $draft))
+            ->assertOk()
+            ->assertDownload();
+        $this->assertStringEndsWith('-image-v1.pdf', (string) $draft->refresh()->pdf_path);
 
         $response = $this->actingAs($user)->get(route('resume.download.image', $draft));
 
@@ -715,19 +750,29 @@ class ResumeServiceFlowTest extends TestCase
         $this->assertSame('paid', $order->payment_status);
         $this->assertSame('full_discount', $order->payment_method);
         $this->assertSame(0.0, (float) $order->grand_total);
-        $this->assertSame('completed', $order->status);
-        $this->assertNotNull($draft->pdf_path);
-        Storage::disk('local')->assertExists($draft->pdf_path);
-
-        $this->mock(ResumeDocumentService::class, function ($mock): void {
-            $mock->shouldReceive('ensurePdf')->once()->andThrow(new \RuntimeException('Simulated renderer failure.'));
-        });
+        $this->assertSame('processing', $order->status);
+        $this->assertNull($draft->pdf_path);
 
         $this->actingAs($user)
             ->post(route('cart.free.confirm'), ['order_ids' => [$order->id]])
             ->assertRedirect(route('orders.index', ['open_order' => $order->id]))
             ->assertSessionHas('status');
         $this->assertSame(1, Order::query()->where('service_type', 'resume')->count());
+    }
+
+    /**
+     * @return array{User, ResumeDraft}
+     */
+    private function highResolutionPng(): string
+    {
+        $image = $this->highResolutionImageUpload();
+
+        return (string) file_get_contents($image->getRealPath());
+    }
+
+    private function highResolutionImageUpload(): UploadedFile
+    {
+        return UploadedFile::fake()->image('resume.png', 3176, 4492);
     }
 
     /**

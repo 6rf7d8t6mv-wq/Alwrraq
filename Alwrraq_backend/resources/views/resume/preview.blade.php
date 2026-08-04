@@ -26,7 +26,7 @@
         <a href="{{ route('resume.edit', $draft) }}">العودة لتعديل السيرة الذاتية</a>
     @endif
     @if($paid && $translationReady)
-        <a class="download" id="pdfButton" href="{{ $pdfDownloadUrl }}">تحميل السيرة الذاتية PDF</a>
+        <a class="download" id="pdfButton" href="{{ $pdfDownloadUrl ?: '#' }}">تحميل السيرة الذاتية PDF</a>
         <button class="download" id="imageButton" type="button">تحميل السيرة الذاتية كصورة</button>
         @if($isAdminViewer)<span class="notice">معاينة السيرة الذاتية من لوحة الإدارة</span>@endif
     @elseif($paid)
@@ -97,7 +97,14 @@ document.getElementById('imageButton')?.addEventListener('click',async function(
     this.disabled=true;this.textContent='جارٍ تجهيز الصورة...';
     try{const downloads=await ensureFinalImage();await deliverResume('image',downloads.imageDownloadUrl)}catch(e){if(e?.name!=='AbortError')alert('تعذر إنشاء الصورة، حاول مرة أخرى.')}finally{this.disabled=false;this.textContent='تحميل السيرة الذاتية كصورة'}
 });
-if(new URLSearchParams(location.search).get('auto_download')==='pdf'&&resumeExport.pdfDownloadUrl)window.location.assign(resumeExport.pdfDownloadUrl);
+document.getElementById('pdfButton')?.addEventListener('click',async function(event){
+    event.preventDefault();
+    const originalText=this.textContent;this.style.pointerEvents='none';this.textContent='جارٍ تجهيز PDF...';
+    try{const downloads=await ensureFinalImage();await deliverResume('pdf',downloads.pdfDownloadUrl)}catch(e){alert('تعذر إنشاء PDF، حاول مرة أخرى.')}finally{this.style.pointerEvents='';this.textContent=originalText}
+});
+const autoDownloadPdf=new URLSearchParams(location.search).get('auto_download')==='pdf';
+if(autoDownloadPdf){ensureFinalImage().then(downloads=>deliverResume('pdf',downloads.pdfDownloadUrl)).catch(()=>alert('تعذر إنشاء PDF، حاول مرة أخرى.'))}
+else{setTimeout(()=>ensureFinalImage().catch(()=>{}),0)}
 try{ResumeSecurity.postMessage('open')}catch(e){}
 </script>
 @elseif(! $paid)

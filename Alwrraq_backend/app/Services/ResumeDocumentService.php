@@ -3,17 +3,14 @@
 namespace App\Services;
 
 use App\Models\ResumeDraft;
-use ArPHP\I18N\Arabic;
 use Dompdf\Dompdf;
 use Dompdf\Options;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
-use Throwable;
 
 class ResumeDocumentService
 {
-    private const VECTOR_PDF_VERSION = 5;
+    private const IMAGE_PDF_VERSION = 1;
 
     public function ensurePdf(ResumeDraft $draft): string
     {
@@ -21,7 +18,7 @@ class ResumeDocumentService
         abort_unless($draft->isPaid(), 403);
 
         if ($draft->pdf_path
-            && $this->pdfIsCurrentVectorVersion($draft)
+            && $this->pdfIsCurrentImageVersion($draft)
             && $this->storedPdfIsValid($draft->pdf_path)) {
             return Storage::disk('local')->path($draft->pdf_path);
         }
@@ -31,39 +28,20 @@ class ResumeDocumentService
             $draft->forceFill(['pdf_path' => null])->save();
         }
 
-        $html = view('resume.pdf', [
-            'draft' => $draft,
-            'paid' => true,
-            'pdfMode' => true,
-        ])->render();
-
-        try {
-            // Keep text and rules as PDF vectors. Rendering the saved PNG here
-            // makes every letter pixelated as soon as the customer zooms in.
-            $pdf = $this->renderPdf($html, $draft->language !== 'en', false);
-        } catch (Throwable $primaryException) {
-            Log::warning('Vector resume PDF rendering failed; retrying without Arabic shaping.', [
-                'resume_draft_id' => $draft->id,
-                'error' => $primaryException->getMessage(),
-            ]);
-            try {
-                $pdf = $this->renderPdf($html, false, false);
-            } catch (Throwable $fallbackException) {
-                Log::error('Resume vector PDF fallback failed.', [
-                    'resume_draft_id' => $draft->id,
-                    'error' => $fallbackException->getMessage(),
-                ]);
-                throw new RuntimeException(
-                    'تعذر إنشاء ملف PDF المتجهي. حاول مرة أخرى.',
-                    previous: $fallbackException
-                );
-            }
+        if (! $draft->image_path || ! Storage::disk('local')->exists($draft->image_path)) {
+            throw new RuntimeException('يجب تجهيز صورة السيرة عالية الدقة قبل إنشاء ملف PDF.');
         }
 
-        $sourceVersion = $draft->image_path
-            ? pathinfo($draft->image_path, PATHINFO_FILENAME)
-            : 'resume-'.$draft->id.'-'.now()->format('YmdHisv');
-        $path = 'private/resumes/final/'.$sourceVersion.'-'.$this->uiLocale().'-vector-v'.self::VECTOR_PDF_VERSION.'.pdf';
+        $image = Storage::disk('local')->get($draft->image_path);
+        $imageInfo = @getimagesizefromstring($image);
+        if (! $imageInfo || ($imageInfo[0] ?? 0) < 3000 || ($imageInfo[1] ?? 0) < 4400) {
+            throw new RuntimeException('صورة السيرة غير صالحة أو ليست بالدقة المطلوبة.');
+        }
+        $mime = $imageInfo['mime'] ?? 'image/png';
+        $pdf = $this->renderImagePdf('data:'.$mime.';base64,'.base64_encode($image));
+
+        $sourceVersion = pathinfo($draft->image_path, PATHINFO_FILENAME);
+        $path = 'private/resumes/final/'.$sourceVersion.'-image-v'.self::IMAGE_PDF_VERSION.'.pdf';
         if (! Storage::disk('local')->put($path, $pdf)) {
             throw new RuntimeException('Unable to store the generated resume PDF.');
         }
@@ -100,46 +78,32 @@ class ResumeDocumentService
         }
     }
 
-    private function pdfIsCurrentVectorVersion(ResumeDraft $draft): bool
+    private function pdfIsCurrentImageVersion(ResumeDraft $draft): bool
     {
         return str_ends_with(
             pathinfo((string) $draft->pdf_path, PATHINFO_FILENAME),
-            '-'.$this->uiLocale().'-vector-v'.self::VECTOR_PDF_VERSION
+            pathinfo((string) $draft->image_path, PATHINFO_FILENAME).'-image-v'.self::IMAGE_PDF_VERSION
         );
     }
 
-    private function uiLocale(): string
+    private function renderImagePdf(string $imageSource): string
     {
-        return session('ui_locale', 'ar') === 'en' ? 'en' : 'ar';
-    }
-
-    private function renderPdf(string $html, bool $shapeArabic, bool $showPageNumber = true): string
-    {
-        if ($shapeArabic) {
-            $html = $this->shapeArabicTextNodes($html);
-        }
-
         $options = new Options();
         $options->set('isRemoteEnabled', false);
         $options->set('isHtml5ParserEnabled', true);
-        $options->set('defaultFont', 'Tajawal');
 
         $dompdf = new Dompdf($options);
         $dompdf->setPaper('A4');
-        $dompdf->loadHtml($html, 'UTF-8');
+        $dompdf->loadHtml(
+            '<!doctype html><html><head><meta charset="utf-8"><style>'
+            .'@page{size:A4;margin:0}html,body{margin:0;padding:0;width:210mm;height:297mm;overflow:hidden}'
+            .'img{display:block;width:210mm;height:297mm;margin:0;padding:0}'
+            .'</style></head><body><img src="'.$imageSource.'" alt=""></body></html>',
+            'UTF-8'
+        );
         $dompdf->render();
-        if (! $showPageNumber && $dompdf->getCanvas()->get_page_count() !== 1) {
+        if ($dompdf->getCanvas()->get_page_count() !== 1) {
             throw new RuntimeException('The generated resume PDF must contain exactly one page.');
-        }
-        if ($showPageNumber) {
-            $dompdf->getCanvas()->page_text(
-                540,
-                820,
-                $shapeArabic ? $this->shapeArabicTextNodes('صفحة {PAGE_NUM} من {PAGE_COUNT}') : 'Page {PAGE_NUM} of {PAGE_COUNT}',
-                null,
-                8,
-                [0.39, 0.45, 0.55]
-            );
         }
 
         $pdf = $dompdf->output();
@@ -148,18 +112,5 @@ class ResumeDocumentService
         }
 
         return $pdf;
-    }
-
-    private function shapeArabicTextNodes(string $html): string
-    {
-        $arabic = new Arabic();
-
-        return preg_replace_callback(
-            '/>([^<>]*[\x{0600}-\x{06FF}][^<>]*)</u',
-            static fn (array $match): string => '>'
-                .$arabic->utf8Glyphs($match[1], 500, false, false)
-                .'<',
-            $html
-        ) ?? $html;
     }
 }
