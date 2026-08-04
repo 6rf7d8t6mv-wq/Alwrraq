@@ -44,7 +44,10 @@ class ExampleTest extends TestCase
             ->assertSee('html[dir="ltr"] .nav { direction: rtl; }', false)
             ->assertSee('html[dir="ltr"] .nav > * { direction: ltr; }', false)
             ->assertSee('html[dir="ltr"] .hero-grid', false)
-            ->assertSee('overflow-wrap: anywhere;', false);
+            ->assertSee('overflow-wrap: anywhere;', false)
+            ->assertSee("const brandToken = 'ALWRRAQBRANDTOKEN';", false)
+            ->assertSee("new RegExp(brandToken, 'gi'), 'Alwrraq'", false)
+            ->assertSee("alwrraq-ui-translations-v3", false);
     }
 
     public function test_the_public_sitemap_is_available(): void

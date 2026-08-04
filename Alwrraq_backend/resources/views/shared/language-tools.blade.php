@@ -21,6 +21,9 @@
         const locale = @json($currentLocale);
         const root = document.documentElement;
         const hasArabic = (value) => /[\u0600-\u06ff]/.test(value || '');
+        const brandPattern = /الورّاق|الوراق/g;
+        const brandToken = 'ALWRRAQBRANDTOKEN';
+        const restoreBrand = (value) => String(value || '').replace(new RegExp(brandToken, 'gi'), 'Alwrraq');
 
         root.lang = locale;
         root.dir = locale === 'en' ? 'ltr' : 'rtl';
@@ -48,7 +51,7 @@
         let flushTimer;
 
         try {
-            const saved = JSON.parse(sessionStorage.getItem('alwrraq-ui-translations-v2') || '{}');
+            const saved = JSON.parse(sessionStorage.getItem('alwrraq-ui-translations-v3') || '{}');
             Object.entries(saved).forEach(([source, translated]) => cache.set(source, translated));
         } catch (_) {}
 
@@ -57,19 +60,25 @@
             cache.set(source, translated);
             try {
                 const compact = Object.fromEntries([...cache.entries()].slice(-600));
-                sessionStorage.setItem('alwrraq-ui-translations-v2', JSON.stringify(compact));
+                sessionStorage.setItem('alwrraq-ui-translations-v3', JSON.stringify(compact));
             } catch (_) {}
         }
 
         function register(source, apply) {
             const text = String(source || '').trim();
-            if (!text || !hasArabic(text)) return;
-            if (cache.has(text)) {
-                apply(cache.get(text));
+            if (!text) return;
+            const protectedText = text.replace(brandPattern, brandToken);
+            const applyWithBrand = (translated) => apply(restoreBrand(translated));
+            if (!hasArabic(protectedText)) {
+                if (protectedText !== text) applyWithBrand(protectedText);
                 return;
             }
-            if (!targets.has(text)) targets.set(text, []);
-            targets.get(text).push(apply);
+            if (cache.has(protectedText)) {
+                applyWithBrand(cache.get(protectedText));
+                return;
+            }
+            if (!targets.has(protectedText)) targets.set(protectedText, []);
+            targets.get(protectedText).push(applyWithBrand);
         }
 
         function registerTextNode(node) {
