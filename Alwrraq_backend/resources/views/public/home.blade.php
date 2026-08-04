@@ -486,6 +486,7 @@
         html[dir="ltr"] .device-desktop { right: 0; left: auto; transform: rotate(3deg); }
         html[dir="ltr"] .device-phone { right: auto; left: 0; transform: rotate(-3deg); }
         @media (max-width: 560px) {
+            html[dir="ltr"] .nav { direction: ltr; }
             html[dir="ltr"] .nav-actions .btn,
             html[dir="ltr"] .nav-actions .language-switcher-button,
             html[dir="ltr"] .nav-links a { white-space: normal; overflow-wrap: anywhere; }

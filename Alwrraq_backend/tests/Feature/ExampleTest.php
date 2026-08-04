@@ -46,6 +46,8 @@ class ExampleTest extends TestCase
             ->assertSee('html[dir="ltr"] .nav > * { direction: ltr; }', false)
             ->assertSee('html[dir="ltr"] .nav-actions { order: 2; }', false)
             ->assertSee('html[dir="ltr"] .nav-links { order: 3; }', false)
+            ->assertSee('@media (max-width: 560px)', false)
+            ->assertSee('html[dir="ltr"] .nav { direction: ltr; }', false)
             ->assertSee('html[dir="ltr"] .hero-grid', false)
             ->assertSee('overflow-wrap: anywhere;', false)
             ->assertSee("const brandToken = 'ALWRRAQBRANDTOKEN';", false)
