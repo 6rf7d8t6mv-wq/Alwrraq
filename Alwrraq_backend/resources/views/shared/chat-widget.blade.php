@@ -18,6 +18,9 @@
         .support-chat-title { margin: 0; font-size: 15px; font-weight: 900; }
         .support-chat-subtitle { margin: 2px 0 0; color: #cbd5e1; font-size: 12px; }
         .support-chat-close { width: auto; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: #ffffff; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-weight: 900; }
+        .support-chat-window-controls { display: none; align-items: center; gap: 5px; }
+        .support-chat-size-button { width: 38px; height: 38px; display: inline-grid; place-items: center; padding: 0; border: 1px solid #d9e0e7; border-radius: 9px; background: #ffffff; color: #475569; cursor: pointer; font-family: inherit; font-size: 18px; line-height: 1; }
+        .support-chat-size-button:hover { background: #f1f5f9; }.support-chat-size-button.active { border-color: #0f4c81; background: #e8f3fb; color: #0f4c81; box-shadow: inset 0 0 0 1px #0f4c81; }
         .support-chat-layout { min-height: 0; flex: 1; display: grid; grid-template-columns: {{ $chatIsAdmin ? '150px minmax(0, 1fr)' : '1fr' }}; overscroll-behavior: contain; }
         .support-chat-threads { display: {{ $chatIsAdmin ? 'block' : 'none' }}; overflow-y: auto; border-left: 1px solid #e5e7eb; background: #f8fafc; }
         .support-chat-thread { width: 100%; display: block; padding: 11px 10px; border: 0; border-bottom: 1px solid #e5e7eb; background: transparent; text-align: right; cursor: pointer; font-family: inherit; }
@@ -58,6 +61,7 @@
             .support-chat-subtitle { color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .support-chat-close { order: -1; display: inline-flex; align-items: center; gap: 5px; padding: 8px 6px; border: 0; background: transparent; color: #0f4c81; border-radius: 10px; font-size: 14px; }
             .support-chat-close-icon { font-size: 24px; line-height: 1; }
+            .support-chat-close-icon-desktop,.support-chat-close-label-desktop { display: none; }
             .support-chat-layout { grid-template-columns: 1fr; }
             .support-chat-threads { max-height: 132px; border-left: 0; border-bottom: 1px solid #e5e7eb; }
             .support-chat-messages { padding: 14px 10px; background-color: #efeae2; background-image: radial-gradient(circle at 20% 30%, rgba(15,76,129,.035) 0 2px, transparent 2.5px), radial-gradient(circle at 75% 68%, rgba(15,76,129,.03) 0 2px, transparent 2.5px); background-size: 42px 42px, 54px 54px; }
@@ -79,9 +83,12 @@
             .support-chat-head > div { min-width: 0; flex: 1; }
             .support-chat-title { color: #111827; font-size: 17px; }
             .support-chat-subtitle { color: #64748b; }
-            .support-chat-close { order: -1; display: inline-flex; align-items: center; gap: 6px; padding: 9px 10px; border: 0; background: transparent; color: #0f4c81; border-radius: 10px; font-size: 14px; }
-            .support-chat-close:hover { background: #eef6fc; }
+            .support-chat-window-controls { display: flex; }
+            .support-chat-close { order: initial; display: inline-flex; align-items: center; gap: 6px; min-width: 82px; justify-content: center; padding: 9px 12px; border: 1px solid #fecaca; background: #fff5f5; color: #b91c1c; border-radius: 10px; font-size: 14px; }
+            .support-chat-close:hover { background: #fee2e2; }
             .support-chat-close-icon { font-size: 25px; line-height: 1; }
+            .support-chat-close-icon-mobile,.support-chat-close-label-mobile { display: none; }
+            .support-chat-close-icon-desktop { font-size: 19px; line-height: 1; }
             .support-chat-layout { grid-template-columns: {{ $chatIsAdmin ? '320px minmax(0, 1fr)' : '1fr' }}; background: #efeae2; }
             .support-chat-threads { border-left: 1px solid #d8dde1; background: #ffffff; }
             .support-chat-thread { padding: 14px 16px; }
@@ -96,6 +103,18 @@
             .support-chat-input { min-height: 46px; max-height: 120px; padding: 12px 18px; border: 0; border-radius: 24px; background: #ffffff; box-shadow: 0 1px 2px rgba(15,23,42,.1); font-size: 16px; line-height: 22px; outline: none; }
             .support-chat-send { width: 48px; height: 48px; overflow: hidden; padding: 0; border-radius: 50%; font-size: 0; box-shadow: 0 2px 5px rgba(15,23,42,.18); }
             .support-chat-send::after { content: '\27A4'; display: block; color: #ffffff; font-size: 22px; line-height: 48px; transform: rotate(180deg); }
+            .support-chat-panel.chat-size-full { width: calc(100vw - 24px); height: calc(100vh - 24px); border-radius: 12px; }
+            .support-chat-panel.chat-size-mobile { width: min(430px, calc(100vw - 32px)); height: min(780px, calc(100vh - 32px)); border-radius: 18px; }
+            .support-chat-panel.chat-size-mobile .support-chat-layout { grid-template-columns: 1fr; }
+            .support-chat-panel.chat-size-mobile .support-chat-threads { max-height: 138px; border-left: 0; border-bottom: 1px solid #d8dde1; }
+            .support-chat-panel.chat-size-mobile .support-chat-messages { padding: 14px 10px; }
+            .support-chat-panel.chat-size-mobile .support-chat-form { padding: 8px; }
+            .support-chat-panel.chat-size-mobile .support-chat-head { padding-inline: 10px; }
+            .support-chat-panel.chat-size-mobile .support-chat-subtitle { max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .support-chat-panel.chat-size-mobile .support-chat-window-controls { gap: 3px; }
+            .support-chat-panel.chat-size-mobile .support-chat-size-button { width: 34px; height: 34px; }
+            .support-chat-panel.chat-size-mobile .support-chat-close { min-width: 38px; width: 38px; height: 38px; padding: 0; font-size: 0; }
+            .support-chat-panel.chat-size-mobile .support-chat-close-label-desktop { display: none; }
         }
     </style>
 
@@ -110,7 +129,12 @@
                 <h2 class="support-chat-title" id="supportChatTitle">{{ $chatIsAdmin ? 'محادثات العملاء' : 'خدمة العملاء' }}</h2>
                 <p class="support-chat-subtitle" id="supportChatSubtitle">{{ $chatIsAdmin ? 'اختر العميل وتابع المحادثة' : 'اكتب رسالتك وسيتم الرد عليك من الإدارة' }}</p>
             </div>
-            <button class="support-chat-close" id="supportChatClose" type="button"><span class="support-chat-close-icon" aria-hidden="true">&#8594;</span><span>رجوع</span></button>
+            <div class="support-chat-window-controls" aria-label="حجم نافذة المحادثة">
+                <button class="support-chat-size-button" type="button" data-chat-size="full" title="ملء الشاشة" aria-label="ملء الشاشة">&#x26F6;</button>
+                <button class="support-chat-size-button active" type="button" data-chat-size="medium" title="الحجم المتوسط" aria-label="الحجم المتوسط">&#9635;</button>
+                <button class="support-chat-size-button" type="button" data-chat-size="mobile" title="حجم الجوال" aria-label="حجم الجوال">&#9645;</button>
+            </div>
+            <button class="support-chat-close" id="supportChatClose" type="button"><span class="support-chat-close-icon support-chat-close-icon-mobile" aria-hidden="true">&#8594;</span><span class="support-chat-close-label-mobile">رجوع</span><span class="support-chat-close-icon-desktop" aria-hidden="true">&#10005;</span><span class="support-chat-close-label-desktop">إغلاق</span></button>
         </div>
         <div class="support-chat-layout">
             <div class="support-chat-threads" id="supportChatThreads"></div>
@@ -146,6 +170,7 @@
             const attachmentRemove = document.getElementById('supportChatAttachmentRemove');
             const titleEl = document.getElementById('supportChatTitle');
             const subtitleEl = document.getElementById('supportChatSubtitle');
+            const sizeButtons = Array.from(panel.querySelectorAll('[data-chat-size]'));
             const countEl = document.getElementById('supportChatCount');
             const isAdmin = panel.dataset.isAdmin === '1';
             const conversationsUrl = panel.dataset.conversationsUrl;
@@ -163,6 +188,25 @@
             let lockedPageScrollY = 0;
             let chatHistoryEntry = false;
             const notifiedReadMessages = new Set();
+
+            const applyChatSize = (requestedSize, { persist = true } = {}) => {
+                const size = ['full', 'medium', 'mobile'].includes(requestedSize) ? requestedSize : 'medium';
+                panel.classList.remove('chat-size-full', 'chat-size-medium', 'chat-size-mobile');
+                panel.classList.add(`chat-size-${size}`);
+                sizeButtons.forEach((button) => {
+                    const active = button.dataset.chatSize === size;
+                    button.classList.toggle('active', active);
+                    button.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+                if (persist) {
+                    try { localStorage.setItem('alwrraq-chat-window-size', size); } catch {}
+                }
+                if (panel.classList.contains('active')) syncChatViewport();
+            };
+
+            let savedChatSize = 'medium';
+            try { savedChatSize = localStorage.getItem('alwrraq-chat-window-size') || 'medium'; } catch {}
+            applyChatSize(savedChatSize, { persist: false });
 
             const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
                 '&': '&amp;',
@@ -518,6 +562,10 @@
             });
 
             closeButton.addEventListener('click', () => closeChatPanel());
+
+            sizeButtons.forEach((button) => {
+                button.addEventListener('click', () => applyChatSize(button.dataset.chatSize));
+            });
 
             window.addEventListener('popstate', () => {
                 if (panel.classList.contains('active')) closeChatPanel({ fromHistory: true });
