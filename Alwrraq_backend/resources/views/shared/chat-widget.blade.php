@@ -182,6 +182,9 @@
             let conversations = [];
             let currentConversationId = null;
             let pollTimer = null;
+            let liveStream = null;
+            let liveReconnectTimer = null;
+            let latestRenderedMessageId = 0;
             let previousUnreadTotal = null;
             let initialMessagesLoaded = false;
             let renderedConversationId = null;
@@ -267,6 +270,34 @@
                 }
                 titleEl.textContent = 'خدمة العملاء';
                 subtitleEl.textContent = 'متصل — اكتب رسالتك وسيتم الرد عليك';
+            };
+
+            const stopLiveStream = () => {
+                if (liveReconnectTimer) clearTimeout(liveReconnectTimer);
+                liveReconnectTimer = null;
+                if (liveStream) liveStream.close();
+                liveStream = null;
+            };
+
+            const startLiveStream = () => {
+                stopLiveStream();
+                if (!panel.classList.contains('active') || !currentConversationId || !('EventSource' in window)) return;
+
+                const stream = new EventSource(`${baseUrl}/${currentConversationId}/stream?after=${latestRenderedMessageId}`);
+                liveStream = stream;
+                const refreshAndReconnect = async () => {
+                    if (liveStream !== stream) return;
+                    stopLiveStream();
+                    await refresh();
+                    liveReconnectTimer = setTimeout(startLiveStream, 100);
+                };
+                stream.addEventListener('chat-update', refreshAndReconnect);
+                stream.addEventListener('reconnect', refreshAndReconnect);
+                stream.onerror = () => {
+                    if (liveStream !== stream) return;
+                    stopLiveStream();
+                    liveReconnectTimer = setTimeout(startLiveStream, 1000);
+                };
             };
 
             const browserNotificationsSupported = () => 'Notification' in window;
@@ -386,6 +417,7 @@
 
             const closeChatPanel = ({ fromHistory = false } = {}) => {
                 if (!panel.classList.contains('active')) return;
+                stopLiveStream();
                 input.blur();
                 panel.classList.remove('active');
                 panel.classList.remove('keyboard-visible');
@@ -468,6 +500,7 @@
             };
 
             const renderMessages = (messages, { forceBottom = false } = {}) => {
+                latestRenderedMessageId = Math.max(0, ...(messages || []).map((message) => Number(message.id) || 0));
                 const fingerprint = (messages || []).map((message) => [
                     message.id,
                     message.message,
@@ -589,6 +622,7 @@
             launcher.addEventListener('click', async () => {
                 openChatPanel();
                 await refresh();
+                startLiveStream();
                 scanOrderAlerts();
                 requestBrowserNotificationPermission().then(scanOrderAlerts);
             });
@@ -619,6 +653,7 @@
                 const button = event.target.closest('[data-chat-thread]');
                 if (!button) return;
                 await loadMessages(Number(button.dataset.chatThread), { forceBottom: true });
+                startLiveStream();
                 focusChatInput();
             });
 
@@ -647,6 +682,7 @@
                     attachmentPreview.classList.remove('active');
                     await loadConversations();
                     await loadMessages(currentConversationId, { forceBottom: true });
+                    startLiveStream();
                     focusChatInput();
                 } else if (response.status === 422) {
                     const error = await response.json().catch(() => null);
@@ -699,6 +735,7 @@
             pollTimer = setInterval(refresh, 1000);
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollTimer);
+                stopLiveStream();
                 if (viewportFrame) cancelAnimationFrame(viewportFrame);
                 if (document.body.dataset.chatScrollLocked === '1') {
                     document.body.style.overflow = '';

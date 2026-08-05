@@ -97,6 +97,13 @@ class ChatAttachmentFlowTest extends TestCase
             ->assertJsonPath('message.attachment_is_image', true);
 
         $messageId = $customerResponse->json('message.id');
+        $stream = $this->actingAs($customer)
+            ->get(route('chat.conversations.stream', ['conversation' => $conversation, 'after' => 0]));
+        $stream->assertOk()->assertHeader('Content-Type', 'text/event-stream; charset=UTF-8');
+        $streamedContent = $stream->streamedContent();
+        $this->assertStringContainsString('event: chat-update', $streamedContent);
+        $this->assertStringContainsString('"latest_message_id":'.$messageId, $streamedContent);
+
         $this->actingAs($admin)
             ->getJson(route('chat.conversations.show', $conversation))
             ->assertOk()

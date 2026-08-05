@@ -71,6 +71,44 @@ class ChatController extends Controller
         ]);
     }
 
+    public function stream(Request $request, ChatConversation $conversation)
+    {
+        $this->authorizeConversation($request, $conversation);
+        $afterMessageId = max(0, $request->integer('after'));
+
+        return response()->stream(function () use ($conversation, $afterMessageId): void {
+            @set_time_limit(30);
+            $startedAt = microtime(true);
+
+            while (! connection_aborted() && microtime(true) - $startedAt < 25) {
+                $latestMessageId = (int) $conversation->messages()->max('id');
+                if ($latestMessageId > $afterMessageId) {
+                    echo "event: chat-update\n";
+                    echo 'data: '.json_encode(['latest_message_id' => $latestMessageId])."\n\n";
+                    @ob_flush();
+                    flush();
+
+                    return;
+                }
+
+                echo ": keepalive\n\n";
+                @ob_flush();
+                flush();
+                usleep(400000);
+            }
+
+            echo "event: reconnect\n";
+            echo "data: {}\n\n";
+            @ob_flush();
+            flush();
+        }, 200, [
+            'Content-Type' => 'text/event-stream',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Connection' => 'keep-alive',
+            'X-Accel-Buffering' => 'no',
+        ]);
+    }
+
     public function store(Request $request, ChatConversation $conversation): JsonResponse
     {
         $this->authorizeConversation($request, $conversation);
