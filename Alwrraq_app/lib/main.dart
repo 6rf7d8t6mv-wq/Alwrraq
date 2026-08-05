@@ -1,7 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
+
+import 'android_file_selector.dart';
 
 void main() {
   runApp(const AlwrraqApp());
@@ -164,7 +169,24 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           },
         ),
       );
-    _loadSite();
+    unawaited(_initializeWebView());
+  }
+
+  Future<void> _initializeWebView() async {
+    if (defaultTargetPlatform == TargetPlatform.android &&
+        _controller.platform is AndroidWebViewController) {
+      final androidController =
+          _controller.platform as AndroidWebViewController;
+      await androidController.setOnShowFileSelector((params) async {
+        try {
+          return await selectAndroidWebViewFiles(params);
+        } catch (_) {
+          return const <String>[];
+        }
+      });
+    }
+
+    await _loadSite();
   }
 
   Future<void> _loadSite() async {
