@@ -164,15 +164,13 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           },
         ),
       );
-    _loadFreshSite();
+    _loadSite();
   }
 
-  Future<void> _loadFreshSite() async {
-    await _controller.clearCache();
-    await _controller.loadRequest(
-      _siteUri,
-      headers: const {'Cache-Control': 'no-cache'},
-    );
+  Future<void> _loadSite() async {
+    // Keep the WebView cache between launches. Dynamic pages still revalidate
+    // normally, while logos, previews, fonts, and scripts open immediately.
+    await _controller.loadRequest(_siteUri);
   }
 
   Future<void> _reload() async {
@@ -180,7 +178,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
       _isLoading = true;
       _errorMessage = null;
     });
-    await _loadFreshSite();
+    await _loadSite();
   }
 
   @override

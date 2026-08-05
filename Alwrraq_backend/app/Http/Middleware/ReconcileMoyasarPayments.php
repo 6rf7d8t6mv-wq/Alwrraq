@@ -24,6 +24,13 @@ class ReconcileMoyasarPayments
             return;
         }
 
+        if (! $request->isMethod('GET')
+            || $request->expectsJson()
+            || $request->ajax()
+            || $request->is('live-status', 'admin/live-status', 'app-revision', 'chat/*', 'language/*')) {
+            return;
+        }
+
         try {
             app(MoyasarPaymentService::class)->reconcilePendingAttempts();
         } catch (Throwable $exception) {

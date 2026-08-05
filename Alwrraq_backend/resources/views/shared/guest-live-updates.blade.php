@@ -34,7 +34,7 @@
                 }
             };
 
-            const timer = window.setInterval(checkForUpdate, 1500);
+            const timer = window.setInterval(checkForUpdate, 30000);
             document.addEventListener('input', (event) => {
                 if (event.isTrusted) userIsEditing = true;
             }, true);

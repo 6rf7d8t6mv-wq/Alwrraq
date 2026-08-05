@@ -146,7 +146,7 @@
             };
 
             showIndicator('التحديث المباشر متصل', false, 2200);
-            const timer = setInterval(poll, 1000);
+            const timer = setInterval(poll, 5000);
             poll();
             document.addEventListener('visibilitychange', () => {
                 if (!document.hidden) poll();

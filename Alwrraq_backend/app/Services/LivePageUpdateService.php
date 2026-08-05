@@ -16,6 +16,13 @@ class LivePageUpdateService
 {
     public function snapshot(User $user): array
     {
+        $scope = $user->role === 'admin' ? 'admin' : 'customer-'.$user->id;
+
+        return Cache::remember("live:snapshot:{$scope}", 5, fn () => $this->buildSnapshot($user));
+    }
+
+    private function buildSnapshot(User $user): array
+    {
         $pricingRevision = Schema::hasTable('service_price_settings')
             ? Cache::remember('live:pricing-revision', 2, fn () => hash(
                 'sha256',
@@ -42,7 +49,8 @@ class LivePageUpdateService
 
         if ($user->role === 'admin') {
             $orders = Order::query();
-            $ordersCount = (int) (clone $orders)->count();
+            $orderStats = (clone $orders)->selectRaw('COUNT(*) as aggregate_count, MAX(updated_at) as latest_update')->first();
+            $ordersCount = (int) ($orderStats?->aggregate_count ?? 0);
             $unseenCount = (int) (clone $orders)
                 ->whereNull('admin_notification_seen_at')
                 ->whereNotIn('status', ['completed', 'finished'])
@@ -51,7 +59,7 @@ class LivePageUpdateService
             $parts = [
                 'admin',
                 $ordersCount,
-                (string) ((clone $orders)->max('updated_at') ?? ''),
+                (string) ($orderStats?->latest_update ?? ''),
                 (string) (User::query()->max('updated_at') ?? ''),
                 (string) (StationeryProduct::query()->max('updated_at') ?? ''),
                 (string) (DiscountCode::query()->max('updated_at') ?? ''),
@@ -62,7 +70,8 @@ class LivePageUpdateService
             ];
         } else {
             $orders = Order::query()->where('user_id', $user->id);
-            $ordersCount = (int) (clone $orders)->count();
+            $orderStats = (clone $orders)->selectRaw('COUNT(*) as aggregate_count, MAX(updated_at) as latest_update')->first();
+            $ordersCount = (int) ($orderStats?->aggregate_count ?? 0);
             $unseenCount = (int) (clone $orders)
                 ->whereNull('customer_notification_seen_at')
                 ->whereHas('deliveredFiles', fn ($query) => $query->whereNull('customer_downloaded_at'))
@@ -72,8 +81,8 @@ class LivePageUpdateService
                 'customer',
                 $user->id,
                 $ordersCount,
-                (string) ((clone $orders)->max('updated_at') ?? ''),
-                (string) ($user->fresh()?->updated_at ?? ''),
+                (string) ($orderStats?->latest_update ?? ''),
+                (string) ($user->updated_at ?? ''),
                 (string) (StationeryProduct::query()->max('updated_at') ?? ''),
                 $pricingRevision,
                 $catalogRevision,

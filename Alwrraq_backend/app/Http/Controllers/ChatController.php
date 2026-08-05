@@ -95,7 +95,7 @@ class ChatController extends Controller
                 echo ": keepalive\n\n";
                 @ob_flush();
                 flush();
-                usleep(400000);
+                usleep(700000);
             }
 
             echo "event: reconnect\n";

@@ -347,7 +347,7 @@
                 const refreshAndReconnect = async () => {
                     if (liveStream !== stream) return;
                     stopLiveStream();
-                    await refresh();
+                    await refresh({ loadActiveMessages: true });
                     liveReconnectTimer = setTimeout(startLiveStream, 100);
                 };
                 stream.addEventListener('chat-update', refreshAndReconnect);
@@ -669,12 +669,16 @@
             };
 
             let refreshing = false;
-            const refresh = async () => {
+            const refresh = async ({ loadActiveMessages = false } = {}) => {
                 if (document.hidden || refreshing) return;
                 refreshing = true;
                 try {
                     await loadConversations();
-                    if (panel.classList.contains('active') && currentConversationId && !mobileAdminListIsOpen()) {
+                    const streamUnavailable = !('EventSource' in window) || !liveStream;
+                    if (panel.classList.contains('active')
+                        && currentConversationId
+                        && !mobileAdminListIsOpen()
+                        && (loadActiveMessages || streamUnavailable)) {
                         await loadMessages(currentConversationId);
                     }
                 } catch (error) {
@@ -686,7 +690,7 @@
 
             launcher.addEventListener('click', async () => {
                 openChatPanel();
-                await refresh();
+                await refresh({ loadActiveMessages: true });
                 if (!mobileAdminListIsOpen()) startLiveStream();
                 scanOrderAlerts();
                 requestBrowserNotificationPermission().then(scanOrderAlerts);
@@ -824,7 +828,7 @@
 
             refresh();
             requestAnimationFrame(scanOrderAlerts);
-            pollTimer = setInterval(refresh, 1000);
+            pollTimer = setInterval(refresh, 2000);
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollTimer);
                 stopLiveStream();

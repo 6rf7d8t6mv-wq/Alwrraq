@@ -229,7 +229,7 @@
             document.addEventListener('submit', () => { busyUntil = Date.now() + 5000; }, true);
 
             showIndicator('التحديث المباشر متصل', '', 1800);
-            const timer = setInterval(poll, 3000);
+            const timer = setInterval(poll, 5000);
             poll();
             document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
             window.addEventListener('pagehide', () => clearInterval(timer), { once: true });
