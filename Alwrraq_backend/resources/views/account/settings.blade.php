@@ -148,7 +148,7 @@
                 <div class="brand">الورّاق</div>
             </div>
             <div class="header-identity">
-                <strong>{{ auth()->user()->name }}</strong>
+                <strong data-transliterate-name>{{ auth()->user()->name }}</strong>
                 <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
             </div>
             <div class="header-actions">

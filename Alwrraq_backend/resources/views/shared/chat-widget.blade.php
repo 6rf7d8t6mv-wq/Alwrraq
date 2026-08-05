@@ -321,10 +321,12 @@
                 const presence = formatPresence(current);
                 subtitleEl.classList.toggle('online', Boolean(current?.is_online));
                 if (isAdmin && current) {
+                    titleEl.setAttribute('data-transliterate-name', '');
                     titleEl.textContent = current.customer_name || 'عميل';
                     subtitleEl.textContent = [current.customer_phone, presence].filter(Boolean).join(' • ');
                     return;
                 }
+                titleEl.removeAttribute('data-transliterate-name');
                 titleEl.textContent = 'خدمة العملاء';
                 subtitleEl.textContent = presence;
             };
@@ -554,7 +556,7 @@
 
                 threadsEl.innerHTML = conversations.map((item) => `
                     <button class="support-chat-thread ${item.id === currentConversationId ? 'active' : ''}" type="button" data-chat-thread="${item.id}">
-                        <strong>${escapeHtml(item.customer_name || 'عميل')}</strong>
+                        <strong data-transliterate-name>${escapeHtml(item.customer_name || 'عميل')}</strong>
                         <span>${escapeHtml(item.last_message || item.customer_phone || 'محادثة جديدة')}</span>
                         <span class="thread-presence ${item.is_online ? 'online' : ''}">${escapeHtml(formatPresence(item))}</span>
                         ${Number(item.unread_count || 0) > 0 ? `<em class="thread-unread">${item.unread_count}</em>` : ''}
@@ -611,7 +613,7 @@
                     return `
                     <div class="support-message ${message.is_mine ? 'mine' : 'other'}">
                         <div class="support-message-bubble">
-                            <span class="support-message-name">${escapeHtml(message.sender_name || 'مستخدم')}</span>
+                            <span class="support-message-name" ${message.sender_role === 'customer' ? 'data-transliterate-name' : ''}>${escapeHtml(message.sender_name || 'مستخدم')}</span>
                             ${attachment}
                             ${message.message ? `<div class="support-message-text" data-message-index="${index}"></div>` : ''}
                             <span class="support-message-time">${formatTime(message.created_at)}</span>

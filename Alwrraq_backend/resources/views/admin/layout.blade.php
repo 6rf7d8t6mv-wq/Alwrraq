@@ -423,7 +423,7 @@
                 <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                 <div class="brand">الورّاق</div>
             </div>
-            <div class="admin-name"><strong>👤 {{ auth()->user()->name }}</strong><small>المدير</small></div>
+            <div class="admin-name"><strong>👤 <span data-transliterate-name>{{ auth()->user()->name }}</span></strong><small>المدير</small></div>
             <nav>
                 @if (auth()->user()->hasAdminPermission('reports_view'))
                     <a class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}" href="{{ route('admin.dashboard') }}"><span class="nav-icon" aria-hidden="true">🏠</span><span class="nav-text">الرئيسية</span></a>

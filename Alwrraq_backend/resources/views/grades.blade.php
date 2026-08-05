@@ -665,7 +665,7 @@
                     <p class="brand-subtitle">خدمات النسخ والتصوير</p>
                 </div>
                 <div class="header-identity">
-                    <strong>{{ auth()->user()->name }}</strong>
+                    <strong data-transliterate-name>{{ auth()->user()->name }}</strong>
                     <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
                 </div>
                 <div class="header-actions">

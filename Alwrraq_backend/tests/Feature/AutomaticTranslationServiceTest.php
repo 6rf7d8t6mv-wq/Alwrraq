@@ -67,6 +67,52 @@ class AutomaticTranslationServiceTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_it_romanizes_account_names_instead_of_translating_their_meaning(): void
+    {
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => null,
+            'services.mymemory_translation.enabled' => false,
+            'services.google_keyless_translation.enabled' => false,
+        ]);
+
+        $translator = app(AutomaticTranslationService::class);
+        $translations = $translator->translateInterfaceTexts(
+            ['مكتبة العلم الراسخ'],
+            ['مكتبة العلم الراسخ']
+        );
+
+        $this->assertArrayHasKey('مكتبة العلم الراسخ', $translations);
+        $this->assertDoesNotMatchRegularExpression('/[\x{0600}-\x{06FF}]/u', $translations['مكتبة العلم الراسخ']);
+        $this->assertNotSame('Established Science Library', $translations['مكتبة العلم الراسخ']);
+        Http::assertNothingSent();
+    }
+
+    public function test_it_protects_a_name_inside_semantically_translated_interface_copy(): void
+    {
+        config([
+            'cache.default' => 'array',
+            'services.google_translation.api_key' => 'test-key',
+            'services.google_translation.endpoint' => 'https://translation.googleapis.com/language/translate/v2',
+        ]);
+        Cache::flush();
+        Http::fake([
+            'translation.googleapis.com/*' => Http::response(['data' => ['translations' => [
+                ['translatedText' => 'Orders for XQZPN0QZX'],
+            ]]]),
+        ]);
+
+        $translator = app(AutomaticTranslationService::class);
+        $translations = $translator->translateInterfaceTexts(
+            ['طلبات اسامه المسيري'],
+            ['اسامه المسيري']
+        );
+
+        $this->assertStringStartsWith('Orders for ', $translations['طلبات اسامه المسيري']);
+        $this->assertStringNotContainsString('XQZPN', $translations['طلبات اسامه المسيري']);
+        $this->assertDoesNotMatchRegularExpression('/[\x{0600}-\x{06FF}]/u', $translations['طلبات اسامه المسيري']);
+    }
+
     public function test_the_public_translation_endpoint_fails_safely_without_a_key(): void
     {
         config([

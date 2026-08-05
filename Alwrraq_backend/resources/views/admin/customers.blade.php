@@ -41,7 +41,7 @@
                         <tr>
                             <td data-label="العميل">
                                 <div class="identity">
-                                    <strong>{{ $customer->name }}</strong>
+                                    <strong data-transliterate-name>{{ $customer->name }}</strong>
                                     <span class="id-badge">عميل {{ $loop->iteration }}</span>
                                 </div>
                             </td>

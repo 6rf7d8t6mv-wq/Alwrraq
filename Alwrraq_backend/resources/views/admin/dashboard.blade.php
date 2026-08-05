@@ -135,7 +135,7 @@
         <section class="dashboard-welcome">
             <h1>الرئيسية</h1>
             <div class="dashboard-meta">
-                <span class="dashboard-pill">👤 {{ auth()->user()->name }}</span>
+                <span class="dashboard-pill">👤 <span data-transliterate-name>{{ auth()->user()->name }}</span></span>
                 <span class="dashboard-pill">🧾 {{ $stats['orders'] }} طلب</span>
                 <span class="dashboard-pill">💳 {{ $stats['paid_orders'] }} مدفوع</span>
             </div>
@@ -220,7 +220,7 @@
                                 @endphp
                                 <tr>
                                     <td data-label="رقم الطلب"><span class="dashboard-order-value"><span class="order-id">#{{ $order->id }}</span></span></td>
-                                    <td data-label="العميل"><span class="dashboard-order-value">{{ $order->user->name }}<br><span class="muted">{{ $order->user->phone }}</span></span></td>
+                                    <td data-label="العميل"><span class="dashboard-order-value"><span data-transliterate-name>{{ $order->user->name }}</span><br><span class="muted">{{ $order->user->phone }}</span></span></td>
                                     <td data-label="الخدمة"><span class="dashboard-order-value">{{ $order->serviceDefinition?->title ?? $serviceNames[$order->service_type] ?? $order->service_type }}</span></td>
                                     <td data-label="الحالة"><span class="dashboard-order-value"><span class="badge">{{ $displayStatus }}</span></span></td>
                                     <td data-label="الدفع"><span class="dashboard-order-value"><span class="badge">{{ $isPaid ? 'مدفوع' : 'غير مدفوع' }}</span></span></td>

@@ -14,6 +14,8 @@ class AutomaticTranslationController extends Controller
         $validated = $request->validate([
             'texts' => ['required', 'array', 'max:50'],
             'texts.*' => ['required', 'string', 'max:1000'],
+            'proper_names' => ['sometimes', 'array', 'max:100'],
+            'proper_names.*' => ['required', 'string', 'max:150'],
         ]);
 
         $texts = array_values(array_unique($validated['texts']));
@@ -25,7 +27,7 @@ class AutomaticTranslationController extends Controller
         }
 
         return response()->json([
-            'translations' => $translator->translateArabicToEnglish($texts),
+            'translations' => $translator->translateInterfaceTexts($texts, $validated['proper_names'] ?? []),
             'configured' => $translator->isConfigured(),
         ]);
     }

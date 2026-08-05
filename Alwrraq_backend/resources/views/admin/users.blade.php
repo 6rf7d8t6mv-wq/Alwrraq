@@ -41,7 +41,7 @@
                         <tr>
                             <td data-label="المستخدم">
                                 <div class="identity">
-                                    <strong>{{ $user->name }}</strong>
+                                    <strong data-transliterate-name>{{ $user->name }}</strong>
                                     <span class="id-badge">{{ auth()->user()->is($user) ? 'حسابك الحالي' : 'مستخدم ' . $loop->iteration }}</span>
                                 </div>
                             </td>

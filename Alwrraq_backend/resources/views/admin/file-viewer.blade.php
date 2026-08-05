@@ -155,7 +155,7 @@
                     </div>
                     <div class="meta-item wide">
                         <span>العميل</span>
-                        <strong>{{ $order->user->name ?? '-' }} - {{ $order->user->phone ?? '-' }}</strong>
+                        <strong><span data-transliterate-name>{{ $order->user->name ?? '-' }}</span> - {{ $order->user->phone ?? '-' }}</strong>
                     </div>
                     <div class="meta-item wide">
                         <span>الخدمة</span>

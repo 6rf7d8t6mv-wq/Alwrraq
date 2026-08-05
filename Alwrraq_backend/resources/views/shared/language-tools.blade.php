@@ -23,6 +23,7 @@
         const hasArabic = (value) => /[\u0600-\u06ff]/.test(value || '');
         const brandPattern = /الورّاق|الوراق/g;
         const brandToken = 'ALWRRAQBRANDTOKEN';
+        const properNames = new Set(@json(auth()->check() ? [auth()->user()->name] : []));
         const restoreBrand = (value) => String(value || '').replace(new RegExp(brandToken, 'gi'), 'Alwrraq');
 
         root.lang = locale;
@@ -51,7 +52,7 @@
         let flushTimer;
 
         try {
-            const saved = JSON.parse(sessionStorage.getItem('alwrraq-ui-translations-v3') || '{}');
+            const saved = JSON.parse(sessionStorage.getItem('alwrraq-ui-translations-v4') || '{}');
             Object.entries(saved).forEach(([source, translated]) => cache.set(source, translated));
         } catch (_) {}
 
@@ -60,7 +61,7 @@
             cache.set(source, translated);
             try {
                 const compact = Object.fromEntries([...cache.entries()].slice(-600));
-                sessionStorage.setItem('alwrraq-ui-translations-v3', JSON.stringify(compact));
+                sessionStorage.setItem('alwrraq-ui-translations-v4', JSON.stringify(compact));
             } catch (_) {}
         }
 
@@ -86,6 +87,7 @@
             const original = node.nodeValue || '';
             const core = original.trim();
             if (!hasArabic(core)) return;
+            if (node.parentElement.closest('[data-transliterate-name]')) properNames.add(core);
             const leading = original.match(/^\s*/)?.[0] || '';
             const trailing = original.match(/\s*$/)?.[0] || '';
             register(core, (translated) => {
@@ -113,6 +115,10 @@
                 registerTextNode(scope);
                 return;
             }
+            if (scope instanceof Element) {
+                if (scope.matches('[data-transliterate-name]')) properNames.add(scope.textContent.trim());
+                scope.querySelectorAll?.('[data-transliterate-name]').forEach((element) => properNames.add(element.textContent.trim()));
+            }
             const walker = document.createTreeWalker(scope, NodeFilter.SHOW_TEXT, {
                 acceptNode: (node) => ignoredTags.has(node.parentElement?.tagName)
                     ? NodeFilter.FILTER_REJECT
@@ -132,7 +138,7 @@
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
                 },
-                body: JSON.stringify({ texts }),
+                body: JSON.stringify({ texts, proper_names: [...properNames].filter(Boolean) }),
             });
             if (!response.ok) throw new Error('translation_failed');
             return (await response.json()).translations || {};

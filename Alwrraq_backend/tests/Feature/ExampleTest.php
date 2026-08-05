@@ -55,7 +55,7 @@ class ExampleTest extends TestCase
             ->assertSee('overflow-wrap: anywhere;', false)
             ->assertSee("const brandToken = 'ALWRRAQBRANDTOKEN';", false)
             ->assertSee("new RegExp(brandToken, 'gi'), 'Alwrraq'", false)
-            ->assertSee("alwrraq-ui-translations-v3", false)
+            ->assertSee("alwrraq-ui-translations-v4", false)
             ->assertSee('@media (min-width: 821px)', false)
             ->assertSee('html[dir="ltr"] body.customer-app-page .page-header', false)
             ->assertSee('left: 0 !important;', false)

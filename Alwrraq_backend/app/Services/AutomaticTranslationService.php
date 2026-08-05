@@ -11,6 +11,91 @@ use Throwable;
 class AutomaticTranslationService
 {
     /**
+     * Translate interface copy semantically while romanizing people and
+     * account names instead of translating what their words mean.
+     *
+     * @param  array<int, string>  $texts
+     * @param  array<int, string>  $properNames
+     * @return array<string, string>
+     */
+    public function translateInterfaceTexts(array $texts, array $properNames): array
+    {
+        $names = collect($properNames)
+            ->map(fn ($name) => trim((string) $name))
+            ->filter(fn (string $name) => $name !== '' && preg_match('/[\x{0600}-\x{06FF}]/u', $name))
+            ->unique()
+            ->sortByDesc(fn (string $name) => mb_strlen($name))
+            ->values()
+            ->all();
+
+        if ($names === []) {
+            return $this->translateArabicToEnglish($texts);
+        }
+
+        $romanizedNames = collect($names)
+            ->mapWithKeys(fn (string $name) => [$name => $this->transliterateArabicName($name)])
+            ->all();
+        $protectedTexts = [];
+        $sourceByProtectedText = [];
+
+        foreach ($texts as $text) {
+            $sourceText = trim((string) $text);
+            if ($sourceText === '') {
+                continue;
+            }
+            if (isset($romanizedNames[$sourceText])) {
+                $protectedTexts[$sourceText] = $romanizedNames[$sourceText];
+                continue;
+            }
+
+            $protectedText = $sourceText;
+            foreach ($names as $index => $name) {
+                $protectedText = str_replace($name, "XQZPN{$index}QZX", $protectedText);
+            }
+            $sourceByProtectedText[$protectedText] = $sourceText;
+        }
+
+        $semanticTranslations = $this->translateArabicToEnglish(array_keys($sourceByProtectedText));
+        foreach ($semanticTranslations as $protectedSource => $translated) {
+            $sourceText = $sourceByProtectedText[$protectedSource] ?? null;
+            if (! $sourceText) {
+                continue;
+            }
+            foreach ($names as $index => $name) {
+                $translated = str_ireplace("XQZPN{$index}QZX", $romanizedNames[$name], $translated);
+            }
+            $protectedTexts[$sourceText] = $translated;
+        }
+
+        return $protectedTexts;
+    }
+
+    public function transliterateArabicName(string $name): string
+    {
+        $name = trim($name);
+        if ($name === '' || ! preg_match('/[\x{0600}-\x{06FF}]/u', $name)) {
+            return $name;
+        }
+
+        if (class_exists(\Transliterator::class)) {
+            $transliterator = \Transliterator::create('Arabic-Latin; Latin-ASCII');
+            $romanized = $transliterator?->transliterate($name);
+        }
+
+        $romanized ??= strtr($name, [
+            'ا' => 'a', 'أ' => 'a', 'إ' => 'i', 'آ' => 'aa', 'ب' => 'b', 'ت' => 't', 'ث' => 'th',
+            'ج' => 'j', 'ح' => 'h', 'خ' => 'kh', 'د' => 'd', 'ذ' => 'dh', 'ر' => 'r', 'ز' => 'z',
+            'س' => 's', 'ش' => 'sh', 'ص' => 's', 'ض' => 'd', 'ط' => 't', 'ظ' => 'z', 'ع' => 'a',
+            'غ' => 'gh', 'ف' => 'f', 'ق' => 'q', 'ك' => 'k', 'ل' => 'l', 'م' => 'm', 'ن' => 'n',
+            'ه' => 'h', 'ة' => 'h', 'و' => 'w', 'ؤ' => 'w', 'ي' => 'y', 'ى' => 'a', 'ئ' => 'y', 'ء' => '',
+        ]);
+
+        $romanized = preg_replace('/[^A-Za-z0-9\s._\-\'’]/u', 'a', (string) $romanized) ?? (string) $romanized;
+
+        return preg_replace_callback('/(^|[\s\-])([a-z])/i', fn ($match) => $match[1].strtoupper($match[2]), strtolower($romanized)) ?? $romanized;
+    }
+
+    /**
      * @param  array<int, string>  $texts
      * @return array<string, string>
      */

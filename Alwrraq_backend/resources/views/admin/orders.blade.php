@@ -306,7 +306,7 @@
 
         <div class="order orders-customer-card">
             <div class="order-head">
-                <div><span class="label">العميل</span><span class="order-summary-value">{{ $customer->name }} - {{ $customer->phone }}</span></div>
+                <div><span class="label">العميل</span><span class="order-summary-value"><span data-transliterate-name>{{ $customer->name }}</span> - {{ $customer->phone }}</span></div>
                 <div><span class="label">عدد الطلبات</span><span class="order-summary-value">{{ $customerOrders->count() }}</span></div>
                 <div><span class="label">آخر طلب</span><span class="order-summary-value" data-local-datetime="{{ $latestOrder->created_at->toIso8601String() }}">{{ $createdAtText }}</span></div>
                 <div><span class="label">نوع الخدمة</span><span class="order-summary-value">{{ $servicesText }}</span></div>
@@ -423,7 +423,7 @@
                     <div class="panel order-detail-section" data-order-id="{{ $order->id }}" data-order-paid="{{ $isPaid ? '1' : '0' }}" data-open-order-url="{{ route('admin.orders.open', $order) }}" style="margin-bottom: 16px;">
                         <div class="order-head order-detail-section">
                             <div><span class="label">رقم الطلب</span><span class="tiny-status-dot {{ $orderDotColor }}" data-order-status-dot></span>#{{ $order->id }}</div>
-                            <div><span class="label">العميل</span>{{ $order->user->name }} - {{ $order->user->phone }}</div>
+                            <div><span class="label">العميل</span><span data-transliterate-name>{{ $order->user->name }}</span> - {{ $order->user->phone }}</div>
                             <div><span class="label">تاريخ إنشاء الطلب</span><span data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $orderCreatedAtText }}</span></div>
                             <div class="order-service-field"><span class="label">الخدمة</span><strong class="order-service-name">{{ $order->serviceDefinition?->title ?? $serviceFullNames[$order->service_type] ?? $serviceNames[$order->service_type] ?? $order->service_type }}</strong></div>
                             <div><span class="label">الحالة</span><span class="badge">{{ $displayStatus }}</span></div>
@@ -492,7 +492,7 @@
                                 <div class="order-file-card">
                                     <div class="order-file-field file-name">
                                         <span>العميل في السيرة الذاتية</span>
-                                        <strong>{{ data_get($order->resumeDraft->content, 'personal.full_name', $order->user->name) }}</strong>
+                                        <strong data-transliterate-name>{{ data_get($order->resumeDraft->content, 'personal.full_name', $order->user->name) }}</strong>
                                     </div>
                                     <div class="order-file-field"><span>اللغة</span><strong>{{ $order->resumeDraft->language === 'bilingual' ? 'العربية وEnglish' : ($order->resumeDraft->language === 'en' ? 'English' : 'العربية') }}</strong></div>
                                     <div class="order-file-field order-option-highlight"><span>التصميم</span><strong>{{ $order->resumeDraft?->templateName() ?? 'التنفيذي الفاخر' }}</strong></div>

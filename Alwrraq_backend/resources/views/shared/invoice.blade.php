@@ -139,7 +139,7 @@
 
     <div class="invoice-section-title">بيانات الفاتورة</div>
     <div class="invoice-grid">
-        <div><span>العميل</span><strong>{{ $order->user->name }}</strong></div>
+        <div><span>العميل</span><strong data-transliterate-name>{{ $order->user->name }}</strong></div>
         <div><span>رقم الجوال</span><strong>{{ $order->user->phone }}</strong></div>
         <div><span>الخدمة</span><strong>{{ $order->serviceDefinition?->title ?? $serviceFullNames[$order->service_type] ?? $order->service_type }}</strong></div>
         <div><span>تاريخ الطلب</span><strong data-local-datetime="{{ $order->created_at->toIso8601String() }}">{{ $order->created_at->format('Y-m-d H:i') }}</strong></div>
