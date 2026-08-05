@@ -76,6 +76,20 @@ class ExampleTest extends TestCase
             ->assertSee(route('public.home'), false);
     }
 
+    public function test_mobile_upload_inputs_use_strict_mime_filters(): void
+    {
+        $view = (string) file_get_contents(resource_path('views/grades.blade.php'));
+
+        $this->assertSame(5, substr_count($view, 'accept="application/pdf"'));
+        $this->assertSame(3, substr_count(
+            $view,
+            'accept="application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"'
+        ));
+        $this->assertSame(2, substr_count($view, 'accept="image/*"'));
+        $this->assertStringNotContainsString('accept=".pdf"', $view);
+        $this->assertStringNotContainsString('id="imagesFilesPicker" multiple', $view);
+    }
+
     public function test_stationery_images_are_served_without_a_public_storage_symlink(): void
     {
         Storage::fake('public');

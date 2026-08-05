@@ -747,7 +747,7 @@
                     <div class="upload-box" id="notesPdfBox">
                         <div class="file-icon">📕</div>
                         <h3>تحميل ملفات PDF</h3>
-                        <input type="file" id="notesPdfFile" accept=".pdf" multiple />
+                        <input type="file" id="notesPdfFile" accept="application/pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
                         <button class="upload-button" id="notesPdfUploadBtn" onclick="document.getElementById('notesPdfFile').click()">اختر ملفات</button>
@@ -797,7 +797,7 @@
                     <div class="upload-box" id="booksPdfBox">
                         <div class="file-icon">📕</div>
                         <h3>تحميل ملفات PDF</h3>
-                        <input type="file" id="booksPdfFile" accept=".pdf" multiple />
+                        <input type="file" id="booksPdfFile" accept="application/pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
                         <button class="upload-button" id="booksPdfUploadBtn" onclick="document.getElementById('booksPdfFile').click()">اختر ملفات</button>
@@ -846,7 +846,7 @@
                     <div class="upload-box" id="colorPrintingPdfBox">
                         <div class="file-icon">📕</div>
                         <h3>تحميل ملفات PDF</h3>
-                        <input type="file" id="colorPrintingPdfFile" accept=".pdf" multiple />
+                        <input type="file" id="colorPrintingPdfFile" accept="application/pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
                         <p class="file-info">يدعم A4 و A3 و A5 و B5</p>
                         <button class="upload-button" id="colorPrintingPdfUploadBtn" onclick="document.getElementById('colorPrintingPdfFile').click()">اختر ملفات</button>
@@ -898,7 +898,7 @@
                     <div class="upload-box" id="thesisWordBox">
                         <div class="file-icon">📄</div>
                         <h3>تحميل ملفات Word</h3>
-                        <input type="file" id="thesisWordFile" accept=".doc,.docx" multiple />
+                        <input type="file" id="thesisWordFile" accept="application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
                         <p class="file-info">صيغ مدعومة: .doc, .docx</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
                         <p class="word-usage-notice">ملف Word للعرض أو لاستخدامه في عمل الكعب والكليشة فقط، وليس للطباعه.</p>
@@ -910,7 +910,7 @@
                     <div class="upload-box" id="thesisPdfBox">
                         <div class="file-icon">📕</div>
                         <h3>تحميل ملفات PDF</h3>
-                        <input type="file" id="thesisPdfFile" accept=".pdf" multiple />
+                        <input type="file" id="thesisPdfFile" accept="application/pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
                         <p class="binding-required">ملف PDF إجباري للإضافة إلى السلة.</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
@@ -981,7 +981,7 @@
                     <div class="upload-box" id="phdWordBox">
                         <div class="file-icon">📄</div>
                         <h3>تحميل ملفات Word</h3>
-                        <input type="file" id="phdWordFile" accept=".doc,.docx" multiple />
+                        <input type="file" id="phdWordFile" accept="application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
                         <p class="file-info">صيغ مدعومة: .doc, .docx</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
                         <p class="word-usage-notice">ملف Word للعرض أو لاستخدامه في عمل الكعب والكليشة فقط، وليس للطباعه.</p>
@@ -993,7 +993,7 @@
                     <div class="upload-box" id="phdPdfBox">
                         <div class="file-icon">📕</div>
                         <h3>تحميل ملفات PDF</h3>
-                        <input type="file" id="phdPdfFile" accept=".pdf" multiple />
+                        <input type="file" id="phdPdfFile" accept="application/pdf" multiple />
                         <p class="file-info">صيغ مدعومة: .pdf</p>
                         <p class="binding-required">ملف PDF إجباري للإضافة إلى السلة.</p>
                         <p class="file-info">حجم الملف: بدون حد أقصى</p>
@@ -1063,7 +1063,7 @@
                     <div class="upload-box" id="formattingWordBox">
                         <div class="file-icon">📄</div>
                         <h3>تحميل ملف Word</h3>
-                        <input type="file" id="formattingWordFile" accept=".doc,.docx" multiple />
+                        <input type="file" id="formattingWordFile" accept="application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple />
                         <p class="file-info">صيغ مدعومة: .doc, .docx</p>
                         <p class="file-info">سعر التنسيق: {{ rtrim(rtrim(number_format($servicePricing['formatting_page_price'], 2, '.', ''), '0'), '.') }} ريال لكل صفحة</p>
                         <button class="upload-button" id="formattingWordUploadBtn" onclick="document.getElementById('formattingWordFile').click()">اختر ملفات</button>
@@ -1111,7 +1111,7 @@
                         <div class="file-icon">🖼️</div>
                         <h3>تحميل الصور</h3>
                         <input type="file" id="imagesFile" accept="image/*" multiple />
-                        <input type="file" id="imagesFilesPicker" multiple />
+                        <input type="file" id="imagesFilesPicker" accept="image/*" multiple />
                         <p class="file-info">جميع صيغ الصور مدعومة</p>
                         <div class="image-upload-actions">
                             <label class="upload-button" id="imagesUploadBtn" for="imagesFile">اختيار من الاستديو</label>
