@@ -17,6 +17,9 @@
         .support-chat-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; background: #0f172a; color: #ffffff; }
         .support-chat-title { margin: 0; font-size: 15px; font-weight: 900; }
         .support-chat-subtitle { margin: 2px 0 0; color: #cbd5e1; font-size: 12px; }
+        .support-chat-subtitle.online::before,.thread-presence.online::before { content: ''; display: inline-block; width: 7px; height: 7px; margin-left: 5px; border-radius: 50%; background: #22c55e; box-shadow: 0 0 0 2px rgba(34,197,94,.16); }
+        .thread-presence { color: #64748b !important; font-size: 10px !important; }
+        .thread-presence.online { color: #15803d !important; font-weight: 800; }
         .support-chat-close { width: auto; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: #ffffff; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-weight: 900; }
         .support-chat-window-controls { display: none; align-items: center; gap: 5px; }
         .support-chat-size-button { width: 38px; height: 38px; display: inline-grid; place-items: center; padding: 0; border: 1px solid #d9e0e7; border-radius: 9px; background: #ffffff; color: #475569; cursor: pointer; font-family: inherit; font-size: 18px; line-height: 1; }
@@ -261,15 +264,35 @@
                 return `${(size / (1024 * 1024)).toFixed(1)} MB`;
             };
 
+            const formatPresence = (conversation) => {
+                if (conversation?.is_online) return 'متصل الآن';
+                if (!conversation?.last_seen_at) return 'غير متصل';
+
+                try {
+                    const value = new Intl.DateTimeFormat('ar-SA', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                    }).format(new Date(conversation.last_seen_at));
+                    return `آخر ظهور: ${value}`;
+                } catch {
+                    return 'غير متصل';
+                }
+            };
+
             const updateConversationHeader = (conversation = null) => {
                 const current = conversation || conversations.find((item) => Number(item.id) === Number(currentConversationId));
+                const presence = formatPresence(current);
+                subtitleEl.classList.toggle('online', Boolean(current?.is_online));
                 if (isAdmin && current) {
                     titleEl.textContent = current.customer_name || 'عميل';
-                    subtitleEl.textContent = current.customer_phone || 'محادثة العميل';
+                    subtitleEl.textContent = [current.customer_phone, presence].filter(Boolean).join(' • ');
                     return;
                 }
                 titleEl.textContent = 'خدمة العملاء';
-                subtitleEl.textContent = 'متصل — اكتب رسالتك وسيتم الرد عليك';
+                subtitleEl.textContent = presence;
             };
 
             const stopLiveStream = () => {
@@ -494,6 +517,7 @@
                     <button class="support-chat-thread ${item.id === currentConversationId ? 'active' : ''}" type="button" data-chat-thread="${item.id}">
                         <strong>${escapeHtml(item.customer_name || 'عميل')}</strong>
                         <span>${escapeHtml(item.last_message || item.customer_phone || 'محادثة جديدة')}</span>
+                        <span class="thread-presence ${item.is_online ? 'online' : ''}">${escapeHtml(formatPresence(item))}</span>
                         ${Number(item.unread_count || 0) > 0 ? `<em class="thread-unread">${item.unread_count}</em>` : ''}
                     </button>
                 `).join('');

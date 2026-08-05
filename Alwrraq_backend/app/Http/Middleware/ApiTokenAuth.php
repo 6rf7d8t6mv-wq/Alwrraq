@@ -48,6 +48,7 @@ class ApiTokenAuth
         }
 
         Auth::setUser($user);
+        TrackUserPresence::touch($user);
 
         return $next($request);
     }

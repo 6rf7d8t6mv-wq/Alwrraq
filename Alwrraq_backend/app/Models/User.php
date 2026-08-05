@@ -55,6 +55,7 @@ class User extends Authenticatable
             'admin_permissions' => 'array',
             'is_active' => 'boolean',
             'login_blocked' => 'boolean',
+            'last_seen_at' => 'datetime',
             'account_verified_at' => 'datetime',
         ];
     }

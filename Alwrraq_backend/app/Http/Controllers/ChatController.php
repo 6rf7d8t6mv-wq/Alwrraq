@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ChatConversation;
 use App\Models\ChatMessage;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -18,7 +19,7 @@ class ChatController extends Controller
 
         if ($this->isAdmin($user)) {
             $conversations = ChatConversation::query()
-                ->with(['customer:id,name,phone', 'latestMessage.sender:id,name'])
+                ->with(['customer:id,name,phone,last_seen_at', 'latestMessage.sender:id,name'])
                 ->withCount(['messages as unread_count' => function ($query) use ($user) {
                     $query->whereNull('read_at')->where('sender_id', '!=', $user->id);
                 }])
@@ -35,7 +36,7 @@ class ChatController extends Controller
             ['last_message_at' => null]
         );
 
-        $conversation->load(['customer:id,name,phone', 'latestMessage.sender:id,name'])
+        $conversation->load(['customer:id,name,phone,last_seen_at', 'latestMessage.sender:id,name'])
             ->loadCount(['messages as unread_count' => function ($query) use ($user) {
                 $query->whereNull('read_at')->where('sender_id', '!=', $user->id);
             }]);
@@ -60,7 +61,7 @@ class ChatController extends Controller
             ->get()
             ->map(fn (ChatMessage $message) => $this->messagePayload($message, $user, $request));
 
-        $conversation->load(['customer:id,name,phone', 'latestMessage.sender:id,name'])
+        $conversation->load(['customer:id,name,phone,last_seen_at', 'latestMessage.sender:id,name'])
             ->loadCount(['messages as unread_count' => function ($query) use ($user) {
                 $query->whereNull('read_at')->where('sender_id', '!=', $user->id);
             }]);
@@ -206,6 +207,10 @@ class ChatController extends Controller
     {
         $latestMessage = $conversation->latestMessage;
         $lastMessageAt = $conversation->last_message_at ?? $conversation->updated_at;
+        $isCustomerOwner = $conversation->customer_id === $currentUserId;
+        $presence = $isCustomerOwner
+            ? $this->supportPresence()
+            : $this->presencePayload($conversation->customer?->last_seen_at);
 
         return [
             'id' => $conversation->id,
@@ -217,7 +222,27 @@ class ChatController extends Controller
             'last_sender' => $latestMessage?->sender?->name,
             'last_message_at' => $lastMessageAt instanceof Carbon ? $lastMessageAt->toIso8601String() : null,
             'unread_count' => (int) ($conversation->unread_count ?? 0),
-            'is_customer_owner' => $conversation->customer_id === $currentUserId,
+            'is_customer_owner' => $isCustomerOwner,
+            ...$presence,
+        ];
+    }
+
+    private function supportPresence(): array
+    {
+        $lastSeenAt = User::query()
+            ->where('role', 'admin')
+            ->where('is_active', true)
+            ->where('login_blocked', false)
+            ->max('last_seen_at');
+
+        return $this->presencePayload($lastSeenAt ? Carbon::parse($lastSeenAt) : null);
+    }
+
+    private function presencePayload(?Carbon $lastSeenAt): array
+    {
+        return [
+            'is_online' => $lastSeenAt?->gte(now()->subSeconds(45)) ?? false,
+            'last_seen_at' => $lastSeenAt?->toIso8601String(),
         ];
     }
 

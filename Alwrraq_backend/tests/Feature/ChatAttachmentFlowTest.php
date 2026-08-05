@@ -26,6 +26,7 @@ class ChatAttachmentFlowTest extends TestCase
             $table->json('admin_permissions')->nullable();
             $table->boolean('is_active')->default(true);
             $table->boolean('login_blocked')->default(false);
+            $table->timestamp('last_seen_at')->nullable();
             $table->rememberToken();
             $table->timestamps();
         });
@@ -81,6 +82,9 @@ class ChatAttachmentFlowTest extends TestCase
             'role' => 'customer',
         ]);
 
+        $customer->forceFill(['last_seen_at' => now()])->save();
+        $admin->forceFill(['last_seen_at' => now()])->save();
+
         $conversationsResponse = $this->actingAs($customer)
             ->getJson(route('chat.conversations'))
             ->assertOk();
@@ -108,6 +112,7 @@ class ChatAttachmentFlowTest extends TestCase
             ->getJson(route('chat.conversations.show', $conversation))
             ->assertOk()
             ->assertJsonPath('conversation.customer_name', 'عميل المرفقات')
+            ->assertJsonPath('conversation.is_online', true)
             ->assertJsonPath('messages.0.attachment_name', 'example.jpg');
         $this->actingAs($admin)
             ->get(route('chat.attachments.show', $messageId))
@@ -129,7 +134,15 @@ class ChatAttachmentFlowTest extends TestCase
             ->getJson(route('chat.conversations.show', $conversation))
             ->assertOk()
             ->assertJsonCount(2, 'messages')
+            ->assertJsonPath('conversation.is_online', true)
             ->assertJsonPath('messages.1.sender_name', 'مسؤول خدمة العملاء')
             ->assertJsonPath('messages.1.attachment_name', 'instructions.txt');
+
+        $admin->forceFill(['last_seen_at' => now()->subMinutes(2)])->save();
+        $this->actingAs($customer)
+            ->getJson(route('chat.conversations'))
+            ->assertOk()
+            ->assertJsonPath('conversations.0.is_online', false)
+            ->assertJsonPath('conversations.0.last_seen_at', fn ($value) => filled($value));
     }
 }
