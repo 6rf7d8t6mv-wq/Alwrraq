@@ -14,7 +14,7 @@
         .support-chat-launcher.has-unread .chat-count { display: inline-block; }
         .support-chat-panel { position: fixed; left: 18px; bottom: 78px; z-index: 91; width: min(420px, calc(100vw - 28px)); height: min(620px, calc(100vh - 104px)); display: none; flex-direction: column; overflow: hidden; border: 1px solid #dbe3ef; border-radius: 18px; background: #ffffff; box-shadow: 0 28px 90px rgba(15, 23, 42, 0.28); direction: rtl; }
         .support-chat-panel.active { display: flex; }
-        .support-chat-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; background: #0f172a; color: #ffffff; }
+        .support-chat-head { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; background: #0f172a; color: #ffffff; }
         .support-chat-title { margin: 0; font-size: 15px; font-weight: 900; }
         .support-chat-subtitle { margin: 2px 0 0; color: #cbd5e1; font-size: 12px; }
         .support-chat-close { width: auto; border: 1px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.08); color: #ffffff; border-radius: 9px; padding: 6px 10px; cursor: pointer; font-family: inherit; font-weight: 900; }
@@ -40,12 +40,27 @@
         .support-chat-input { flex: 1; min-width: 0; resize: none; min-height: 42px; max-height: 96px; padding: 10px 11px; border: 1px solid #cbd5e1; border-radius: 11px; font-family: inherit; font-size: 14px; }
         .support-chat-send { flex: 0 0 auto; width: auto; padding: 10px 14px; border: 0; border-radius: 11px; background: #16a34a; color: #ffffff; font-family: inherit; font-weight: 900; cursor: pointer; }
         @media (max-width: 560px) {
+            body.support-chat-open { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; }
             .support-chat-launcher { left: 12px; bottom: 12px; }
-            .support-chat-panel { left: 10px; bottom: 66px; width: calc(100vw - 20px); height: min(620px, calc(100vh - 78px)); }
-            .support-chat-panel.keyboard-visible { top: calc(var(--chat-viewport-top, 0px) + 6px); bottom: auto; height: calc(var(--chat-viewport-height, 100dvh) - 12px); max-height: none; border-radius: 14px; }
+            body.support-chat-open .support-chat-launcher { display: none; }
+            .support-chat-panel,
+            .support-chat-panel.keyboard-visible { top: var(--chat-viewport-top, 0px); right: 0; bottom: auto; left: 0; width: 100%; height: var(--chat-viewport-height, 100dvh); max-height: none; border: 0; border-radius: 0; box-shadow: none; z-index: 2147483000; }
+            .support-chat-head { min-height: 64px; padding: max(10px, env(safe-area-inset-top)) 12px 10px; justify-content: flex-start; background: #ffffff; color: #111827; border-bottom: 1px solid #e5e7eb; box-shadow: 0 1px 5px rgba(15,23,42,.08); }
+            .support-chat-head > div { min-width: 0; flex: 1; }
+            .support-chat-title { color: #111827; font-size: 16px; }
+            .support-chat-subtitle { color: #64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .support-chat-close { order: -1; display: inline-flex; align-items: center; gap: 5px; padding: 8px 6px; border: 0; background: transparent; color: #0f4c81; border-radius: 10px; font-size: 14px; }
+            .support-chat-close-icon { font-size: 24px; line-height: 1; }
             .support-chat-layout { grid-template-columns: 1fr; }
             .support-chat-threads { max-height: 132px; border-left: 0; border-bottom: 1px solid #e5e7eb; }
-            .support-chat-input { font-size: 16px; }
+            .support-chat-messages { padding: 14px 10px; background-color: #efeae2; background-image: radial-gradient(circle at 20% 30%, rgba(15,76,129,.035) 0 2px, transparent 2.5px), radial-gradient(circle at 75% 68%, rgba(15,76,129,.03) 0 2px, transparent 2.5px); background-size: 42px 42px, 54px 54px; }
+            .support-message { margin-bottom: 7px; }
+            .support-message-bubble { max-width: 86%; border: 0; border-radius: 11px; box-shadow: 0 1px 2px rgba(15,23,42,.14); }
+            .support-message.mine .support-message-bubble { background: #d9fdd3; border-color: #d9fdd3; color: #111827; }
+            .support-chat-form { flex: 0 0 auto; align-items: flex-end; padding: 7px 8px max(7px, env(safe-area-inset-bottom)); background: #f0f2f5; border-top: 0; }
+            .support-chat-input { min-height: 44px; max-height: 104px; padding: 11px 16px; border: 0; border-radius: 23px; background: #ffffff; box-shadow: 0 1px 2px rgba(15,23,42,.1); font-size: 16px; line-height: 22px; outline: none; }
+            .support-chat-send { width: 46px; height: 46px; overflow: hidden; padding: 0; border-radius: 50%; font-size: 0; box-shadow: 0 2px 5px rgba(15,23,42,.18); }
+            .support-chat-send::after { content: '\27A4'; display: block; color: #ffffff; font-size: 21px; line-height: 46px; transform: rotate(180deg); }
         }
     </style>
 
@@ -60,7 +75,7 @@
                 <h2 class="support-chat-title">{{ $chatIsAdmin ? 'محادثات العملاء' : 'خدمة العملاء' }}</h2>
                 <p class="support-chat-subtitle">{{ $chatIsAdmin ? 'اختر العميل وتابع المحادثة' : 'اكتب رسالتك وسيتم الرد عليك من الإدارة' }}</p>
             </div>
-            <button class="support-chat-close" id="supportChatClose" type="button">إغلاق</button>
+            <button class="support-chat-close" id="supportChatClose" type="button"><span class="support-chat-close-icon" aria-hidden="true">&#8594;</span><span>رجوع</span></button>
         </div>
         <div class="support-chat-layout">
             <div class="support-chat-threads" id="supportChatThreads"></div>
@@ -102,7 +117,10 @@
             let renderedMessagesFingerprint = '';
             let viewportFrame = null;
             let expandedViewportHeight = window.visualViewport?.height || window.innerHeight;
+            let lockedPageScrollY = 0;
+            let chatHistoryEntry = false;
             const notifiedReadMessages = new Set();
+            const mobileChat = () => window.matchMedia('(max-width: 560px)').matches;
 
             const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
                 '&': '&amp;',
@@ -157,7 +175,7 @@
 
                 notification.onclick = () => {
                     window.focus();
-                    panel.classList.add('active');
+                    openChatPanel();
                     notification.close();
                 };
             };
@@ -220,18 +238,39 @@
             };
 
             const openChatPanel = () => {
+                if (panel.classList.contains('active')) return;
                 panel.classList.add('active');
                 document.body.dataset.chatScrollLocked = '1';
-                document.body.style.overflow = 'hidden';
+                if (mobileChat()) {
+                    lockedPageScrollY = window.scrollY;
+                    document.body.style.top = `-${lockedPageScrollY}px`;
+                    document.body.classList.add('support-chat-open');
+                    if (!chatHistoryEntry) {
+                        history.pushState({ ...(history.state || {}), supportChatOpen: true }, '', location.href);
+                        chatHistoryEntry = true;
+                    }
+                } else {
+                    document.body.style.overflow = 'hidden';
+                }
                 syncChatViewport();
             };
 
-            const closeChatPanel = () => {
+            const closeChatPanel = ({ fromHistory = false } = {}) => {
+                if (!panel.classList.contains('active')) return;
                 input.blur();
                 panel.classList.remove('active');
                 panel.classList.remove('keyboard-visible');
                 delete document.body.dataset.chatScrollLocked;
                 document.body.style.overflow = '';
+                document.body.classList.remove('support-chat-open');
+                document.body.style.top = '';
+                window.scrollTo(0, lockedPageScrollY);
+                if (chatHistoryEntry && !fromHistory) {
+                    chatHistoryEntry = false;
+                    history.back();
+                } else if (fromHistory) {
+                    chatHistoryEntry = false;
+                }
             };
 
             const focusChatInput = () => {
@@ -404,14 +443,20 @@
 
             launcher.addEventListener('click', async () => {
                 openChatPanel();
-                focusChatInput();
                 await requestBrowserNotificationPermission();
                 await refresh();
                 scanOrderAlerts();
-                focusChatInput();
             });
 
-            closeButton.addEventListener('click', closeChatPanel);
+            closeButton.addEventListener('click', () => closeChatPanel());
+
+            window.addEventListener('popstate', () => {
+                if (panel.classList.contains('active')) closeChatPanel({ fromHistory: true });
+            });
+
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && panel.classList.contains('active')) closeChatPanel();
+            });
 
             document.addEventListener('pointerdown', (event) => {
                 if (!panel.classList.contains('active')) return;
@@ -433,6 +478,7 @@
                 if (!message || !currentConversationId) return;
 
                 input.value = '';
+                input.style.height = '';
                 const response = await fetch(`${baseUrl}/${currentConversationId}/messages`, {
                     method: 'POST',
                     headers: {
@@ -455,6 +501,12 @@
 
                 event.preventDefault();
                 form.requestSubmit();
+            });
+
+            input.addEventListener('input', () => {
+                input.style.height = 'auto';
+                input.style.height = `${Math.min(input.scrollHeight, 104)}px`;
+                syncChatViewport();
             });
 
             window.visualViewport?.addEventListener('resize', syncChatViewport);
