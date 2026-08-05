@@ -66,7 +66,12 @@
             .support-chat-close-icon { font-size: 24px; line-height: 1; }
             .support-chat-close-icon-desktop,.support-chat-close-label-desktop { display: none; }
             .support-chat-layout { grid-template-columns: 1fr; }
-            .support-chat-threads { max-height: 132px; border-left: 0; border-bottom: 1px solid #e5e7eb; }
+            .support-chat-panel[data-is-admin="1"]:not(.chat-mobile-thread-list) .support-chat-threads { display: none; }
+            .support-chat-panel.chat-mobile-thread-list .support-chat-layout { display: block; background: #ffffff; }
+            .support-chat-panel.chat-mobile-thread-list .support-chat-threads { display: block; width: 100%; height: 100%; max-height: none; border: 0; background: #ffffff; }
+            .support-chat-panel.chat-mobile-thread-list .support-chat-main { display: none; }
+            .support-chat-panel.chat-mobile-thread-list .support-chat-thread { padding: 15px 16px; }
+            .support-chat-panel.chat-mobile-thread-list .support-chat-thread strong { font-size: 14px; }
             .support-chat-messages { padding: 14px 10px; background-color: #efeae2; background-image: radial-gradient(circle at 20% 30%, rgba(15,76,129,.035) 0 2px, transparent 2.5px), radial-gradient(circle at 75% 68%, rgba(15,76,129,.03) 0 2px, transparent 2.5px); background-size: 42px 42px, 54px 54px; }
             .support-message { margin-bottom: 7px; }
             .support-message-bubble { max-width: 86%; border: 0; border-radius: 11px; box-shadow: 0 1px 2px rgba(15,23,42,.14); }
@@ -196,6 +201,7 @@
             let expandedViewportHeight = window.visualViewport?.height || window.innerHeight;
             let lockedPageScrollY = 0;
             let chatHistoryEntry = false;
+            let chatConversationHistoryEntry = false;
             let currentChatSize = 'medium';
             const notifiedReadMessages = new Set();
 
@@ -264,6 +270,28 @@
                 return `${(size / (1024 * 1024)).toFixed(1)} MB`;
             };
 
+            const isNarrowChatViewport = () => window.matchMedia('(max-width: 560px)').matches;
+
+            const mobileAdminListIsOpen = () => isAdmin
+                && isNarrowChatViewport()
+                && panel.classList.contains('chat-mobile-thread-list');
+
+            const showMobileAdminList = () => {
+                if (!isAdmin || !isNarrowChatViewport()) return false;
+                stopLiveStream();
+                input.blur();
+                panel.classList.add('chat-mobile-thread-list');
+                titleEl.textContent = 'محادثات العملاء';
+                subtitleEl.textContent = 'اختر العميل لفتح المحادثة';
+                subtitleEl.classList.remove('online');
+                return true;
+            };
+
+            const showMobileAdminConversation = () => {
+                panel.classList.remove('chat-mobile-thread-list');
+                updateConversationHeader();
+            };
+
             const formatPresence = (conversation) => {
                 if (conversation?.is_online) return 'متصل الآن';
                 if (!conversation?.last_seen_at) return 'غير متصل';
@@ -283,6 +311,12 @@
             };
 
             const updateConversationHeader = (conversation = null) => {
+                if (mobileAdminListIsOpen()) {
+                    titleEl.textContent = 'محادثات العملاء';
+                    subtitleEl.textContent = 'اختر العميل لفتح المحادثة';
+                    subtitleEl.classList.remove('online');
+                    return;
+                }
                 const current = conversation || conversations.find((item) => Number(item.id) === Number(currentConversationId));
                 const presence = formatPresence(current);
                 subtitleEl.classList.toggle('online', Boolean(current?.is_online));
@@ -435,6 +469,9 @@
                     history.pushState({ ...(history.state || {}), supportChatOpen: true }, '', location.href);
                     chatHistoryEntry = true;
                 }
+                if (isAdmin && isNarrowChatViewport()) {
+                    showMobileAdminList();
+                }
                 syncChatViewport();
             };
 
@@ -444,6 +481,8 @@
                 input.blur();
                 panel.classList.remove('active');
                 panel.classList.remove('keyboard-visible');
+                panel.classList.remove('chat-mobile-thread-list');
+                chatConversationHistoryEntry = false;
                 if (document.body.classList.contains('support-chat-compact')) {
                     lockedPageScrollY = window.scrollY;
                 }
@@ -633,7 +672,7 @@
                 refreshing = true;
                 try {
                     await loadConversations();
-                    if (panel.classList.contains('active') && currentConversationId) {
+                    if (panel.classList.contains('active') && currentConversationId && !mobileAdminListIsOpen()) {
                         await loadMessages(currentConversationId);
                     }
                 } catch (error) {
@@ -646,19 +685,35 @@
             launcher.addEventListener('click', async () => {
                 openChatPanel();
                 await refresh();
-                startLiveStream();
+                if (!mobileAdminListIsOpen()) startLiveStream();
                 scanOrderAlerts();
                 requestBrowserNotificationPermission().then(scanOrderAlerts);
             });
 
-            closeButton.addEventListener('click', () => closeChatPanel());
+            closeButton.addEventListener('click', () => {
+                if (isAdmin && isNarrowChatViewport() && !mobileAdminListIsOpen()) {
+                    if (chatConversationHistoryEntry) {
+                        history.back();
+                        return;
+                    }
+                    showMobileAdminList();
+                    return;
+                }
+                closeChatPanel();
+            });
 
             sizeButtons.forEach((button) => {
                 button.addEventListener('click', () => applyChatSize(button.dataset.chatSize));
             });
 
             window.addEventListener('popstate', () => {
-                if (panel.classList.contains('active')) closeChatPanel({ fromHistory: true });
+                if (!panel.classList.contains('active')) return;
+                if (isAdmin && isNarrowChatViewport() && !mobileAdminListIsOpen()) {
+                    chatConversationHistoryEntry = false;
+                    showMobileAdminList();
+                    return;
+                }
+                closeChatPanel({ fromHistory: true });
             });
 
             document.addEventListener('keydown', (event) => {
@@ -676,6 +731,11 @@
             threadsEl.addEventListener('click', async (event) => {
                 const button = event.target.closest('[data-chat-thread]');
                 if (!button) return;
+                if (mobileAdminListIsOpen() && !chatConversationHistoryEntry) {
+                    history.pushState({ ...(history.state || {}), supportChatOpen: true, supportChatConversation: true }, '', location.href);
+                    chatConversationHistoryEntry = true;
+                }
+                showMobileAdminConversation();
                 await loadMessages(Number(button.dataset.chatThread), { forceBottom: true });
                 startLiveStream();
                 focusChatInput();
@@ -751,7 +811,13 @@
 
             window.visualViewport?.addEventListener('resize', syncChatViewport);
             window.visualViewport?.addEventListener('scroll', syncChatViewport);
-            window.addEventListener('resize', syncChatViewport);
+            window.addEventListener('resize', () => {
+                if (!isNarrowChatViewport() && panel.classList.contains('chat-mobile-thread-list')) {
+                    panel.classList.remove('chat-mobile-thread-list');
+                    updateConversationHeader();
+                }
+                syncChatViewport();
+            });
             window.addEventListener('orientationchange', syncChatViewport);
 
             refresh();
