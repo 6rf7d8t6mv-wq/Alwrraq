@@ -26,4 +26,5 @@ Route::middleware(ApiTokenAuth::class)->group(function () {
     Route::get('/chat/conversations', [ChatController::class, 'conversations']);
     Route::get('/chat/conversations/{conversation}', [ChatController::class, 'show']);
     Route::post('/chat/conversations/{conversation}/messages', [ChatController::class, 'store']);
+    Route::get('/chat/messages/{message}/attachment', [ChatController::class, 'attachment']);
 });

@@ -36,7 +36,14 @@
         .support-message-name { display: block; margin-bottom: 4px; font-size: 10px; color: inherit; opacity: 0.76; font-weight: 900; }
         .support-message-text { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; font-size: 13px; }
         .support-message-time { display: block; margin-top: 5px; font-size: 10px; opacity: 0.66; }
-        .support-chat-form { display: flex; gap: 8px; padding: 12px; border-top: 1px solid #e5e7eb; background: #ffffff; }
+        .support-message-attachment-image { display: block; max-width: min(100%, 420px); max-height: 440px; margin-bottom: 6px; border-radius: 9px; object-fit: contain; background: #e5e7eb; }
+        .support-message-file { display: flex; align-items: center; gap: 9px; min-width: 190px; margin-bottom: 6px; padding: 10px; border-radius: 9px; background: rgba(255,255,255,.58); color: inherit; text-decoration: none; font-weight: 800; }
+        .support-message-file-icon { font-size: 22px; }.support-message-file-name { min-width: 0; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .support-chat-form { display: flex; flex-wrap: wrap; gap: 8px; padding: 12px; border-top: 1px solid #e5e7eb; background: #ffffff; }
+        .support-chat-attachment-preview { display: none; flex: 0 0 100%; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 11px; border-radius: 10px; background: #e2e8f0; color: #334155; font-size: 12px; font-weight: 800; }
+        .support-chat-attachment-preview.active { display: flex; }.support-chat-attachment-preview span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.support-chat-attachment-remove { border: 0; background: transparent; color: #b91c1c; cursor: pointer; font: inherit; font-weight: 900; }
+        .support-chat-attach { flex: 0 0 auto; width: 42px; height: 42px; display: inline-grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #475569; cursor: pointer; font-size: 23px; }
+        .support-chat-attach input { display: none; }
         .support-chat-input { flex: 1; min-width: 0; resize: none; min-height: 42px; max-height: 96px; padding: 10px 11px; border: 1px solid #cbd5e1; border-radius: 11px; font-family: inherit; font-size: 14px; }
         .support-chat-send { flex: 0 0 auto; width: auto; padding: 10px 14px; border: 0; border-radius: 11px; background: #16a34a; color: #ffffff; font-family: inherit; font-weight: 900; cursor: pointer; }
         @media (max-width: 560px) {
@@ -64,9 +71,10 @@
         }
         @media (min-width: 561px) {
             body.support-chat-open { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; }
+            body.support-chat-open::before { content: ''; position: fixed; inset: 0; z-index: 2147482990; background: rgba(15,23,42,.48); backdrop-filter: blur(3px); }
             body.support-chat-open .support-chat-launcher { display: none; }
             .support-chat-panel,
-            .support-chat-panel.keyboard-visible { top: var(--chat-viewport-top, 0px); right: 0; bottom: auto; left: 0; width: 100%; height: var(--chat-viewport-height, 100vh); max-height: none; border: 0; border-radius: 0; box-shadow: none; z-index: 2147483000; }
+            .support-chat-panel.keyboard-visible { top: 50%; right: auto; bottom: auto; left: 50%; width: min(1440px, calc(100vw - 72px)); height: min(900px, calc(100vh - 52px)); max-height: none; transform: translate(-50%, -50%); border: 1px solid #d8dde1; border-radius: 16px; box-shadow: 0 28px 90px rgba(15,23,42,.4); z-index: 2147483000; }
             .support-chat-head { min-height: 68px; padding: 11px 22px; justify-content: flex-start; background: #ffffff; color: #111827; border-bottom: 1px solid #dfe3e7; box-shadow: 0 1px 4px rgba(15,23,42,.08); }
             .support-chat-head > div { min-width: 0; flex: 1; }
             .support-chat-title { color: #111827; font-size: 17px; }
@@ -83,6 +91,8 @@
             .support-message-bubble { max-width: min(72%, 720px); border: 0; border-radius: 11px; box-shadow: 0 1px 2px rgba(15,23,42,.14); }
             .support-message.mine .support-message-bubble { background: #d9fdd3; border-color: #d9fdd3; color: #111827; }
             .support-chat-form { flex: 0 0 auto; align-items: flex-end; padding: 10px max(18px, 5vw); background: #f0f2f5; border-top: 0; }
+            .support-chat-attachment-preview { max-width: 760px; margin-inline: auto; }
+            .support-chat-attach { width: 48px; height: 48px; }
             .support-chat-input { min-height: 46px; max-height: 120px; padding: 12px 18px; border: 0; border-radius: 24px; background: #ffffff; box-shadow: 0 1px 2px rgba(15,23,42,.1); font-size: 16px; line-height: 22px; outline: none; }
             .support-chat-send { width: 48px; height: 48px; overflow: hidden; padding: 0; border-radius: 50%; font-size: 0; box-shadow: 0 2px 5px rgba(15,23,42,.18); }
             .support-chat-send::after { content: '\27A4'; display: block; color: #ffffff; font-size: 22px; line-height: 48px; transform: rotate(180deg); }
@@ -97,8 +107,8 @@
     <section class="support-chat-panel" id="supportChatPanel" data-is-admin="{{ $chatIsAdmin ? '1' : '0' }}" data-conversations-url="{{ route('chat.conversations') }}" data-base-url="{{ url('/chat/conversations') }}">
         <div class="support-chat-head">
             <div>
-                <h2 class="support-chat-title">{{ $chatIsAdmin ? 'محادثات العملاء' : 'خدمة العملاء' }}</h2>
-                <p class="support-chat-subtitle">{{ $chatIsAdmin ? 'اختر العميل وتابع المحادثة' : 'اكتب رسالتك وسيتم الرد عليك من الإدارة' }}</p>
+                <h2 class="support-chat-title" id="supportChatTitle">{{ $chatIsAdmin ? 'محادثات العملاء' : 'خدمة العملاء' }}</h2>
+                <p class="support-chat-subtitle" id="supportChatSubtitle">{{ $chatIsAdmin ? 'اختر العميل وتابع المحادثة' : 'اكتب رسالتك وسيتم الرد عليك من الإدارة' }}</p>
             </div>
             <button class="support-chat-close" id="supportChatClose" type="button"><span class="support-chat-close-icon" aria-hidden="true">&#8594;</span><span>رجوع</span></button>
         </div>
@@ -109,7 +119,9 @@
                     <div class="support-chat-empty">اضغط لبدء المحادثة</div>
                 </div>
                 <form class="support-chat-form" id="supportChatForm">
-                    <textarea class="support-chat-input" id="supportChatInput" placeholder="اكتب رسالتك هنا..." rows="1" required></textarea>
+                    <div class="support-chat-attachment-preview" id="supportChatAttachmentPreview"><span></span><button class="support-chat-attachment-remove" id="supportChatAttachmentRemove" type="button">إزالة</button></div>
+                    <label class="support-chat-attach" title="إرفاق صورة أو ملف" aria-label="إرفاق صورة أو ملف">&#128206;<input id="supportChatAttachment" type="file" accept="image/jpeg,image/png,image/webp,image/gif,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"></label>
+                    <textarea class="support-chat-input" id="supportChatInput" placeholder="اكتب رسالتك هنا..." rows="1"></textarea>
                     <button class="support-chat-send" type="submit">إرسال</button>
                 </form>
             </div>
@@ -128,6 +140,12 @@
             const messagesEl = document.getElementById('supportChatMessages');
             const form = document.getElementById('supportChatForm');
             const input = document.getElementById('supportChatInput');
+            const attachmentInput = document.getElementById('supportChatAttachment');
+            const attachmentPreview = document.getElementById('supportChatAttachmentPreview');
+            const attachmentPreviewName = attachmentPreview?.querySelector('span');
+            const attachmentRemove = document.getElementById('supportChatAttachmentRemove');
+            const titleEl = document.getElementById('supportChatTitle');
+            const subtitleEl = document.getElementById('supportChatSubtitle');
             const countEl = document.getElementById('supportChatCount');
             const isAdmin = panel.dataset.isAdmin === '1';
             const conversationsUrl = panel.dataset.conversationsUrl;
@@ -166,6 +184,24 @@
                 } catch {
                     return '';
                 }
+            };
+
+            const formatFileSize = (bytes) => {
+                const size = Number(bytes || 0);
+                if (!size) return '';
+                if (size < 1024 * 1024) return `${Math.max(1, Math.round(size / 1024))} KB`;
+                return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+            };
+
+            const updateConversationHeader = (conversation = null) => {
+                const current = conversation || conversations.find((item) => Number(item.id) === Number(currentConversationId));
+                if (isAdmin && current) {
+                    titleEl.textContent = current.customer_name || 'عميل';
+                    subtitleEl.textContent = current.customer_phone || 'محادثة العميل';
+                    return;
+                }
+                titleEl.textContent = 'خدمة العملاء';
+                subtitleEl.textContent = 'متصل — اكتب رسالتك وسيتم الرد عليك';
             };
 
             const browserNotificationsSupported = () => 'Notification' in window;
@@ -359,12 +395,15 @@
                 const fingerprint = (messages || []).map((message) => [
                     message.id,
                     message.message,
+                    message.attachment_url,
+                    message.attachment_name,
+                    message.attachment_size,
                     message.read_at,
                     message.created_at,
                 ].join(':')).join('|');
                 const sameConversation = renderedConversationId === currentConversationId;
 
-                // Polling runs every three seconds. Avoid replacing an unchanged
+                // Polling runs every second. Avoid replacing an unchanged
                 // message list because doing so resets a customer's reading position.
                 if (sameConversation && fingerprint === renderedMessagesFingerprint) return;
 
@@ -391,18 +430,26 @@
                     initialMessagesLoaded = true;
                 }
 
-                messagesEl.innerHTML = messages.map((message) => `
+                messagesEl.innerHTML = messages.map((message, index) => {
+                    const attachment = message.attachment_url
+                        ? (message.attachment_is_image
+                            ? `<a href="${escapeHtml(message.attachment_url)}" target="_blank" rel="noopener"><img class="support-message-attachment-image" src="${escapeHtml(message.attachment_url)}" alt="${escapeHtml(message.attachment_name || 'صورة مرفقة')}" loading="lazy"></a>`
+                            : `<a class="support-message-file" href="${escapeHtml(message.attachment_url)}" target="_blank" rel="noopener"><span class="support-message-file-icon">&#128206;</span><span class="support-message-file-name">${escapeHtml(message.attachment_name || 'ملف مرفق')}</span><small>${escapeHtml(formatFileSize(message.attachment_size))}</small></a>`)
+                        : '';
+                    return `
                     <div class="support-message ${message.is_mine ? 'mine' : 'other'}">
                         <div class="support-message-bubble">
                             <span class="support-message-name">${escapeHtml(message.sender_name || 'مستخدم')}</span>
-                            <div class="support-message-text"></div>
+                            ${attachment}
+                            ${message.message ? `<div class="support-message-text" data-message-index="${index}"></div>` : ''}
                             <span class="support-message-time">${formatTime(message.created_at)}</span>
                         </div>
                     </div>
-                `).join('');
+                `;
+                }).join('');
 
-                messagesEl.querySelectorAll('.support-message-text').forEach((node, index) => {
-                    node.textContent = messages[index]?.message || '';
+                messagesEl.querySelectorAll('.support-message-text').forEach((node) => {
+                    node.textContent = messages[Number(node.dataset.messageIndex)]?.message || '';
                 });
                 if (shouldScrollToBottom) {
                     messagesEl.scrollTop = messagesEl.scrollHeight;
@@ -412,7 +459,7 @@
             };
 
             const loadConversations = async () => {
-                const response = await fetch(conversationsUrl, { headers: { Accept: 'application/json' } });
+                const response = await fetch(conversationsUrl, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' } });
                 if (!response.ok) throw new Error('chat conversations failed');
                 const data = await response.json();
                 conversations = data.conversations || [];
@@ -421,6 +468,7 @@
                     currentConversationId = conversations[0].id;
                 }
 
+                updateConversationHeader();
                 renderThreads();
                 updateUnread();
                 return conversations;
@@ -434,9 +482,10 @@
 
                 const changedConversation = Number(currentConversationId) !== Number(conversationId);
                 currentConversationId = conversationId;
-                const response = await fetch(`${baseUrl}/${conversationId}`, { headers: { Accept: 'application/json' } });
+                const response = await fetch(`${baseUrl}/${conversationId}`, { cache: 'no-store', headers: { Accept: 'application/json', 'Cache-Control': 'no-cache' } });
                 if (!response.ok) throw new Error('chat messages failed');
                 const data = await response.json();
+                updateConversationHeader(data.conversation);
                 renderMessages(data.messages || [], { forceBottom: forceBottom || changedConversation });
 
                 const item = conversations.find((conversation) => conversation.id === conversationId);
@@ -463,9 +512,9 @@
 
             launcher.addEventListener('click', async () => {
                 openChatPanel();
-                await requestBrowserNotificationPermission();
                 await refresh();
                 scanOrderAlerts();
+                requestBrowserNotificationPermission().then(scanOrderAlerts);
             });
 
             closeButton.addEventListener('click', () => closeChatPanel());
@@ -495,25 +544,54 @@
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const message = input.value.trim();
-                if (!message || !currentConversationId) return;
+                const attachment = attachmentInput?.files?.[0] || null;
+                if ((!message && !attachment) || !currentConversationId) return;
 
-                input.value = '';
-                input.style.height = '';
+                const payload = new FormData();
+                if (message) payload.append('message', message);
+                if (attachment) payload.append('attachment', attachment);
                 const response = await fetch(`${baseUrl}/${currentConversationId}/messages`, {
                     method: 'POST',
                     headers: {
                         Accept: 'application/json',
-                        'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrf,
                     },
-                    body: JSON.stringify({ message }),
+                    body: payload,
                 });
 
                 if (response.ok) {
+                    input.value = '';
+                    input.style.height = '';
+                    attachmentInput.value = '';
+                    attachmentPreview.classList.remove('active');
                     await loadConversations();
                     await loadMessages(currentConversationId, { forceBottom: true });
                     focusChatInput();
+                } else if (response.status === 422) {
+                    const error = await response.json().catch(() => null);
+                    alert(Object.values(error?.errors || {}).flat()[0] || 'تعذر إرفاق الملف. تأكد من نوعه وألا يتجاوز 15 ميجابايت.');
                 }
+            });
+
+            attachmentInput?.addEventListener('change', () => {
+                const file = attachmentInput.files?.[0];
+                if (!file) {
+                    attachmentPreview.classList.remove('active');
+                    return;
+                }
+                if (file.size > 15 * 1024 * 1024) {
+                    attachmentInput.value = '';
+                    attachmentPreview.classList.remove('active');
+                    alert('حجم الملف يجب ألا يتجاوز 15 ميجابايت.');
+                    return;
+                }
+                attachmentPreviewName.textContent = `${file.name} — ${formatFileSize(file.size)}`;
+                attachmentPreview.classList.add('active');
+            });
+
+            attachmentRemove?.addEventListener('click', () => {
+                attachmentInput.value = '';
+                attachmentPreview.classList.remove('active');
             });
 
             input.addEventListener('keydown', (event) => {
@@ -537,7 +615,7 @@
 
             refresh();
             requestAnimationFrame(scanOrderAlerts);
-            pollTimer = setInterval(refresh, 3000);
+            pollTimer = setInterval(refresh, 1000);
             window.addEventListener('beforeunload', () => {
                 clearInterval(pollTimer);
                 if (viewportFrame) cancelAnimationFrame(viewportFrame);

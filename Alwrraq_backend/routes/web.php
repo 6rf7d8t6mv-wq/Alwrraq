@@ -96,6 +96,7 @@ Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
     Route::get('/conversations', [ChatController::class, 'conversations'])->name('conversations');
     Route::get('/conversations/{conversation}', [ChatController::class, 'show'])->name('conversations.show');
     Route::post('/conversations/{conversation}/messages', [ChatController::class, 'store'])->name('messages.store');
+    Route::get('/messages/{message}/attachment', [ChatController::class, 'attachment'])->name('attachments.show');
 });
 
 Route::get('/', function () {
