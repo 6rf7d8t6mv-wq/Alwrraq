@@ -157,7 +157,7 @@ class ChatController extends Controller
 
     private function displaySenderName($sender, $viewer): string
     {
-        if ($sender?->role === 'admin' && $viewer?->role !== 'admin') {
+        if ($sender?->role === 'admin') {
             return 'مسؤول خدمة العملاء';
         }
 

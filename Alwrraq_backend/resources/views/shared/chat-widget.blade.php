@@ -76,6 +76,8 @@
         @media (min-width: 561px) {
             body.support-chat-open { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; }
             body.support-chat-open::before { content: ''; position: fixed; inset: 0; z-index: 2147482990; background: rgba(15,23,42,.48); backdrop-filter: blur(3px); }
+            body.support-chat-open.support-chat-compact { position: static; inset: auto; width: auto; overflow: auto; overscroll-behavior: auto; }
+            body.support-chat-open.support-chat-compact::before { display: none; }
             body.support-chat-open .support-chat-launcher { display: none; }
             .support-chat-panel,
             .support-chat-panel.keyboard-visible { top: 50%; right: auto; bottom: auto; left: 50%; width: min(1440px, calc(100vw - 72px)); height: min(900px, calc(100vh - 52px)); max-height: none; transform: translate(-50%, -50%); border: 1px solid #d8dde1; border-radius: 16px; box-shadow: 0 28px 90px rgba(15,23,42,.4); z-index: 2147483000; }
@@ -104,7 +106,7 @@
             .support-chat-send { width: 48px; height: 48px; overflow: hidden; padding: 0; border-radius: 50%; font-size: 0; box-shadow: 0 2px 5px rgba(15,23,42,.18); }
             .support-chat-send::after { content: '\27A4'; display: block; color: #ffffff; font-size: 22px; line-height: 48px; transform: rotate(180deg); }
             .support-chat-panel.chat-size-full { width: calc(100vw - 24px); height: calc(100vh - 24px); border-radius: 12px; }
-            .support-chat-panel.chat-size-mobile { width: min(430px, calc(100vw - 32px)); height: min(780px, calc(100vh - 32px)); border-radius: 18px; }
+            .support-chat-panel.chat-size-mobile { top: auto; right: auto; bottom: 18px; left: 18px; width: min(430px, calc(100vw - 36px)); height: min(780px, calc(100vh - 36px)); transform: none; border-radius: 18px; box-shadow: 0 20px 65px rgba(15,23,42,.3); }
             .support-chat-panel.chat-size-mobile .support-chat-layout { grid-template-columns: 1fr; }
             .support-chat-panel.chat-size-mobile .support-chat-threads { max-height: 138px; border-left: 0; border-bottom: 1px solid #d8dde1; }
             .support-chat-panel.chat-size-mobile .support-chat-messages { padding: 14px 10px; }
@@ -187,10 +189,12 @@
             let expandedViewportHeight = window.visualViewport?.height || window.innerHeight;
             let lockedPageScrollY = 0;
             let chatHistoryEntry = false;
+            let currentChatSize = 'medium';
             const notifiedReadMessages = new Set();
 
             const applyChatSize = (requestedSize, { persist = true } = {}) => {
                 const size = ['full', 'medium', 'mobile'].includes(requestedSize) ? requestedSize : 'medium';
+                currentChatSize = size;
                 panel.classList.remove('chat-size-full', 'chat-size-medium', 'chat-size-mobile');
                 panel.classList.add(`chat-size-${size}`);
                 sizeButtons.forEach((button) => {
@@ -201,7 +205,23 @@
                 if (persist) {
                     try { localStorage.setItem('alwrraq-chat-window-size', size); } catch {}
                 }
-                if (panel.classList.contains('active')) syncChatViewport();
+                if (panel.classList.contains('active')) {
+                    const compactDesktop = window.matchMedia('(min-width: 561px)').matches && size === 'mobile';
+                    if (compactDesktop) {
+                        document.body.classList.add('support-chat-compact');
+                        document.body.style.top = '';
+                        delete document.body.dataset.chatScrollLocked;
+                        window.scrollTo(0, lockedPageScrollY);
+                    } else {
+                        if (document.body.classList.contains('support-chat-compact')) {
+                            lockedPageScrollY = window.scrollY;
+                        }
+                        document.body.classList.remove('support-chat-compact');
+                        document.body.style.top = `-${lockedPageScrollY}px`;
+                        document.body.dataset.chatScrollLocked = '1';
+                    }
+                    syncChatViewport();
+                }
             };
 
             let savedChatSize = 'medium';
@@ -344,10 +364,17 @@
             const openChatPanel = () => {
                 if (panel.classList.contains('active')) return;
                 panel.classList.add('active');
-                document.body.dataset.chatScrollLocked = '1';
                 lockedPageScrollY = window.scrollY;
-                document.body.style.top = `-${lockedPageScrollY}px`;
                 document.body.classList.add('support-chat-open');
+                const compactDesktop = window.matchMedia('(min-width: 561px)').matches && currentChatSize === 'mobile';
+                document.body.classList.toggle('support-chat-compact', compactDesktop);
+                if (compactDesktop) {
+                    document.body.style.top = '';
+                    delete document.body.dataset.chatScrollLocked;
+                } else {
+                    document.body.style.top = `-${lockedPageScrollY}px`;
+                    document.body.dataset.chatScrollLocked = '1';
+                }
                 if (!chatHistoryEntry) {
                     history.pushState({ ...(history.state || {}), supportChatOpen: true }, '', location.href);
                     chatHistoryEntry = true;
@@ -360,9 +387,12 @@
                 input.blur();
                 panel.classList.remove('active');
                 panel.classList.remove('keyboard-visible');
+                if (document.body.classList.contains('support-chat-compact')) {
+                    lockedPageScrollY = window.scrollY;
+                }
                 delete document.body.dataset.chatScrollLocked;
                 document.body.style.overflow = '';
-                document.body.classList.remove('support-chat-open');
+                document.body.classList.remove('support-chat-open', 'support-chat-compact');
                 document.body.style.top = '';
                 window.scrollTo(0, lockedPageScrollY);
                 if (chatHistoryEntry && !fromHistory) {
@@ -578,6 +608,7 @@
             document.addEventListener('pointerdown', (event) => {
                 if (!panel.classList.contains('active')) return;
                 if (panel.contains(event.target) || launcher.contains(event.target)) return;
+                if (document.body.classList.contains('support-chat-compact')) return;
 
                 closeChatPanel();
             });

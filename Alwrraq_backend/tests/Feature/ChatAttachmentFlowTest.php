@@ -122,6 +122,7 @@ class ChatAttachmentFlowTest extends TestCase
             ->getJson(route('chat.conversations.show', $conversation))
             ->assertOk()
             ->assertJsonCount(2, 'messages')
+            ->assertJsonPath('messages.1.sender_name', 'مسؤول خدمة العملاء')
             ->assertJsonPath('messages.1.attachment_name', 'instructions.txt');
     }
 }
