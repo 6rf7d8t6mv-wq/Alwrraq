@@ -1,4 +1,4 @@
-package com.example.alwrraq_app
+package com.alwrraq.app
 
 import android.app.DownloadManager
 import android.content.Context
