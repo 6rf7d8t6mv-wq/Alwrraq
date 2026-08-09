@@ -45,6 +45,7 @@ class AdminServiceDefinitionController extends Controller
         unset($data['image']);
         $data['code'] = $this->uniqueCode($data['title']);
         $data['requires_file'] = $this->workflowRequiresFile($data['workflow_type']);
+        $data['requires_delivery'] = $request->boolean('requires_delivery');
         $data['is_active'] = true;
         $data['is_system'] = false;
         $data['sort_order'] = ((int) ServiceDefinition::query()->max('sort_order')) + 10;
@@ -74,6 +75,7 @@ class AdminServiceDefinitionController extends Controller
         $image = $data['image'] ?? null;
         unset($data['image']);
         $data['requires_file'] = $this->workflowRequiresFile($data['workflow_type']);
+        $data['requires_delivery'] = $request->boolean('requires_delivery');
         $previousImagePath = $service->image_path;
         if ($image) {
             $data['image_path'] = $image->store('service-images', 'public');
@@ -108,6 +110,7 @@ class AdminServiceDefinitionController extends Controller
                 'string',
                 Rule::in(array_keys(ServiceDefinition::WORKFLOWS)),
             ],
+            'requires_delivery' => ['nullable', 'boolean'],
         ]);
     }
 

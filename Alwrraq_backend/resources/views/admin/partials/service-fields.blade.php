@@ -37,4 +37,11 @@
         </select>
         <p class="form-note">النموذج يحدد الحقول ورفع الملفات والتسعير المستخدم في الصفحة، من دون تغيير النموذج الأصلي.</p>
     </div>
+    <div class="full">
+        <label class="checkbox-line" for="{{ $fieldPrefix }}service_requires_delivery">
+            <input id="{{ $fieldPrefix }}service_requires_delivery" name="requires_delivery" type="checkbox" value="1">
+            يشترط على العميل تحديد الاستلام أو التوصيل
+        </label>
+        <p class="form-note">إذا احتوت السلة على خدمة واحدة مفعّل لها هذا الشرط، يصبح تحديد الاستلام أو التوصيل مطلوبًا للسلة كاملة.</p>
+    </div>
 </div>

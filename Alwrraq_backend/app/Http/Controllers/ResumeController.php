@@ -551,6 +551,10 @@ class ResumeController extends Controller
 
     private function latestEditableDraft(Request $request): ?ResumeDraft
     {
+        if (! $request->user()) {
+            return null;
+        }
+
         return ResumeDraft::query()
             ->where('user_id', $request->user()->id)
             ->whereIn('status', ['draft', 'pending_payment'])

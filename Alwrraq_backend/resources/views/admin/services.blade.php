@@ -28,6 +28,7 @@
                         <th>الخدمة</th>
                         <th>نموذج الصفحة</th>
                         <th>طلب ملف</th>
+                        <th>استلام أو توصيل</th>
                         <th>الإجراء</th>
                     </tr>
                 </thead>
@@ -40,6 +41,7 @@
                             </td>
                             <td>{{ $workflows[$service->workflow_type] }}</td>
                             <td>{{ $service->requires_file ? 'نعم' : 'لا' }}</td>
+                            <td>{{ $service->requires_delivery ? 'مطلوب' : 'غير مطلوب' }}</td>
                             <td>
                                 @if (auth()->user()->hasAdminPermission('services_update'))
                                     <button
@@ -54,6 +56,7 @@
                                                 ? route('services.image', ['filename' => basename($service->image_path)], false)
                                                 : null,
                                             'workflow_type' => $service->workflow_type,
+                                            'requires_delivery' => $service->requires_delivery,
                                         ], JSON_UNESCAPED_UNICODE) }}"
                                         onclick="openServiceEditor(JSON.parse(this.dataset.service))"
                                     >تعديل</button>
@@ -124,6 +127,7 @@
             document.getElementById('edit_service_description').value = service.description || '';
             document.getElementById('edit_service_icon').value = service.icon || '';
             document.getElementById('edit_service_workflow').value = service.workflow_type || '';
+            document.getElementById('edit_service_requires_delivery').checked = Boolean(service.requires_delivery);
             const imageInput = document.getElementById('edit_service_image');
             if (imageInput) imageInput.value = '';
             showServiceImagePreview('edit_', service.image_url || '', service.image_url ? 'الصورة الحالية' : 'لا توجد صورة حالية');

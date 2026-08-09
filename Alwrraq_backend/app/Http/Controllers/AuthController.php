@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
-use App\Http\Controllers\AdminController;
+use App\Services\GuestCartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rules\Password;
@@ -15,13 +15,20 @@ class AuthController extends Controller
         return view('auth');
     }
 
-    public function showAppLogin()
+    public function showAppEntry(Request $request)
+    {
+        return redirect()->route('home', $request->query());
+    }
+
+    public function showAppLogin(Request $request)
     {
         if (Auth::check()) {
             session(['auth_surface' => 'app']);
 
             return $this->redirectAfterLogin(Auth::user());
         }
+
+        $request->session()->put('url.intended', route('cart.index'));
 
         return view('auth', ['appMode' => true]);
     }
@@ -54,7 +61,7 @@ class AuthController extends Controller
         ]);
 
         $user = User::query()->create([
-            'name' => trim($data['first_name'] . ' ' . $data['second_name']),
+            'name' => trim($data['first_name'].' '.$data['second_name']),
             'phone' => $data['phone'],
             'email' => $data['email'] ?? null,
             'institution_name' => $request->boolean('institution_not_interested') ? null : $data['institution_name'],
@@ -64,11 +71,13 @@ class AuthController extends Controller
 
         Auth::login($user);
 
+        app(GuestCartService::class)->claim($request, $user);
+
         if ($request->routeIs('app.register.store')) {
             $request->session()->put('auth_surface', 'app');
         }
 
-        return redirect()->route('home');
+        return redirect()->intended(route('home'));
     }
 
     public function appLogin(Request $request)
@@ -101,7 +110,9 @@ class AuthController extends Controller
         $request->session()->regenerate();
         $request->session()->put('auth_surface', 'app');
 
-        return $this->redirectAfterLogin(Auth::user());
+        app(GuestCartService::class)->claim($request, Auth::user());
+
+        return redirect()->intended(route('home'));
     }
 
     public function login(Request $request)
@@ -115,7 +126,7 @@ class AuthController extends Controller
 
         $field = filter_var($data['login_identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
 
-        if (!Auth::attempt([$field => $data['login_identifier'], 'password' => $data['password']], true)) {
+        if (! Auth::attempt([$field => $data['login_identifier'], 'password' => $data['password']], true)) {
             return back()->withErrors([
                 'login_identifier' => 'رقم الجوال أو البريد الإلكتروني أو كلمة المرور غير صحيحة',
             ])->onlyInput('login_identifier');
@@ -142,9 +153,11 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
+        app(GuestCartService::class)->claim($request, Auth::user());
+
         return Auth::user()->role === 'admin'
             ? redirect()->route('admin.dashboard')
-            : redirect()->route('home');
+            : redirect()->intended(route('home'));
     }
 
     public function adminLogin(Request $request)
@@ -158,7 +171,7 @@ class AuthController extends Controller
 
         $field = filter_var($data['login_identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
 
-        if (!Auth::attempt([$field => $data['login_identifier'], 'password' => $data['password']], true)) {
+        if (! Auth::attempt([$field => $data['login_identifier'], 'password' => $data['password']], true)) {
             return back()->withErrors([
                 'login_identifier' => 'بيانات مدير النظام غير صحيحة',
             ])->onlyInput('login_identifier');

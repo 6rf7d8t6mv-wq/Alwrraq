@@ -28,6 +28,7 @@ class ServiceDefinition extends Model
         'image_path',
         'workflow_type',
         'requires_file',
+        'requires_delivery',
         'is_active',
         'is_system',
         'sort_order',
@@ -37,6 +38,7 @@ class ServiceDefinition extends Model
     {
         return [
             'requires_file' => 'boolean',
+            'requires_delivery' => 'boolean',
             'is_active' => 'boolean',
             'is_system' => 'boolean',
         ];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderFile;
 use App\Models\ServiceDefinition;
+use App\Services\GuestCartService;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -14,9 +15,12 @@ class FileUploadController extends Controller
 {
     private readonly ServicePricingService $pricing;
 
-    public function __construct(?ServicePricingService $pricing = null)
+    private readonly GuestCartService $guestCart;
+
+    public function __construct(?ServicePricingService $pricing = null, ?GuestCartService $guestCart = null)
     {
-        $this->pricing = $pricing ?? new ServicePricingService();
+        $this->pricing = $pricing ?? new ServicePricingService;
+        $this->guestCart = $guestCart ?? new GuestCartService;
     }
 
     public function upload(Request $request)
@@ -163,7 +167,7 @@ class FileUploadController extends Controller
             $path = $storagePath.'/'.$filename;
 
             $order = Order::query()->firstOrCreate([
-                'user_id' => Auth::id(),
+                ...$this->guestCart->orderIdentity($request),
                 'service_type' => $service,
                 'service_definition_id' => $serviceDefinition?->id,
                 'status' => 'new',
@@ -282,7 +286,7 @@ class FileUploadController extends Controller
 
     public function updateFile(Request $request, OrderFile $file)
     {
-        abort_unless($file->order->user_id === Auth::id() || Auth::user()?->role === 'admin', 403);
+        abort_unless($this->guestCart->owns($request, $file->order) || Auth::user()?->role === 'admin', 403);
 
         $coverColorRule = $file->order->service_type === 'books'
             ? 'in:black,green,red,blue,beige,brown'
@@ -445,7 +449,7 @@ class FileUploadController extends Controller
         $prices = $this->calculatePrices('research', $pages, 1, null);
 
         $order = Order::query()->firstOrCreate([
-            'user_id' => Auth::id(),
+            ...$this->guestCart->orderIdentity($request),
             'service_type' => 'research',
             'service_definition_id' => $serviceDefinition?->id,
             'status' => 'new',
@@ -538,9 +542,9 @@ class FileUploadController extends Controller
         return Str::limit($segments->implode('/'), 1000, '');
     }
 
-    public function destroyFile(OrderFile $file)
+    public function destroyFile(Request $request, OrderFile $file)
     {
-        abort_unless($file->order->user_id === Auth::id() || Auth::user()?->role === 'admin', 403);
+        abort_unless($this->guestCart->owns($request, $file->order) || Auth::user()?->role === 'admin', 403);
 
         $order = $file->order;
 
@@ -844,7 +848,7 @@ class FileUploadController extends Controller
         $baseTotal = $printTotal + $bindingTotal + $cdTotal;
         $discountAmount = min((float) $order->discount_amount, $baseTotal);
         $subtotal = max(0, $baseTotal - $discountAmount);
-        $deliveryFee = in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd'], true)
+        $deliveryFee = $order->requiresDelivery()
             ? $this->deliveryFee($order->delivery_method, $baseTotal)
             : 0;
 

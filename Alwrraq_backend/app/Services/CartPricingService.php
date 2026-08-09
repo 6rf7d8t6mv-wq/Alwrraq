@@ -43,7 +43,7 @@ class CartPricingService
             array_filter($baseTotals, fn (float $baseTotal) => $baseTotal > 0)
         );
         $deliveryOrders = $orders->filter(
-            fn (Order $order) => in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)
+            fn (Order $order) => $order->requiresDelivery()
         );
         $deliveryAnchor = $deliveryOrders->first(fn (Order $order) => filled($order->delivery_method))
             ?? $deliveryOrders->first();
@@ -86,7 +86,7 @@ class CartPricingService
                 'grand_total' => round(max(0, $baseTotal - $discountAmount) + max(0, $orderDeliveryFee), 2),
             ];
 
-            if ($sharedDelivery && in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)) {
+            if ($sharedDelivery && $order->requiresDelivery()) {
                 $totals = array_merge($totals, $sharedDelivery);
             }
 

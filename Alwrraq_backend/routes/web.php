@@ -3,10 +3,10 @@
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceDefinitionController;
-use App\Http\Controllers\AdminStationeryProductController;
 use App\Http\Controllers\AdminServicePricingController;
-use App\Http\Controllers\AutomaticTranslationController;
+use App\Http\Controllers\AdminStationeryProductController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AutomaticTranslationController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\CustomerOrderController;
@@ -19,6 +19,7 @@ use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\StationeryController;
 use App\Models\Order;
 use App\Models\ServiceDefinition;
+use App\Services\LivePageUpdateService;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,7 +33,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/app/register', [AuthController::class, 'register'])->name('app.register.store');
 });
 
-Route::get('/app', [AuthController::class, 'showAppLogin'])->name('app.entry');
+Route::get('/app', [AuthController::class, 'showAppEntry'])->name('app.entry');
+Route::get('/app/login', [AuthController::class, 'showAppLogin'])->name('app.login');
 
 Route::get('/educational-institutions', [EducationalInstitutionController::class, 'index'])
     ->name('educational-institutions.index');
@@ -62,7 +64,7 @@ Route::get('/live-status', LivePageUpdateController::class)
     ->middleware('auth')
     ->name('live-status');
 
-Route::get('/app-revision', function (\App\Services\LivePageUpdateService $updates) {
+Route::get('/app-revision', function (LivePageUpdateService $updates) {
     return response()
         ->json(['revision' => $updates->applicationRevision()])
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -129,7 +131,7 @@ Route::get('/home', function (Request $request) {
     ];
 
     $editOrderPayload = null;
-    if ($request->filled('order')) {
+    if ($request->filled('order') && auth()->check()) {
         $formatSize = function (int $bytes): string {
             if ($bytes <= 0) {
                 return '0 Bytes';
@@ -205,22 +207,22 @@ Route::get('/home', function (Request $request) {
     $customServicePrices = app(ServicePricingService::class)->customServicePrices($serviceDefinitions);
 
     return view('grades', compact('students', 'editOrderPayload', 'servicePricing', 'serviceDefinitions', 'customServicePrices'));
-})->middleware('auth')->name('home');
+})->name('home');
 
-Route::post('/upload-file', [FileUploadController::class, 'upload'])->middleware('auth');
-Route::post('/research-order', [FileUploadController::class, 'saveResearchOrder'])->middleware('auth');
-Route::patch('/order-files/{file}', [FileUploadController::class, 'updateFile'])->middleware('auth');
-Route::delete('/order-files/{file}', [FileUploadController::class, 'destroyFile'])->middleware('auth');
+Route::post('/upload-file', [FileUploadController::class, 'upload']);
+Route::post('/research-order', [FileUploadController::class, 'saveResearchOrder']);
+Route::patch('/order-files/{file}', [FileUploadController::class, 'updateFile']);
+Route::delete('/order-files/{file}', [FileUploadController::class, 'destroyFile']);
 
-Route::middleware('auth')->prefix('stationery')->name('stationery.')->group(function () {
+Route::prefix('stationery')->name('stationery.')->group(function () {
     Route::get('/', [StationeryController::class, 'index'])->name('index');
     Route::post('/products/{product}/add', [StationeryController::class, 'add'])->name('products.add');
     Route::delete('/products/{product}/remove', [StationeryController::class, 'remove'])->name('products.remove');
     Route::delete('/items/{item}', [StationeryController::class, 'removeItem'])->name('items.destroy');
 });
 
+Route::get('/resume', [ResumeController::class, 'landing'])->name('resume.landing');
 Route::middleware('auth')->prefix('resume')->name('resume.')->group(function () {
-    Route::get('/', [ResumeController::class, 'landing'])->name('landing');
     Route::post('/start', [ResumeController::class, 'start'])->name('start');
     Route::get('/{resumeDraft}/edit', [ResumeController::class, 'edit'])->name('edit');
     Route::patch('/{resumeDraft}', [ResumeController::class, 'update'])->name('update');

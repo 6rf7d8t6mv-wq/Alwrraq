@@ -97,15 +97,19 @@
                 <div class="brand">الورّاق</div>
             </div>
             <div class="header-identity">
-                <strong data-transliterate-name>{{ auth()->user()->name }}</strong>
-                <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
+                <strong data-transliterate-name>{{ auth()->user()?->name ?? 'زائر' }}</strong>
+                <small>{{ auth()->check() ? (auth()->user()->role === 'admin' ? 'المدير' : 'العميل') : 'تصفح الخدمات بدون حساب' }}</small>
             </div>
             <div class="header-actions">
                 <a class="home-button" href="{{ route('home') }}">🏠 الرئيسية</a>
-                <a class="home-button" href="{{ route('orders.index') }}">🧾 طلباتي</a>
-                <a class="home-button" href="{{ route('cart.index') }}">🛒 السلة</a>
-                <a class="settings-button" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
-                <form class="header-form" method="post" action="{{ route('logout') }}">@csrf<button class="logout-button" type="submit">🚪 خروج</button></form>
+                @auth
+                    <a class="home-button" href="{{ route('orders.index') }}">🧾 طلباتي</a>
+                    <a class="home-button" href="{{ route('cart.index') }}">🛒 السلة</a>
+                    <a class="settings-button" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
+                    <form class="header-form" method="post" action="{{ route('logout') }}">@csrf<button class="logout-button" type="submit">🚪 خروج</button></form>
+                @else
+                    <a class="settings-button" href="{{ route('app.login') }}">🔐 تسجيل الدخول أو إنشاء حساب</a>
+                @endauth
                 @include('shared.language-switcher')
             </div>
         </div>
@@ -120,7 +124,7 @@
                     <h1>القرطاسية</h1>
                     <p>اختر المنتجات وأضفها أو أزلها من السلة مباشرة.</p>
                 </div>
-                <a class="cart-link" href="{{ route('cart.index') }}">🛒 السلة <span id="stationeryCartCount" class="cart-count">{{ $cartOrder?->productItems->sum('quantity') ?? 0 }}</span></a>
+                <a class="cart-link" href="{{ auth()->check() ? route('cart.index') : route('app.login') }}">🛒 السلة <span id="stationeryCartCount" class="cart-count">{{ $cartOrder?->productItems->sum('quantity') ?? 0 }}</span></a>
             </div>
 
             <form class="search-form" method="get" action="{{ route('stationery.index') }}">

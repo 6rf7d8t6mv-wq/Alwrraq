@@ -46,7 +46,7 @@ class CartController extends Controller
         }
 
         $selectedDeliveryOrders = $cartOrders->filter(
-            fn (Order $order) => in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)
+            fn (Order $order) => $order->requiresDelivery()
         );
 
         if ($selectedDeliveryOrders->contains(fn (Order $order) => blank($order->delivery_method))) {
@@ -282,7 +282,7 @@ class CartController extends Controller
     public function updateDelivery(Request $request, Order $order, CartPricingService $cartPricing)
     {
         $this->authorizeOrder($order);
-        abort_unless(in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true), 404);
+        abort_unless($order->requiresDelivery(), 404);
 
         $data = $request->validate([
             'delivery_method' => ['required', Rule::in([
@@ -308,7 +308,7 @@ class CartController extends Controller
 
         $cartOrders = $this->cartOrders();
         $deliveryOrders = $cartOrders->filter(
-            fn (Order $cartOrder) => in_array($cartOrder->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true)
+            fn (Order $cartOrder) => $cartOrder->requiresDelivery()
         );
         $needsAddress = in_array($data['delivery_method'], ['madinah_delivery', 'redbox_delivery'], true);
         $deliveryOrders->each(function (Order $cartOrder) use ($data, $needsAddress) {
@@ -479,7 +479,7 @@ class CartController extends Controller
             return 'بيانات السيرة الذاتية غير موجودة.';
         }
 
-        if (in_array($order->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true) && blank($order->delivery_method)) {
+        if ($order->requiresDelivery() && blank($order->delivery_method)) {
             return 'اختر طريقة الاستلام أو التوصيل قبل الدفع.';
         }
 

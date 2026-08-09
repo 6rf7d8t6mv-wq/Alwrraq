@@ -4,14 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Order;
 use App\Models\OrderProductItem;
+use App\Models\ServiceDefinition;
 use App\Models\StationeryProduct;
+use App\Services\GuestCartService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class StationeryController extends Controller
 {
+    public function __construct(private readonly GuestCartService $guestCart) {}
+
     public function image(string $filename)
     {
         abort_unless($filename === basename($filename), 404);
@@ -27,6 +30,15 @@ class StationeryController extends Controller
 
     public function index(Request $request)
     {
+        if ($request->filled('service_definition_id')) {
+            $definition = ServiceDefinition::query()
+                ->whereKey($request->integer('service_definition_id'))
+                ->where('workflow_type', 'stationery')
+                ->where('is_active', true)
+                ->firstOrFail();
+            $request->session()->put('stationery_service_definition_id', $definition->id);
+        }
+
         $search = trim((string) $request->query('q', ''));
         $products = StationeryProduct::query()
             ->where('is_active', true)
@@ -40,8 +52,7 @@ class StationeryController extends Controller
             ->latest('id')
             ->get();
 
-        $cartOrder = Order::query()
-            ->where('user_id', Auth::id())
+        $cartOrder = $this->guestCart->scopeOwned(Order::query(), $request)
             ->where('service_type', 'stationery')
             ->where('payment_status', 'unpaid')
             ->with('productItems')
@@ -57,10 +68,11 @@ class StationeryController extends Controller
     {
         abort_unless($product->is_active, 404);
 
-        [$item, $order] = DB::transaction(function () use ($product) {
+        [$item, $order] = DB::transaction(function () use ($request, $product) {
             $order = Order::query()->firstOrCreate([
-                'user_id' => Auth::id(),
+                ...$this->guestCart->orderIdentity($request),
                 'service_type' => 'stationery',
+                'service_definition_id' => $request->session()->get('stationery_service_definition_id'),
                 'status' => 'new',
                 'payment_status' => 'unpaid',
             ], [
@@ -101,8 +113,7 @@ class StationeryController extends Controller
 
     public function remove(Request $request, StationeryProduct $product)
     {
-        $order = Order::query()
-            ->where('user_id', Auth::id())
+        $order = $this->guestCart->scopeOwned(Order::query(), $request)
             ->where('service_type', 'stationery')
             ->where('payment_status', 'unpaid')
             ->with('productItems')
@@ -129,7 +140,7 @@ class StationeryController extends Controller
     public function removeItem(Request $request, OrderProductItem $item)
     {
         $order = $item->order;
-        abort_unless($order->user_id === Auth::id() && $order->service_type === 'stationery' && $order->payment_status === 'unpaid', 403);
+        abort_unless($this->guestCart->owns($request, $order) && $order->service_type === 'stationery' && $order->payment_status === 'unpaid', 403);
 
         $item->delete();
         if ($order->productItems()->doesntExist()) {

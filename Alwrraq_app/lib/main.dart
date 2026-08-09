@@ -169,7 +169,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
             );
             if (_pendingSharedFiles.isNotEmpty &&
                 currentUrl?.host == _siteUri.host &&
-                currentUrl?.path == '/' &&
+                const {'/', '/app', '/home'}.contains(currentUrl?.path) &&
                 currentUrl?.queryParameters['share_import'] != '1') {
               await _controller.loadRequest(_sharedServicesUri());
               return;
@@ -279,7 +279,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
         _pendingSharedFiles.map((file) => file.kind.name).toSet().toList()
           ..sort();
     return _siteUri.replace(
-      path: '/',
+      path: '/home',
       queryParameters: {'share_import': '1', 'share_types': kinds.join(',')},
     );
   }
@@ -316,7 +316,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
         'document.querySelector(\'meta[name="csrf-token"]\')?.content || ""',
       );
       if (cookie == null || cookie.isEmpty || csrfToken.isEmpty) {
-        throw const FormatException('Missing authenticated session');
+        throw const FormatException('Missing web session');
       }
 
       final failed = <SharedImportFile>[];
@@ -360,8 +360,8 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
       if (mounted) {
         setState(() {
           _shareErrorMessage = _isEnglish
-              ? 'Sign in, then try importing the shared files again.'
-              : 'سجّل الدخول ثم حاول استيراد الملفات المشتركة مرة أخرى.';
+              ? 'The shared files could not be imported. Try again.'
+              : 'تعذر استيراد الملفات المشتركة. حاول مرة أخرى.';
         });
       }
     } finally {

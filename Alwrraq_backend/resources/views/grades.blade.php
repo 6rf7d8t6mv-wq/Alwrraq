@@ -667,33 +667,37 @@
                     <p class="brand-subtitle">خدمات النسخ والتصوير</p>
                 </div>
                 <div class="header-identity">
-                    <strong data-transliterate-name>{{ auth()->user()->name }}</strong>
-                    <small>{{ auth()->user()->role === 'admin' ? 'المدير' : 'العميل' }}</small>
+                    <strong data-transliterate-name>{{ auth()->user()?->name ?? 'زائر' }}</strong>
+                    <small>{{ auth()->check() ? (auth()->user()->role === 'admin' ? 'المدير' : 'العميل') : 'تصفح الخدمات بدون حساب' }}</small>
                 </div>
                 <div class="header-actions">
                     @php
-                        $hasCustomerOrderNotice = \App\Models\Order::query()
+                        $hasCustomerOrderNotice = auth()->check() && \App\Models\Order::query()
                             ->where('user_id', auth()->id())
                             ->whereNull('customer_notification_seen_at')
                             ->whereHas('deliveredFiles', fn ($query) => $query->whereNull('customer_downloaded_at'))
                             ->exists();
                     @endphp
                     <a class="header-link" href="{{ route('home') }}">🏠 الرئيسية</a>
-                    <a class="header-link" href="{{ route('orders.index') }}">
-                        🧾 طلباتي
-                        @if ($hasCustomerOrderNotice)
-                            <span class="customer-notice-dot" data-customer-orders-dot aria-label="تحديث جديد في طلباتك"></span>
+                    @auth
+                        <a class="header-link" href="{{ route('orders.index') }}">
+                            🧾 طلباتي
+                            @if ($hasCustomerOrderNotice)
+                                <span class="customer-notice-dot" data-customer-orders-dot aria-label="تحديث جديد في طلباتك"></span>
+                            @endif
+                        </a>
+                        <a class="header-link" href="{{ route('cart.index') }}">🛒 السلة</a>
+                        <a class="header-link settings-link" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
+                        @if (auth()->user()->role === 'admin')
+                            <a class="header-link admin-header-link" href="{{ route('admin.orders') }}">لوحة المدير</a>
                         @endif
-                    </a>
-                    <a class="header-link" href="{{ route('cart.index') }}">🛒 السلة</a>
-                    <a class="header-link settings-link" href="{{ route('account.settings') }}">⚙️ الإعدادات</a>
-                    @if (auth()->user()->role === 'admin')
-                        <a class="header-link admin-header-link" href="{{ route('admin.orders') }}">لوحة المدير</a>
-                    @endif
-                    <form class="header-form" method="post" action="{{ route('logout') }}">
-                        @csrf
-                        <button class="logout-button" type="submit">🚪 خروج</button>
-                    </form>
+                        <form class="header-form" method="post" action="{{ route('logout') }}">
+                            @csrf
+                            <button class="logout-button" type="submit">🚪 خروج</button>
+                        </form>
+                    @else
+                        <a class="header-link settings-link" href="{{ route('app.login') }}">🔐 تسجيل الدخول أو إنشاء حساب</a>
+                    @endauth
                     @include('shared.language-switcher')
                 </div>
             </div>
@@ -727,7 +731,7 @@
                         <h3 class="service-title">{{ $serviceDefinition->title }}</h3>
                         <p class="service-description">{{ $serviceDefinition->description }}</p>
                         @if ($serviceDefinition->workflow_type === 'stationery')
-                            <button class="service-entry" type="button" onclick="window.location.href='{{ route('stationery.index') }}'">الدخول للمتجر</button>
+                            <button class="service-entry" type="button" onclick="window.location.href='{{ route('stationery.index', ['service_definition_id' => $serviceDefinition->id]) }}'">الدخول للمتجر</button>
                         @elseif ($serviceDefinition->workflow_type === 'resume')
                             <button class="service-entry" type="button" onclick="window.location.href='{{ route('resume.landing') }}'">الدخول للخدمة</button>
                         @else
@@ -1887,7 +1891,7 @@
                     <div class="checkout-summary-line">
                         ${totalsHtml}
                         <div class="checkout-row">
-                            <a class="checkout-button" href="/cart">الانتقال للسلة</a>
+                            <a class="checkout-button" href="{{ auth()->check() ? route('cart.index') : route('app.login') }}">الانتقال للسلة</a>
                         </div>
                     </div>
                     ${deliveryNotice}

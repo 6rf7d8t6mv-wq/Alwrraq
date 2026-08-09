@@ -11,6 +11,7 @@ class Order extends Model
 {
     protected $fillable = [
         'user_id',
+        'guest_token',
         'service_type',
         'service_definition_id',
         'status',
@@ -135,5 +136,14 @@ class Order extends Model
     public function subtotalAfterDiscount(): float
     {
         return max(0, $this->baseTotal() - (float) $this->discount_amount);
+    }
+
+    public function requiresDelivery(): bool
+    {
+        if ($this->serviceDefinition) {
+            return (bool) $this->serviceDefinition->requires_delivery;
+        }
+
+        return in_array($this->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true);
     }
 }

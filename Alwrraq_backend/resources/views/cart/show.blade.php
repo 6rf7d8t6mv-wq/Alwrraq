@@ -506,8 +506,7 @@
                 ];
                 $hasAcademicService = $cartOrders->contains(fn ($cartOrder) => in_array($cartOrder->service_type, ['thesis', 'phd'], true));
                 $paymentPage = $paymentPage ?? false;
-                $deliveryServiceTypes = ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'];
-                $deliveryOrders = $cartOrders->filter(fn ($order) => in_array($order->service_type, $deliveryServiceTypes, true));
+                $deliveryOrders = $cartOrders->filter(fn ($order) => $order->requiresDelivery());
                 $hasMissingDeliveryMethod = $deliveryOrders->contains(fn ($order) => blank($order->delivery_method));
                 $cartDeliveryOrder = $deliveryOrders->first(fn ($order) => filled($order->delivery_method)) ?? $deliveryOrders->first();
                 $cartDiscountOrder = $cartOrders->first(fn ($order) => filled($order->discount_code)) ?? $cartOrders->first();
@@ -627,7 +626,7 @@
                                  data-order-binding="{{ (float) $cartOrder->binding_total }}"
                                  data-order-cd="{{ (float) $cartOrder->files->sum('cd_price') }}"
                                  data-order-discount="{{ (float) $cartOrder->discount_amount }}"
-                                 data-order-delivery-eligible="{{ in_array($cartOrder->service_type, ['notes', 'books', 'color_printing', 'thesis', 'phd', 'stationery'], true) ? '1' : '0' }}"
+                                 data-order-delivery-eligible="{{ $cartOrder->requiresDelivery() ? '1' : '0' }}"
                                  data-order-delivery-method="{{ $cartOrder->delivery_method }}">
                                 <div class="cart-order-head">
                                     <div class="cart-order-heading">
