@@ -30,7 +30,40 @@ class ExampleTest extends TestCase
             ->assertSee('الطباعة والتصوير وتجليد الرسائل', false)
             ->assertSee('داخل الجامعة الإسلامية', false)
             ->assertSee('من ساعة إلى 3 ساعات عمل', false)
-            ->assertSee('من 3 إلى 8 أيام عمل', false);
+            ->assertSee('من 3 إلى 8 أيام عمل', false)
+            ->assertSee(route('public.privacy'), false)
+            ->assertSee(route('public.terms'), false)
+            ->assertSee(route('public.refund'), false);
+    }
+
+    public function test_public_legal_pages_are_available_in_arabic_and_english(): void
+    {
+        $pages = [
+            '/privacy-policy' => ['سياسة الخصوصية – تطبيق الورّاق', 'Privacy Policy – Alwrraq App', '13. التواصل معنا'],
+            '/terms-and-conditions' => ['الشروط والأحكام – الورّاق', 'Terms and Conditions – Alwrraq', '15. التواصل معنا'],
+            '/cancellation-and-refund-policy' => ['سياسة الإلغاء والاسترجاع – الورّاق', 'Cancellation and Refund Policy – Alwrraq', '10. التواصل معنا'],
+        ];
+
+        foreach ($pages as $path => [$arabicTitle, $englishTitle, $lastArabicSection]) {
+            $this->withSession(['ui_locale' => 'ar'])
+                ->get($path)
+                ->assertOk()
+                ->assertSee('<html lang="ar" dir="rtl">', false)
+                ->assertSee($arabicTitle, false)
+                ->assertSee('آخر تحديث: 9 أغسطس 2026', false)
+                ->assertSee($lastArabicSection, false)
+                ->assertSee(route('public.privacy'), false)
+                ->assertSee(route('public.terms'), false)
+                ->assertSee(route('public.refund'), false);
+
+            $this->withSession(['ui_locale' => 'en'])
+                ->get($path)
+                ->assertOk()
+                ->assertSee('<html lang="en" dir="ltr">', false)
+                ->assertSee($englishTitle, false)
+                ->assertSee('Last updated: August 9, 2026', false)
+                ->assertSee('Contact Us', false);
+        }
     }
 
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
@@ -73,7 +106,10 @@ class ExampleTest extends TestCase
             ->assertStatus(200)
             ->assertHeader('Content-Type', 'application/xml; charset=UTF-8')
             ->assertSee('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">', false)
-            ->assertSee(route('public.home'), false);
+            ->assertSee(route('public.home'), false)
+            ->assertSee(route('public.privacy'), false)
+            ->assertSee(route('public.terms'), false)
+            ->assertSee(route('public.refund'), false);
     }
 
     public function test_mobile_upload_inputs_use_strict_mime_filters(): void

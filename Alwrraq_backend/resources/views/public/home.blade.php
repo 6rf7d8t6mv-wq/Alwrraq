@@ -711,8 +711,9 @@
         <div class="container footer-inner">
             <div>© {{ date('Y') }} الورّاق. جميع الحقوق محفوظة.</div>
             <div class="footer-links">
-                <a href="#privacy">سياسة الخصوصية</a>
-                <a href="#terms">الشروط والأحكام</a>
+                <a href="{{ route('public.privacy') }}">سياسة الخصوصية</a>
+                <a href="{{ route('public.terms') }}">الشروط والأحكام</a>
+                <a href="{{ route('public.refund') }}">سياسة الإلغاء والاسترجاع</a>
             </div>
         </div>
     </footer>

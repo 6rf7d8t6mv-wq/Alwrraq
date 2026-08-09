@@ -68,13 +68,28 @@ Route::get('/app-revision', function (\App\Services\LivePageUpdateService $updat
         ->header('Cache-Control', 'no-store, no-cache, must-revalidate');
 })->name('app.revision');
 
+Route::view('/privacy-policy', 'public.legal', ['documentKey' => 'privacy'])
+    ->name('public.privacy');
+Route::view('/terms-and-conditions', 'public.legal', ['documentKey' => 'terms'])
+    ->name('public.terms');
+Route::view('/cancellation-and-refund-policy', 'public.legal', ['documentKey' => 'refund'])
+    ->name('public.refund');
+
 Route::get('/sitemap.xml', function () {
-    $homeView = resource_path('views/public/home.blade.php');
-    $lastModified = date('c', filemtime($homeView));
+    $lastModified = date('c', max(
+        filemtime(resource_path('views/public/home.blade.php')),
+        filemtime(resource_path('views/public/legal.blade.php')),
+        filemtime(config_path('legal.php')),
+    ));
 
     return response()
         ->view('public.sitemap', [
-            'homeUrl' => route('public.home'),
+            'urls' => [
+                ['url' => route('public.home'), 'priority' => '1.0'],
+                ['url' => route('public.privacy'), 'priority' => '0.6'],
+                ['url' => route('public.terms'), 'priority' => '0.6'],
+                ['url' => route('public.refund'), 'priority' => '0.6'],
+            ],
             'lastModified' => $lastModified,
         ])
         ->header('Content-Type', 'application/xml; charset=UTF-8');
