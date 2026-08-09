@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 
 import 'package:alwrraq_app/android_file_selector.dart';
 import 'package:alwrraq_app/main.dart';
+import 'package:alwrraq_app/shared_import.dart';
 
 void main() {
   test('App root can be constructed', () {
@@ -57,6 +58,60 @@ void main() {
         'xlsx',
         'zip',
       ]);
+    });
+  });
+
+  group('Shared file routing', () {
+    test('classifies PDF, Word, and image files', () {
+      expect(
+        sharedFileKind(name: 'document.pdf', mimeType: ''),
+        SharedFileKind.pdf,
+      );
+      expect(
+        sharedFileKind(
+          name: 'document',
+          mimeType:
+              'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ),
+        SharedFileKind.word,
+      );
+      expect(
+        sharedFileKind(name: 'photo.heic', mimeType: 'image/heic'),
+        SharedFileKind.image,
+      );
+    });
+
+    test('PDF only exposes PDF-compatible services', () {
+      final kinds = {SharedFileKind.pdf};
+
+      expect(serviceAcceptsSharedKinds('notes', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('thesis', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('formatting', kinds), isFalse);
+      expect(serviceAcceptsSharedKinds('images', kinds), isFalse);
+    });
+
+    test('Word only exposes Word-compatible services', () {
+      final kinds = {SharedFileKind.word};
+
+      expect(serviceAcceptsSharedKinds('formatting', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('phd', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('notes', kinds), isFalse);
+    });
+
+    test('images only expose image services', () {
+      final kinds = {SharedFileKind.image};
+
+      expect(serviceAcceptsSharedKinds('images', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('thesis', kinds), isFalse);
+    });
+
+    test('mixed PDF and Word only expose services accepting both', () {
+      final kinds = {SharedFileKind.pdf, SharedFileKind.word};
+
+      expect(serviceAcceptsSharedKinds('thesis', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('phd', kinds), isTrue);
+      expect(serviceAcceptsSharedKinds('notes', kinds), isFalse);
+      expect(serviceAcceptsSharedKinds('formatting', kinds), isFalse);
     });
   });
 }

@@ -90,6 +90,20 @@ class ExampleTest extends TestCase
         $this->assertStringNotContainsString('id="imagesFilesPicker" multiple', $view);
     }
 
+    public function test_mobile_share_import_filters_services_and_receives_uploaded_files(): void
+    {
+        $view = (string) file_get_contents(resource_path('views/grades.blade.php'));
+
+        $this->assertStringContainsString('data-share-workflow=', $view);
+        $this->assertStringContainsString("notes: ['pdf']", $view);
+        $this->assertStringContainsString("thesis: ['pdf', 'word']", $view);
+        $this->assertStringContainsString("formatting: ['word']", $view);
+        $this->assertStringContainsString("images: ['image']", $view);
+        $this->assertStringContainsString('window.AlwrraqShareService.postMessage', $view);
+        $this->assertStringContainsString('window.alwrraqReceiveSharedUpload', $view);
+        $this->assertStringContainsString('window.alwrraqFinishSharedImport', $view);
+    }
+
     public function test_stationery_images_are_served_without_a_public_storage_symlink(): void
     {
         Storage::fake('public');

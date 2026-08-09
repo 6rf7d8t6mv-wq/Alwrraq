@@ -4,7 +4,12 @@ import WebKit
 
 @main
 @objc class AppDelegate: FlutterAppDelegate, FlutterImplicitEngineDelegate {
+  static let incomingShareNotification = Notification.Name("AlwrraqIncomingShare")
+  private let appGroup = "group.com.alwrraq.app"
+  private let shareManifestName = "pending-share.json"
   private var privacyCover: UIView?
+  private var shareChannel: FlutterMethodChannel?
+  private var shareObserver: NSObjectProtocol?
   override func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
@@ -90,6 +95,89 @@ import WebKit
         self?.setPrivacyCover(enabled: secure)
         result(nil)
       }
+    }
+
+    guard let shareRegistrar = engineBridge.pluginRegistry.registrar(forPlugin: "AlwrraqShare") else {
+      return
+    }
+    let shareFlutterChannel = FlutterMethodChannel(
+      name: "alwrraq/share",
+      binaryMessenger: shareRegistrar.messenger()
+    )
+    shareChannel = shareFlutterChannel
+    shareFlutterChannel.setMethodCallHandler { [weak self] call, result in
+      switch call.method {
+      case "getInitialShare":
+        result(self?.consumeSharedFiles() ?? [])
+      case "getCookies":
+        guard
+          let arguments = call.arguments as? [String: Any],
+          let urlText = arguments["url"] as? String,
+          let url = URL(string: urlText)
+        else {
+          result(nil)
+          return
+        }
+        WKWebsiteDataStore.default().httpCookieStore.getAllCookies { cookies in
+          let matching = cookies.filter { cookie in
+            url.host?.hasSuffix(
+              cookie.domain.trimmingCharacters(in: CharacterSet(charactersIn: "."))
+            ) == true
+          }
+          result(HTTPCookie.requestHeaderFields(with: matching)["Cookie"])
+        }
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
+
+    shareObserver = NotificationCenter.default.addObserver(
+      forName: AppDelegate.incomingShareNotification,
+      object: nil,
+      queue: .main
+    ) { [weak self] _ in
+      self?.publishPendingSharedFiles()
+    }
+  }
+
+  override func application(
+    _ app: UIApplication,
+    open url: URL,
+    options: [UIApplication.OpenURLOptionsKey: Any] = [:]
+  ) -> Bool {
+    guard url.scheme == "alwrraq", url.host == "share" else {
+      return super.application(app, open: url, options: options)
+    }
+    publishPendingSharedFiles()
+    return true
+  }
+
+  private func consumeSharedFiles() -> [[String: Any]] {
+    guard
+      let container = FileManager.default.containerURL(
+        forSecurityApplicationGroupIdentifier: appGroup
+      )
+    else { return [] }
+
+    let manifest = container.appendingPathComponent(shareManifestName)
+    guard
+      let data = try? Data(contentsOf: manifest),
+      let payload = try? JSONSerialization.jsonObject(with: data) as? [[String: Any]]
+    else { return [] }
+
+    try? FileManager.default.removeItem(at: manifest)
+    return payload
+  }
+
+  private func publishPendingSharedFiles() {
+    let files = consumeSharedFiles()
+    guard !files.isEmpty else { return }
+    shareChannel?.invokeMethod("sharedFiles", arguments: files)
+  }
+
+  deinit {
+    if let shareObserver {
+      NotificationCenter.default.removeObserver(shareObserver)
     }
   }
 

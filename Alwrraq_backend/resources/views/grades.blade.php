@@ -44,6 +44,8 @@
             .service-entry { width: 100%; align-self: stretch; min-width: 0; padding: 13px 16px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #ffffff; border: none; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 900; transition: all 0.25s ease; box-shadow: 0 8px 18px rgba(15, 23, 42, 0.18); }
             .service-entry:hover { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(15, 23, 42, 0.24); background: linear-gradient(135deg, #1e293b 0%, #334155 100%); }
             .service-entry:active { transform: translateY(0); }
+            .service-card.share-hidden { display: none !important; }
+            .shared-import-empty { grid-column: 1 / -1; padding: 30px 20px; border: 1px dashed #cbd5e1; border-radius: 16px; background: #fff; color: #991b1b; text-align: center; font-weight: 900; line-height: 1.8; }
             
             .back-button { padding: 12px 19px; background: #16a34a; color: white; border: none; border-radius: 7px; cursor: pointer; font-size: 15px; font-weight: 700; transition: all 0.3s; align-self: flex-start; margin-bottom: 20px; }
             .back-button:hover { background: #15803d; }
@@ -705,7 +707,11 @@
                 </div>
 
                 @foreach ($serviceDefinitions as $serviceDefinition)
-                    <article class="service-card">
+                    <article
+                        class="service-card"
+                        data-share-workflow="{{ $serviceDefinition->workflow_type }}"
+                        data-service-definition-id="{{ $serviceDefinition->id }}"
+                    >
                         @if ($serviceDefinition->image_path)
                             <div class="service-icon has-image">
                                 <img
@@ -1394,6 +1400,68 @@
 
             let activeServiceDefinitionId = null;
 
+            const sharedImportServiceKinds = {
+                notes: ['pdf'],
+                books: ['pdf'],
+                color_printing: ['pdf'],
+                thesis: ['pdf', 'word'],
+                phd: ['pdf', 'word'],
+                formatting: ['word'],
+                images: ['image']
+            };
+
+            function activateSharedImportMode() {
+                const params = new URLSearchParams(window.location.search);
+                if (params.get('share_import') !== '1') return;
+
+                const requestedKinds = (params.get('share_types') || '')
+                    .split(',')
+                    .map(value => value.trim())
+                    .filter(value => ['pdf', 'word', 'image'].includes(value));
+                if (!requestedKinds.length) return;
+
+                const cards = Array.from(document.querySelectorAll('[data-share-workflow]'));
+                let visibleCount = 0;
+                cards.forEach(card => {
+                    const workflow = card.dataset.shareWorkflow || '';
+                    const acceptedKinds = sharedImportServiceKinds[workflow] || [];
+                    const isCompatible = requestedKinds.every(kind => acceptedKinds.includes(kind));
+                    card.classList.toggle('share-hidden', !isCompatible);
+                    if (isCompatible) visibleCount++;
+                });
+
+                const title = document.querySelector('.services-title');
+                if (title) title.textContent = 'اختر الخدمة لإضافة الملفات المشتركة';
+                const titleBlock = document.querySelector('.services-title-block');
+                if (titleBlock && !titleBlock.querySelector('.services-subtitle')) {
+                    titleBlock.insertAdjacentHTML(
+                        'beforeend',
+                        '<p class="services-subtitle">نعرض لك فقط الخدمات التي تقبل جميع الملفات التي اخترتها.</p>'
+                    );
+                }
+
+                if (!visibleCount) {
+                    document.getElementById('servicesScreen')?.insertAdjacentHTML(
+                        'beforeend',
+                        '<div class="shared-import-empty">لا توجد خدمة واحدة تقبل أنواع الملفات المحددة معًا. شارك كل نوع على حدة.</div>'
+                    );
+                }
+            }
+
+            window.alwrraqFinishSharedImport = function () {
+                const url = new URL(window.location.href);
+                url.searchParams.delete('share_import');
+                url.searchParams.delete('share_types');
+                window.history.replaceState({}, '', url);
+                document.querySelectorAll('[data-share-workflow]').forEach(card => {
+                    card.classList.remove('share-hidden');
+                });
+                document.querySelector('.shared-import-empty')?.remove();
+                document.querySelector('.services-title-block .services-subtitle')?.remove();
+                const title = document.querySelector('.services-title');
+                if (title) title.textContent = 'اختر الخدمة المطلوبة';
+            };
+
             function selectService(service, serviceDefinitionId = null) {
                 initializeSaudiUniversitiesList();
                 activeServiceDefinitionId = serviceDefinitionId ? Number(serviceDefinitionId) : null;
@@ -1412,6 +1480,14 @@
                 document.getElementById('servicesScreen').style.display = 'none';
                 document.getElementById(uploadIds[service] || ('upload' + service.charAt(0).toUpperCase() + service.slice(1))).classList.add('active');
                 initializeService(service);
+
+                const shareParams = new URLSearchParams(window.location.search);
+                if (shareParams.get('share_import') === '1' && window.AlwrraqShareService) {
+                    window.AlwrraqShareService.postMessage(JSON.stringify({
+                        service,
+                        serviceDefinitionId: activeServiceDefinitionId
+                    }));
+                }
             }
 
             function backToServices() {
@@ -3175,6 +3251,48 @@
                 });
             }
 
+            window.alwrraqReceiveSharedUpload = function (payload) {
+                const service = payload?.service;
+                const type = payload?.type;
+                const response = payload?.response || {};
+                const configKey = getConfigKey(service, type);
+                if (!configKey || !uploadedFiles[service]?.[type] || !response.success) return false;
+
+                currentOrders[service] = response.order_id;
+                uploadedFiles[service][type].push({
+                    id: response.file_id,
+                    filename: response.original_name || response.filename,
+                    relativePath: response.relative_path || response.original_name || response.filename,
+                    pages: Number(response.pages || 1),
+                    size: formatFileSize(response.size),
+                    binding: response.binding_type || (service === 'books' ? 'normal' : ''),
+                    copies: Number(response.copies || 1),
+                    printSides: response.print_sides || (service === 'color_printing' ? 'one_side' : 'two_sides'),
+                    pageSize: response.page_size || 'A4',
+                    paperColor: response.paper_color || (service === 'color_printing' ? '' : 'white'),
+                    thesisProjectType: '',
+                    universityChoice: '',
+                    universityName: response.university_name || '',
+                    customUniversity: '',
+                    coverColor: response.cover_color || '',
+                    writingColor: response.writing_color || '',
+                    cdType: response.cd_type || 'none',
+                    cdCopies: Number(response.cd_copies || 0),
+                    cdPrice: Number(response.cd_price || 0),
+                    imagePrintType: response.image_print_type || ''
+                });
+
+                updateFilesList(configKey);
+                if (['notes', 'books', 'color_printing'].includes(service)) {
+                    updatePrintProductPricingSummary(service);
+                } else if (['thesis', 'phd'].includes(service)) {
+                    updateAcademicPricingSummary(service);
+                } else if (service === 'images') {
+                    updateImagesPricingSummary();
+                }
+                return true;
+            };
+
             function hydrateEditOrder(payload) {
                 if (!payload || !payload.service_type || !uploadedFiles[payload.service_type]) {
                     return;
@@ -3245,6 +3363,7 @@
             }
 
             bindEnglishNumberWarnings();
+            activateSharedImportMode();
 
             const editOrderPayload = @json($editOrderPayload ?? null);
             const requestedService = new URLSearchParams(window.location.search).get('service') || editOrderPayload?.service_type;
