@@ -54,17 +54,14 @@ class AuthController extends Controller
             'first_name' => ['required', 'string', 'max:120'],
             'second_name' => ['required', 'string', 'max:120'],
             'phone' => ['required', 'string', 'regex:/^05[0-9]{8}$/', 'unique:users,phone'],
-            'email' => ['nullable', 'email:rfc', 'max:255', 'regex:/^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/', 'unique:users,email'],
-            'institution_name' => ['nullable', 'string', 'max:255', 'required_unless:institution_not_interested,1'],
-            'institution_not_interested' => ['nullable', 'boolean'],
             'password' => ['required', 'confirmed', Password::min(6), 'regex:/^[\x21-\x7E]+$/'],
         ]);
 
         $user = User::query()->create([
             'name' => trim($data['first_name'].' '.$data['second_name']),
             'phone' => $data['phone'],
-            'email' => $data['email'] ?? null,
-            'institution_name' => $request->boolean('institution_not_interested') ? null : $data['institution_name'],
+            'email' => null,
+            'institution_name' => null,
             'password' => $data['password'],
             'role' => 'customer',
         ]);
@@ -85,15 +82,15 @@ class AuthController extends Controller
         $this->normalizeAuthInput($request);
 
         $data = $request->validate([
-            // Keep legacy accounts usable in the unified app login. New customer
-            // registration still requires a Saudi mobile number starting with 05.
-            'login_identifier' => ['required', 'string', 'max:30', 'regex:/^[0-9]+$/'],
+            'login_identifier' => ['required', 'string', 'max:255', 'regex:/^[\x21-\x7E]+$/'],
             'password' => ['required', 'string', 'regex:/^[\x21-\x7E]+$/'],
         ]);
 
-        if (! Auth::attempt(['phone' => $data['login_identifier'], 'password' => $data['password']], true)) {
+        $field = filter_var($data['login_identifier'], FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+
+        if (! Auth::attempt([$field => $data['login_identifier'], 'password' => $data['password']], true)) {
             return back()->withErrors([
-                'login_identifier' => 'رقم الجوال أو كلمة المرور غير صحيحة',
+                'login_identifier' => 'رقم الجوال أو البريد الإلكتروني أو كلمة المرور غير صحيحة',
             ])->onlyInput('login_identifier');
         }
 

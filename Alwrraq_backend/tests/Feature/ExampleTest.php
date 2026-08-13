@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 // use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Models\User;
 use App\Models\ServiceDefinition;
+use App\Models\User;
 use App\Services\LivePageUpdateService;
 use App\Services\ServicePricingService;
 use Illuminate\Support\Facades\Storage;
@@ -88,7 +88,7 @@ class ExampleTest extends TestCase
             ->assertSee('overflow-wrap: anywhere;', false)
             ->assertSee("const brandToken = 'ALWRRAQBRANDTOKEN';", false)
             ->assertSee("new RegExp(brandToken, 'gi'), 'Alwrraq'", false)
-            ->assertSee("alwrraq-ui-translations-v4", false)
+            ->assertSee('alwrraq-ui-translations-v4', false)
             ->assertSee('@media (min-width: 821px)', false)
             ->assertSee('html[dir="ltr"] body.customer-app-page .page-header', false)
             ->assertSee('left: 0 !important;', false)
@@ -138,6 +138,27 @@ class ExampleTest extends TestCase
         $this->assertStringContainsString('window.AlwrraqShareService.postMessage', $view);
         $this->assertStringContainsString('window.alwrraqReceiveSharedUpload', $view);
         $this->assertStringContainsString('window.alwrraqFinishSharedImport', $view);
+    }
+
+    public function test_registration_is_minimal_and_mobile_header_is_a_drawer(): void
+    {
+        $authView = (string) file_get_contents(resource_path('views/auth.blade.php'));
+        $header = (string) file_get_contents(resource_path('views/shared/language-switcher.blade.php'));
+        $services = (string) file_get_contents(resource_path('views/grades.blade.php'));
+
+        $this->assertStringContainsString('name="first_name"', $authView);
+        $this->assertStringContainsString('name="second_name"', $authView);
+        $this->assertStringContainsString('name="phone"', $authView);
+        $this->assertStringContainsString('name="password"', $authView);
+        $this->assertStringContainsString('name="password_confirmation"', $authView);
+        $this->assertStringNotContainsString('name="institution_name"', $authView);
+        $this->assertStringNotContainsString('name="institution_not_interested"', $authView);
+        $this->assertStringNotContainsString('name="email"', $authView);
+        $this->assertStringContainsString('رقم الجوال أو البريد الإلكتروني', $authView);
+        $this->assertStringContainsString('customer-menu-toggle', $header);
+        $this->assertStringContainsString('customer-menu-backdrop', $header);
+        $this->assertStringContainsString('خدمات الورّاق', $services);
+        $this->assertStringNotContainsString('اختر الخدمة المطلوبة', $services);
     }
 
     public function test_stationery_images_are_served_without_a_public_storage_symlink(): void
@@ -238,13 +259,13 @@ class ExampleTest extends TestCase
 
     public function test_custom_services_receive_an_automatic_default_price(): void
     {
-        $customService = new ServiceDefinition();
+        $customService = new ServiceDefinition;
         $customService->forceFill([
             'id' => 99,
             'is_system' => false,
         ]);
 
-        $systemService = new ServiceDefinition();
+        $systemService = new ServiceDefinition;
         $systemService->forceFill([
             'id' => 1,
             'is_system' => true,

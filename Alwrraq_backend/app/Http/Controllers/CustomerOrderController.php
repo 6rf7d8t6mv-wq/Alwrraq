@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\OrderDeliveredFile;
 use App\Models\OrderFile;
+use App\Services\GuestCartService;
 use App\Services\Payments\MoyasarPaymentService;
 use App\Services\WordPreviewService;
 use Illuminate\Support\Facades\Auth;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Response;
 
 class CustomerOrderController extends Controller
 {
+    public function __construct(private readonly GuestCartService $guestCart) {}
+
     public function index(MoyasarPaymentService $moyasar)
     {
         $moyasar->reconcilePendingAttempts(Auth::user());
@@ -75,7 +78,7 @@ class CustomerOrderController extends Controller
 
     public function viewUploadedFile(Order $order, OrderFile $file, WordPreviewService $wordPreview)
     {
-        abort_unless($order->user_id === Auth::id(), 403);
+        abort_unless($this->guestCart->owns(request(), $order), 403);
         abort_unless($file->order_id === $order->id, 404);
 
         $absolutePath = storage_path('app/'.$file->path);

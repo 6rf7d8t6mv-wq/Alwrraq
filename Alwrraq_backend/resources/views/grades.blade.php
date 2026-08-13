@@ -31,8 +31,9 @@
             p { margin: 0 0 26px; color: #475569; line-height: 1.7; }
             
             .services-screen { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(14px, 2vw, 20px); align-items: stretch; }
-            .services-title-block { grid-column: 1 / -1; padding: clamp(18px, 3vw, 26px); border-radius: 20px; background: linear-gradient(135deg, #dbeafe 0%, #e0f2fe 100%); color: #0f172a; border: 1px solid #bfdbfe; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); }
-            .services-title { margin: 0; color: #0f172a; border: 0; padding: 0; font-size: clamp(24px, 3.2vw, 34px); line-height: 1.4; }
+            .services-title-block { grid-column: 1 / -1; padding: 10px 0 18px; color: #0f172a; text-align: center; }
+            .services-title { display: inline-block; position: relative; margin: 0; color: #0f2744; border: 0; padding: 0 22px 13px; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(30px, 4vw, 45px); font-weight: 900; line-height: 1.35; letter-spacing: .01em; text-shadow: 0 8px 24px rgba(15,76,129,.12); }
+            .services-title::after { content: ''; position: absolute; right: 18%; bottom: 0; left: 18%; height: 3px; border-radius: 999px; background: linear-gradient(90deg, transparent, #d4a017, #0f4c81, #d4a017, transparent); }
             .services-subtitle { margin: 8px 0 0; color: #475569; font-size: clamp(13px, 1.5vw, 15px); line-height: 1.8; }
             .service-card { min-height: 250px; display: flex; flex-direction: column; align-items: stretch; gap: 13px; padding: clamp(18px, 2.6vw, 26px); background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid #e2e8f0; border-radius: 18px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08); transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease; }
             .service-card:hover { transform: translateY(-4px); border-color: #cbd5e1; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.13); }
@@ -232,8 +233,8 @@
             @media (max-width: 768px) {
                 :root { --sidebar-width: 0px; --page-gap: 10px; }
                 body { padding: 0; }
-                .services-title-block { padding: 10px 12px; border-radius: 12px; box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06); }
-                .services-title { font-size: 19px; line-height: 1.35; }
+                .services-title-block { padding: 8px 0 14px; }
+                .services-title { font-size: 27px; line-height: 1.35; }
                 .page-header { position: sticky; top: 0; width: 100%; min-height: 0; max-height: none; padding: 8px 10px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16); }
                 .header-inner { height: auto; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
                 .header-inner > div:first-child { display: flex; align-items: center; gap: 8px; min-width: 0; }
@@ -547,8 +548,8 @@
             }
             @media (min-width: 769px) {
                 .services-screen { gap: 9px; }
-                .services-title-block { padding: 12px 15px; border-radius: 13px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
-                .services-title { font-size: 25px; line-height: 1.3; }
+                .services-title-block { padding: 10px 0 18px; }
+                .services-title { font-size: 36px; line-height: 1.3; }
                 .services-subtitle { margin-top: 3px; font-size: 13px; line-height: 1.55; }
                 .service-card { min-height: 180px; gap: 6px; padding: 10px 11px; border-radius: 12px; box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06); }
                 .service-icon { width: 40px; height: 40px; border-radius: 10px; font-size: 20px; }
@@ -707,7 +708,7 @@
             <!-- Services Selection Screen -->
             <div id="servicesScreen" class="services-screen">
                 <div class="services-title-block">
-                    <h2 class="services-title">اختر الخدمة المطلوبة</h2>
+                    <h2 class="services-title">خدمات الورّاق</h2>
                 </div>
 
                 @foreach ($serviceDefinitions as $serviceDefinition)
@@ -1463,7 +1464,7 @@
                 document.querySelector('.shared-import-empty')?.remove();
                 document.querySelector('.services-title-block .services-subtitle')?.remove();
                 const title = document.querySelector('.services-title');
-                if (title) title.textContent = 'اختر الخدمة المطلوبة';
+                if (title) title.textContent = 'خدمات الورّاق';
             };
 
             function selectService(service, serviceDefinitionId = null) {

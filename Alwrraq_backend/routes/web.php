@@ -19,6 +19,7 @@ use App\Http\Controllers\ResumeController;
 use App\Http\Controllers\StationeryController;
 use App\Models\Order;
 use App\Models\ServiceDefinition;
+use App\Services\GuestCartService;
 use App\Services\LivePageUpdateService;
 use App\Services\ServicePricingService;
 use Illuminate\Http\Request;
@@ -131,7 +132,7 @@ Route::get('/home', function (Request $request) {
     ];
 
     $editOrderPayload = null;
-    if ($request->filled('order') && auth()->check()) {
+    if ($request->filled('order')) {
         $formatSize = function (int $bytes): string {
             if ($bytes <= 0) {
                 return '0 Bytes';
@@ -143,8 +144,8 @@ Route::get('/home', function (Request $request) {
             return round($bytes / (1024 ** $index), 2).' '.$units[$index];
         };
 
-        $editOrder = Order::query()
-            ->where('user_id', auth()->id())
+        $editOrder = app(GuestCartService::class)
+            ->scopeOwned(Order::query(), $request)
             ->where('payment_status', '!=', 'paid')
             ->with('files')
             ->find($request->integer('order'));
@@ -262,7 +263,6 @@ Route::delete('/my-orders/{order}', [CustomerOrderController::class, 'destroy'])
     ->middleware('auth')
     ->name('orders.destroy');
 Route::get('/my-orders/{order}/files/{file}', [CustomerOrderController::class, 'viewUploadedFile'])
-    ->middleware('auth')
     ->name('orders.file.view');
 Route::get('/my-orders/{order}/delivered-files/{deliveredFile}/view', [CustomerOrderController::class, 'downloadDeliveredFile'])
     ->middleware('auth')

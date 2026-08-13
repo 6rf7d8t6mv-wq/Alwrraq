@@ -30,32 +30,10 @@
         .auth-panel.active { display: block; }
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         .form-grid label { margin-top: 14px; }
-        .optional-note { margin-top: 14px; padding: 10px 12px; border-radius: 9px; background: #eff6ff; color: #0f4c81; font-size: 12px; font-weight: 800; line-height: 1.7; }
-        .check-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #334155; font-size: 13px; font-weight: 800; }
-        .check-row input { width: auto; }
-        .institution-box.disabled { opacity: 0.45; pointer-events: none; }
-        .institution-results { display: none; margin-top: 8px; border: 1px solid #cbd5e1; border-radius: 9px; background: #ffffff; overflow: hidden; max-height: 210px; overflow-y: auto; }
-        .institution-results.active { display: block; }
-        .institution-result { width: 100%; margin: 0; padding: 11px 12px; border: 0; border-bottom: 1px solid #e5e7eb; border-radius: 0; background: #ffffff; color: #111827; text-align: right; font-size: 13px; font-weight: 800; cursor: pointer; }
-        .institution-result:hover { background: #f8fafc; }
-        .institution-result:last-child { border-bottom: 0; }
-        .institution-meta { display: block; margin-top: 4px; color: #64748b; font-size: 11px; font-weight: 700; }
-        .institution-empty { padding: 11px 12px; color: #64748b; font-size: 12px; font-weight: 800; line-height: 1.7; }
-        .institution-control { position: relative; }
-        .institution-dropdown { position: absolute; z-index: 40; top: calc(100% + 6px); right: 0; left: 0; display: none; margin: 0; padding: 7px; border: 1px solid #cbd5e1; border-radius: 10px; background: #ffffff; box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18); }
-        .institution-dropdown.active { display: block; }
-        .institution-picker { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: stretch; }
-        .institution-picker input { min-width: 0; }
-        .institution-picker button { width: auto; margin: 0; white-space: nowrap; }
-        #institutionName { -webkit-appearance: none; appearance: none; background-image: none !important; }
-        #institutionName::-webkit-contacts-auto-fill-button,
-        #institutionName::-webkit-credentials-auto-fill-button,
-        #institutionName::-webkit-calendar-picker-indicator { display: none !important; visibility: hidden; pointer-events: none; opacity: 0; }
-        .institution-manual-note { display: block; margin-top: 7px; color: #64748b; font-size: 11px; font-weight: 800; line-height: 1.5; }
         @media (max-width: 520px) {
-            .form-grid { grid-template-columns: 1fr; gap: 0; }
-            .institution-picker { grid-template-columns: 1fr; }
-            .institution-picker button { width: 100%; }
+            .auth-card { padding-inline: 14px; }
+            .form-grid { gap: 8px; }
+            .form-grid input { padding-inline: 9px; }
         }
     </style>
 </head>
@@ -79,13 +57,13 @@
 
             <div id="loginPanel" class="auth-panel active">
                 <h2>تسجيل الدخول</h2>
-                <p>{{ $appMode ? 'ادخل رقم جوالك وكلمة المرور، وسيتم فتح واجهتك تلقائيًا.' : 'ادخل رقم جوالك أو بريدك الإلكتروني وكلمة المرور للمتابعة.' }}</p>
+                <p>ادخل رقم جوالك أو بريدك الإلكتروني وكلمة المرور للمتابعة.</p>
 
                 <form method="post" action="{{ $appMode ? route('app.login.store') : route('login.store') }}">
                     @csrf
-                    <label for="loginIdentifier">{{ $appMode ? 'رقم الجوال' : 'رقم الجوال أو البريد الإلكتروني' }}</label>
-                    <input id="loginIdentifier" name="login_identifier" value="{{ old('login_identifier') }}" autocomplete="username" @if($appMode) inputmode="numeric" @endif required>
-                    <p class="input-note">{{ $appMode ? 'اكتب رقم الجوال المسجل، والأرقام العربية تتحول تلقائيًا إلى إنجليزية.' : 'يقبل رقم الجوال أو البريد بحروف وأرقام إنجليزية ورموز البريد فقط، والأرقام العربية تتحول تلقائيًا إلى إنجليزية.' }}</p>
+                    <label for="loginIdentifier">رقم الجوال أو البريد الإلكتروني</label>
+                    <input id="loginIdentifier" name="login_identifier" value="{{ old('login_identifier') }}" autocomplete="username" required>
+                    <p class="input-note">يمكنك الدخول برقم الجوال المسجل أو البريد الإلكتروني الذي أضفته من إعدادات الحساب.</p>
 
                     <label for="loginPassword">كلمة المرور</label>
                     <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
@@ -119,29 +97,6 @@
                     <label for="phone">رقم الجوال</label>
                     <input id="phone" name="phone" inputmode="numeric" autocomplete="tel" required>
                     <p class="input-note">اكتب الرقم بأي صيغة أرقام عربية أو إنجليزية، وسيتم تحويله تلقائيًا إلى أرقام إنجليزية.</p>
-
-                    <label for="email">البريد الإلكتروني (اختياري)</label>
-                    <input id="email" name="email" type="email" inputmode="email" pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}" title="اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com">
-                    <p class="input-note">البريد يقبل الحروف الإنجليزية والأرقام والرموز الخاصة بالبريد فقط.</p>
-
-                    <div class="optional-note">اختياري: اختر جامعتك أو معهدك أو مدرستك من القائمة، وإذا لم تجدها اكتب اسمها كاملًا يدويًا وسيتم حفظه. إذا ما تبغى تضيفها اختر غير مهتم.</div>
-                    <label class="check-row" for="institutionNotInterested">
-                        <input id="institutionNotInterested" name="institution_not_interested" type="checkbox" value="1" @checked(old('institution_not_interested'))>
-                        <span>غير مهتم</span>
-                    </label>
-                    <div id="institutionBox" class="institution-box">
-                        <label for="institutionName">جامعتك / معهدك / مدرستك</label>
-                        <div class="institution-control">
-                            <div class="institution-picker">
-                                <input id="institutionName" name="institution_name" value="{{ old('institution_name') }}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" inputmode="text" role="combobox" aria-controls="institutionResults" aria-expanded="false" placeholder="ابحث في القائمة أو اكتب اسم الجهة">
-                                <button id="institutionToggle" type="button">فتح القائمة</button>
-                            </div>
-                            <div id="institutionDropdown" class="institution-dropdown">
-                                <div id="institutionResults" class="institution-results" aria-live="polite"></div>
-                            </div>
-                        </div>
-                        <span class="institution-manual-note">إذا لم تجد الجهة في القائمة، اكتب اسمها في نفس الخانة.</span>
-                    </div>
 
                     <label for="password">كلمة المرور</label>
                     <input id="password" name="password" type="password" autocomplete="new-password" required>
@@ -218,23 +173,14 @@
 
         const asciiPrintable = (value) => convertArabicDigits(value).replace(/[^\x21-\x7E]/g, '');
         const phoneOnly = (value) => convertArabicDigits(value).replace(/[^0-9]/g, '').slice(0, 10);
-        const legacyPhoneOnly = (value) => convertArabicDigits(value).replace(/[^0-9]/g, '').slice(0, 30);
-        const emailOnly = (value) => convertArabicDigits(value).replace(/[^A-Za-z0-9._%+\-@]/g, '');
-
-        const isAppMode = @json($appMode);
-
         document.querySelectorAll('input[name="login_identifier"]').forEach((input) => {
             bindInputRule(
                 input,
-                isAppMode ? /^[0-9]+$/ : /^[\x21-\x7E]+$/,
+                /^[\x21-\x7E]+$/,
                 document.documentElement.lang === 'en'
-                    ? (isAppMode
-                        ? 'Notice: Enter your registered phone number using digits.'
-                        : 'Notice: Login accepts English letters, numbers, and symbols only.')
-                    : (isAppMode
-                        ? 'تنبيه: اكتب رقم الجوال المسجل بالأرقام.'
-                        : 'تنبيه: تسجيل الدخول يقبل الحروف الإنجليزية والأرقام والرموز فقط.'),
-                isAppMode ? legacyPhoneOnly : asciiPrintable
+                    ? 'Notice: Login accepts a phone number or email in English characters.'
+                    : 'تنبيه: أدخل رقم الجوال أو البريد الإلكتروني بحروف وأرقام إنجليزية.',
+                asciiPrintable
             );
         });
 
@@ -249,17 +195,6 @@
             );
         });
 
-        document.querySelectorAll('#registerPanel input[name="email"]').forEach((input) => {
-            bindInputRule(
-                input,
-                /^[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}$/,
-                document.documentElement.lang === 'en'
-                    ? 'Notice: Enter a valid email address, such as name@example.com.'
-                    : 'تنبيه: اكتب بريدًا إلكترونيًا صحيحًا مثل name@example.com.',
-                emailOnly
-            );
-        });
-
         document.querySelectorAll('input[name="password"], input[name="password_confirmation"]').forEach((input) => {
             bindInputRule(
                 input,
@@ -271,148 +206,6 @@
             );
         });
 
-        const institutionCheckbox = document.getElementById('institutionNotInterested');
-        const institutionBox = document.getElementById('institutionBox');
-        const institutionToggle = document.getElementById('institutionToggle');
-        const institutionDropdown = document.getElementById('institutionDropdown');
-        const institutionInput = document.getElementById('institutionName');
-        const institutionResults = document.getElementById('institutionResults');
-        const institutionSearchUrl = @json(route('educational-institutions.index'));
-        let institutionSearchTimer = null;
-        let institutionSearchController = null;
-
-        function setInstitutionDropdown(open) {
-            institutionDropdown.classList.toggle('active', open);
-            institutionResults.classList.toggle('active', open);
-            institutionInput.setAttribute('aria-expanded', open ? 'true' : 'false');
-            institutionToggle.textContent = open ? 'إغلاق القائمة' : 'فتح القائمة';
-        }
-
-        function syncInstitutionInterest() {
-            const notInterested = institutionCheckbox.checked;
-            institutionBox.classList.toggle('disabled', notInterested);
-            institutionToggle.disabled = notInterested;
-            institutionInput.disabled = notInterested;
-            institutionInput.required = !notInterested;
-
-            if (notInterested) {
-                institutionInput.value = '';
-                institutionInput.setCustomValidity('');
-                setInstitutionDropdown(false);
-            }
-        }
-
-        function debounceInstitutionSearch() {
-            setInstitutionDropdown(true);
-            clearTimeout(institutionSearchTimer);
-            institutionSearchTimer = setTimeout(loadInstitutionOptions, 250);
-        }
-
-        function loadInstitutionOptions() {
-            if (institutionInput.disabled) {
-                return;
-            }
-
-            if (institutionSearchController) {
-                institutionSearchController.abort();
-            }
-
-            institutionSearchController = new AbortController();
-
-            const url = new URL(institutionSearchUrl, window.location.origin);
-            url.searchParams.set('q', institutionInput.value.trim());
-            url.searchParams.set('per_page', '100');
-
-            fetch(url, {
-                headers: { 'Accept': 'application/json' },
-                signal: institutionSearchController.signal,
-            })
-                .then((response) => response.ok ? response.json() : Promise.reject())
-                .then((payload) => {
-                    institutionResults.innerHTML = '';
-
-                    if (payload.data.length === 0) {
-                        institutionResults.innerHTML = '';
-
-                        const empty = document.createElement('div');
-                        empty.className = 'institution-empty';
-                        empty.textContent = 'ما لقينا نتيجة مطابقة. تقدر تحفظ الاسم اللي كتبته.';
-                        institutionResults.appendChild(empty);
-
-                        if (institutionInput.value.trim() !== '') {
-                            const manual = document.createElement('button');
-                            manual.type = 'button';
-                            manual.className = 'institution-result';
-                            manual.textContent = `استخدام الاسم المكتوب: ${institutionInput.value.trim()}`;
-                            manual.addEventListener('click', () => {
-                                institutionInput.value = institutionInput.value.trim();
-                                institutionInput.setCustomValidity('');
-                                setInstitutionDropdown(false);
-                            });
-                            institutionResults.appendChild(manual);
-                        }
-
-                        institutionResults.classList.add('active');
-                        return;
-                    }
-
-                    payload.data.forEach((institution) => {
-                        const institutionDisplayName = document.documentElement.lang === 'en' && institution.name_en
-                            ? institution.name_en
-                            : institution.name_ar;
-                        const result = document.createElement('button');
-                        result.type = 'button';
-                        result.className = 'institution-result';
-                        result.textContent = institutionDisplayName;
-
-                        const meta = document.createElement('span');
-                        meta.className = 'institution-meta';
-                        meta.textContent = [institution.city, institution.region, institution.institution_type].filter(Boolean).join(' - ');
-                        result.appendChild(meta);
-
-                        result.addEventListener('click', () => {
-                            institutionInput.value = institutionDisplayName;
-                            institutionInput.setCustomValidity('');
-                            setInstitutionDropdown(false);
-                        });
-                        institutionResults.appendChild(result);
-                    });
-
-                    institutionResults.classList.add('active');
-                })
-                .catch((error) => {
-                    if (! error || error.name !== 'AbortError') {
-                        institutionResults.innerHTML = '';
-                        const unavailable = document.createElement('div');
-                        unavailable.className = 'institution-empty';
-                        unavailable.textContent = 'تعذر تحميل القائمة الآن. يمكنك كتابة اسم الجهة في نفس الخانة.';
-                        institutionResults.appendChild(unavailable);
-                        setInstitutionDropdown(true);
-                    }
-                });
-        }
-
-        institutionCheckbox.addEventListener('change', syncInstitutionInterest);
-        institutionToggle.addEventListener('click', () => {
-            const isOpen = !institutionDropdown.classList.contains('active');
-            setInstitutionDropdown(isOpen);
-
-            if (isOpen) {
-                loadInstitutionOptions();
-                institutionInput.focus({ preventScroll: true });
-            }
-        });
-        institutionInput.addEventListener('focus', () => {
-            setInstitutionDropdown(true);
-            loadInstitutionOptions();
-        });
-        institutionInput.addEventListener('input', debounceInstitutionSearch);
-        document.addEventListener('pointerdown', (event) => {
-            if (! institutionBox.contains(event.target)) {
-                setInstitutionDropdown(false);
-            }
-        });
-        syncInstitutionInterest();
     </script>
     @include('shared.language-tools')
     @include('shared.guest-live-updates')

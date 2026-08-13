@@ -235,11 +235,11 @@
                                 <input name="phone" inputmode="numeric" value="{{ old('phone', $user->phone) }}" required>
                             </div>
                             <div>
-                                <label>البريد الإلكتروني</label>
+                                <label>البريد الإلكتروني (اختياري)</label>
                                 <input name="email" type="email" inputmode="email" value="{{ old('email', $user->email) }}" placeholder="اختياري">
                             </div>
                             <div class="full institution-field" id="accountInstitutionField">
-                                <label for="accountInstitutionName">اسم الجامعة أو المعهد أو المدرسة</label>
+                                <label for="accountInstitutionName">اسم الجامعة أو المعهد أو المدرسة (اختياري)</label>
                                 <input id="accountInstitutionName" name="institution_name" value="{{ old('institution_name', $user->institution_name) }}" maxlength="255" autocomplete="off" placeholder="ابحث أو اكتب اسم الجهة التعليمية">
                                 <div id="accountInstitutionResults" class="institution-results"></div>
                             </div>
