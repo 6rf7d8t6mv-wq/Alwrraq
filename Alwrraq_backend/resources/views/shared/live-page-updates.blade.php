@@ -9,37 +9,6 @@
             : (in_array($liveRouteName, $liveReloadRoutes, true) ? 'reload' : 'main');
     @endphp
 
-    <style>
-        .live-page-indicator {
-            position: fixed;
-            left: 50%;
-            bottom: max(10px, env(safe-area-inset-bottom));
-            z-index: 290;
-            max-width: min(330px, calc(100vw - 24px));
-            padding: 7px 11px;
-            border: 1px solid #86efac;
-            border-radius: 999px;
-            background: #f0fdf4;
-            color: #166534;
-            box-shadow: 0 12px 30px rgba(15,23,42,.16);
-            font-size: 10px;
-            font-weight: 900;
-            text-align: center;
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, 8px);
-            transition: opacity .16s ease, transform .16s ease;
-        }
-        .live-page-indicator.active { opacity: 1; transform: translate(-50%, 0); }
-        .live-page-indicator.waiting { border-color: #fde68a; background: #fffbeb; color: #92400e; }
-        .live-page-indicator.error { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
-        @media (max-width: 560px) {
-            .live-page-indicator { bottom: max(7px, env(safe-area-inset-bottom)); padding: 5px 8px; font-size: 8px; }
-        }
-    </style>
-
-    <div class="live-page-indicator" id="livePageIndicator" aria-live="polite"></div>
-
     <script>
         (() => {
             if (window.__alwrraqLiveUpdatesStarted) return;
@@ -48,7 +17,6 @@
             const endpoint = @json(route('live-status'));
             const refreshMode = @json($liveRefreshMode);
             const ordersUrl = @json(route(auth()->user()->role === 'admin' ? 'admin.orders' : 'orders.index'));
-            const indicator = document.getElementById('livePageIndicator');
             const scrollKey = `alwrraq-live-scroll:${window.location.pathname}${window.location.search}`;
             let revision = @json($livePageSnapshot['revision']);
             let pricingRevision = @json($livePageSnapshot['pricing_revision']);
@@ -57,7 +25,6 @@
             let ordersCount = Number(@json($livePageSnapshot['orders_count']));
             let updating = false;
             let busyUntil = 0;
-            let indicatorTimer = null;
 
             const savedScroll = sessionStorage.getItem(scrollKey);
             if (savedScroll !== null) {
@@ -65,15 +32,8 @@
                 requestAnimationFrame(() => window.scrollTo({ top: Number(savedScroll) || 0, behavior: 'auto' }));
             }
 
-            const showIndicator = (message, state = '', duration = 3500) => {
-                if (!indicator) return;
-                indicator.textContent = message;
-                indicator.classList.remove('waiting', 'error');
-                if (state) indicator.classList.add(state);
-                indicator.classList.add('active');
-                clearTimeout(indicatorTimer);
-                if (duration > 0) indicatorTimer = setTimeout(() => indicator.classList.remove('active'), duration);
-            };
+            // Live updates stay active in the background without interrupting the interface.
+            const showIndicator = () => {};
 
             const updateOrderNotice = (unseenCount) => {
                 const link = document.querySelector(`[data-admin-orders-link], a[href="${ordersUrl}"], a[href$="/my-orders"]`);
@@ -228,7 +188,6 @@
             }, true);
             document.addEventListener('submit', () => { busyUntil = Date.now() + 5000; }, true);
 
-            showIndicator('التحديث المباشر متصل', '', 1800);
             const timer = setInterval(poll, 5000);
             poll();
             document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });

@@ -66,6 +66,17 @@ class ExampleTest extends TestCase
         }
     }
 
+    public function test_live_updates_do_not_render_connection_status_overlays(): void
+    {
+        $customerUpdates = file_get_contents(resource_path('views/shared/live-page-updates.blade.php'));
+        $adminUpdates = file_get_contents(resource_path('views/shared/admin-live-updates.blade.php'));
+
+        $this->assertStringNotContainsString('التحديث المباشر متصل', $customerUpdates);
+        $this->assertStringNotContainsString('livePageIndicator', $customerUpdates);
+        $this->assertStringNotContainsString('التحديث المباشر يعمل', $adminUpdates);
+        $this->assertStringNotContainsString('adminLiveIndicator', $adminUpdates);
+    }
+
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
     {
         $response = $this->withSession(['ui_locale' => 'en'])->get('/');

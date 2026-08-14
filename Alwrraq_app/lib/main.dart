@@ -57,7 +57,6 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   static const MethodChannel _shareChannel = MethodChannel('alwrraq/share');
 
   late final WebViewController _controller;
-  var _isLoading = true;
   var _isEnglish = false;
   var _isImportingSharedFiles = false;
   var _sharedFilesCompleted = 0;
@@ -157,13 +156,11 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           onPageStarted: (_) {
             if (!mounted) return;
             setState(() {
-              _isLoading = true;
               _errorMessage = null;
             });
           },
           onPageFinished: (_) async {
             if (!mounted) return;
-            setState(() => _isLoading = false);
             final currentUrl = Uri.tryParse(
               await _controller.currentUrl() ?? '',
             );
@@ -187,7 +184,6 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           onWebResourceError: (error) {
             if (!mounted || error.isForMainFrame != true) return;
             setState(() {
-              _isLoading = false;
               _errorMessage = _isEnglish
                   ? 'Alwrraq could not be opened. Check your internet connection and try again.'
                   : 'تعذر فتح تطبيق الورّاق. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.';
@@ -446,7 +442,6 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
 
   Future<void> _reload() async {
     setState(() {
-      _isLoading = true;
       _errorMessage = null;
     });
     await _loadSite();
@@ -462,7 +457,6 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),
-              if (_isLoading) const LinearProgressIndicator(minHeight: 3),
               if (_isImportingSharedFiles)
                 _SharedImportProgress(
                   completed: _sharedFilesCompleted,
