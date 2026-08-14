@@ -114,6 +114,7 @@
             </div>
         </div>
     </header>
+    @include('shared.mobile-sidebar')
 
     <main>
         @if (session('status'))<div class="notice">{{ session('status') }}</div>@endif

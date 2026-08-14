@@ -460,6 +460,7 @@
                 @include('shared.language-switcher')
             </nav>
         </aside>
+        @include('shared.mobile-sidebar')
 
         <main>
             @if (session('status'))

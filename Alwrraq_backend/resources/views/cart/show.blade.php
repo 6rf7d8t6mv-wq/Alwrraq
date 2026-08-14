@@ -403,6 +403,7 @@
             </div>
         </div>
     </header>
+    @include('shared.mobile-sidebar')
 
     <main>
         @if (session('status'))

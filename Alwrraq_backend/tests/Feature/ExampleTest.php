@@ -77,6 +77,30 @@ class ExampleTest extends TestCase
         $this->assertStringNotContainsString('adminLiveIndicator', $adminUpdates);
     }
 
+    public function test_mobile_sidebar_is_shared_by_customer_and_admin_headers(): void
+    {
+        $sidebar = $this->view('shared.mobile-sidebar');
+
+        $sidebar
+            ->assertSee('mobile-sidebar-toggle', false)
+            ->assertSee('mobile-sidebar-backdrop', false)
+            ->assertSee("event.key === 'Escape'", false)
+            ->assertSee("event.target.closest('a')", false);
+
+        foreach ([
+            'grades.blade.php',
+            'account/settings.blade.php',
+            'orders/index.blade.php',
+            'cart/show.blade.php',
+            'stationery/index.blade.php',
+            'resume/_customer_header.blade.php',
+            'admin/layout.blade.php',
+        ] as $viewPath) {
+            $source = file_get_contents(resource_path('views/'.$viewPath));
+            $this->assertStringContainsString("@include('shared.mobile-sidebar')", $source);
+        }
+    }
+
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
     {
         $response = $this->withSession(['ui_locale' => 'en'])->get('/');

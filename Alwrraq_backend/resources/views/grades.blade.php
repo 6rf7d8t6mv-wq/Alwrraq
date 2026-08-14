@@ -703,6 +703,7 @@
                 </div>
             </div>
         </header>
+        @include('shared.mobile-sidebar')
 
         <main class="container" id="services">
             <!-- Services Selection Screen -->

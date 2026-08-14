@@ -41,3 +41,4 @@
         </div>
     </div>
 </header>
+@include('shared.mobile-sidebar')
