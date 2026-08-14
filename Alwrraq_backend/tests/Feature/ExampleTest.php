@@ -101,6 +101,24 @@ class ExampleTest extends TestCase
         }
     }
 
+    public function test_support_chat_launcher_is_a_light_green_header_button(): void
+    {
+        $customer = User::factory()->make(['role' => 'customer']);
+        $customerChat = $this->actingAs($customer)->view('shared.chat-widget');
+
+        $customerChat
+            ->assertSee('تواصل مع خدمة العملاء')
+            ->assertSee('background: #bbf7d0', false)
+            ->assertSee("document.querySelector('.header-actions')", false)
+            ->assertDontSee('position: fixed; left: 18px; bottom: 18px', false);
+
+        $admin = User::factory()->make(['role' => 'admin']);
+        $this->actingAs($admin)
+            ->view('shared.chat-widget')
+            ->assertSee('محادثات العملاء')
+            ->assertSee("document.querySelector('.layout > aside nav')", false);
+    }
+
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
     {
         $response = $this->withSession(['ui_locale' => 'en'])->get('/');

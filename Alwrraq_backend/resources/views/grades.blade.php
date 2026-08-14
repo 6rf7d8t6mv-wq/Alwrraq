@@ -3386,7 +3386,6 @@
             document.head.appendChild(script);
         </script>
 
-        @include('shared.chat-widget')
         @include('shared.language-tools')
 
         <footer class="page-footer" id="info">

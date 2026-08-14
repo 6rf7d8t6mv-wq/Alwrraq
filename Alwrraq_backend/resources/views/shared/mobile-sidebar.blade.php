@@ -215,3 +215,4 @@
         });
     })();
 </script>
+@include('shared.chat-widget')

@@ -6,10 +6,10 @@
     <style>
         .support-chat-launcher,
         .support-chat-panel button { margin: 0; }
-        .support-chat-launcher { position: fixed; left: 18px; bottom: 18px; z-index: 90; width: auto; display: inline-flex; align-items: center; gap: 9px; min-height: 46px; padding: 12px 16px; border: 0; border-radius: 999px; background: linear-gradient(135deg, #0f4c81, #10233f); color: #ffffff; box-shadow: 0 18px 44px rgba(15, 23, 42, 0.24); cursor: pointer; font-family: inherit; font-weight: 900; }
-        .support-chat-launcher:hover { transform: translateY(-1px); }
-        body.customer-service-view .support-chat-launcher,
-        body.customer-service-view .support-chat-panel { display: none !important; }
+        .support-chat-launcher { position: relative; width: 100%; display: inline-flex; align-items: center; justify-content: flex-start; gap: 8px; min-height: 42px; margin: 0; padding: 10px 12px; border: 1px solid #86efac; border-radius: 10px; background: #bbf7d0; color: #14532d; box-shadow: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 900; line-height: 1.45; text-align: right; }
+        .support-chat-launcher:hover { background: #86efac; border-color: #4ade80; }
+        .support-chat-icon { display: inline-flex; width: 26px; height: 26px; flex: 0 0 26px; align-items: center; justify-content: center; border-radius: 8px; background: rgba(20, 83, 45, .10); font-size: 14px; line-height: 1; }
+        .support-chat-label { min-width: 0; flex: 1; }
         .support-chat-launcher .chat-count { display: none; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #dc2626; color: #ffffff; font-size: 12px; line-height: 20px; text-align: center; }
         .support-chat-launcher.has-unread .chat-count { display: inline-block; }
         .support-chat-panel { position: fixed; left: 18px; bottom: 78px; z-index: 91; width: min(420px, calc(100vw - 28px)); height: min(620px, calc(100vh - 104px)); display: none; flex-direction: column; overflow: hidden; border: 1px solid #dbe3ef; border-radius: 18px; background: #ffffff; box-shadow: 0 28px 90px rgba(15, 23, 42, 0.28); direction: rtl; }
@@ -54,7 +54,6 @@
         .support-chat-send { flex: 0 0 auto; width: auto; padding: 10px 14px; border: 0; border-radius: 11px; background: #16a34a; color: #ffffff; font-family: inherit; font-weight: 900; cursor: pointer; }
         @media (max-width: 560px) {
             body.support-chat-open { position: fixed; inset: 0; width: 100%; overflow: hidden; overscroll-behavior: none; }
-            .support-chat-launcher { left: 12px; bottom: 12px; }
             body.support-chat-open .support-chat-launcher { display: none; }
             .support-chat-panel,
             .support-chat-panel.keyboard-visible { top: var(--chat-viewport-top, 0px); right: 0; bottom: auto; left: 0; width: 100%; height: var(--chat-viewport-height, 100dvh); max-height: none; border: 0; border-radius: 0; box-shadow: none; z-index: 2147483000; }
@@ -130,7 +129,8 @@
     </style>
 
     <button class="support-chat-launcher" id="supportChatLauncher" type="button">
-        <span>{{ $chatIsAdmin ? 'محادثات العملاء' : 'تواصل مع خدمة العملاء' }}</span>
+        <span class="support-chat-icon" aria-hidden="true">💬</span>
+        <span class="support-chat-label">{{ $chatIsAdmin ? 'محادثات العملاء' : 'تواصل مع خدمة العملاء' }}</span>
         <span class="chat-count" id="supportChatCount">0</span>
     </button>
 
@@ -187,6 +187,12 @@
             const conversationsUrl = panel.dataset.conversationsUrl;
             const baseUrl = panel.dataset.baseUrl;
             const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            const headerActions = isAdmin
+                ? document.querySelector('.layout > aside nav')
+                : document.querySelector('.header-actions');
+            const insertBefore = headerActions?.querySelector('.settings-link, .settings-button, form');
+            if (headerActions) headerActions.insertBefore(launcher, insertBefore || null);
+
             let conversations = [];
             let currentConversationId = null;
             let pollTimer = null;
@@ -689,6 +695,13 @@
             };
 
             launcher.addEventListener('click', async () => {
+                document.body.classList.remove('mobile-sidebar-open');
+                document.querySelector('.mobile-sidebar-panel-open')?.classList.remove('mobile-sidebar-panel-open');
+                const sidebarToggle = document.querySelector('.mobile-sidebar-toggle');
+                sidebarToggle?.setAttribute('aria-expanded', 'false');
+                sidebarToggle?.setAttribute('aria-label', 'فتح القائمة');
+                const sidebarToggleIcon = sidebarToggle?.querySelector('.mobile-sidebar-toggle-icon');
+                if (sidebarToggleIcon) sidebarToggleIcon.textContent = '☰';
                 openChatPanel();
                 await refresh({ loadActiveMessages: true });
                 if (!mobileAdminListIsOpen()) startLiveStream();
