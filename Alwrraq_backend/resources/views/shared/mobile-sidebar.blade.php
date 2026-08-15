@@ -1,5 +1,6 @@
 <style>
     .mobile-sidebar-toggle,
+    .mobile-sidebar-edge,
     .mobile-sidebar-backdrop { display: none; }
 
     @media (max-width: 980px) {
@@ -129,6 +130,19 @@
             white-space: normal !important;
         }
 
+        .mobile-sidebar-edge {
+            position: fixed;
+            inset: 0 0 0 auto;
+            z-index: 1000;
+            display: block;
+            width: 44px;
+            height: 100vh;
+            height: 100dvh;
+            border-inline-start: 1px solid rgba(203, 213, 225, .18);
+            background: linear-gradient(180deg, #111d35 0%, #172554 52%, #0f172a 100%);
+            box-shadow: -8px 0 26px rgba(15, 23, 42, .18);
+            pointer-events: none;
+        }
         .mobile-sidebar-toggle {
             position: fixed;
             top: max(10px, env(safe-area-inset-top));
@@ -141,23 +155,30 @@
             padding: 0;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255, 255, 255, .28);
+            border: 1px solid rgba(253, 224, 71, .50);
             border-inline-end: 0;
             border-radius: 12px 0 0 12px;
-            background: #0f172a;
+            background: linear-gradient(145deg, #176b9d 0%, #0f4c81 58%, #12375d 100%);
             color: #ffffff;
-            box-shadow: 0 10px 28px rgba(15, 23, 42, .24);
+            box-shadow:
+                -5px 9px 24px rgba(15, 23, 42, .30),
+                inset 0 1px 0 rgba(255, 255, 255, .20);
             font: inherit;
             cursor: pointer;
-            touch-action: none;
+            touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
-            transition: right .24s ease, background .18s ease;
+            transition: background .18s ease, border-color .18s ease, transform .18s ease;
         }
-        .mobile-sidebar-toggle-icon { font-size: 23px; line-height: 1; }
+        .mobile-sidebar-toggle:active { transform: scale(.96); }
+        .mobile-sidebar-toggle-icon {
+            font-size: 23px;
+            line-height: 1;
+            text-shadow: 0 2px 8px rgba(15, 23, 42, .35);
+        }
         body.mobile-sidebar-open .mobile-sidebar-toggle {
-            right: var(--mobile-sidebar-width);
-            background: #b91c1c;
+            background: linear-gradient(145deg, #be123c 0%, #9f1239 56%, #881337 100%);
+            border-color: rgba(254, 205, 211, .56);
         }
         .mobile-sidebar-backdrop {
             position: fixed;
@@ -175,6 +196,7 @@
     }
 </style>
 
+<div class="mobile-sidebar-edge" aria-hidden="true"></div>
 <button class="mobile-sidebar-toggle" type="button" aria-label="فتح القائمة" aria-expanded="false">
     <span class="mobile-sidebar-toggle-icon" aria-hidden="true">☰</span>
 </button>
@@ -191,10 +213,6 @@
         if (!panel || !toggle || !backdrop) return;
 
         const icon = toggle.querySelector('.mobile-sidebar-toggle-icon');
-        const togglePositionKey = 'alwrraq-mobile-menu-top';
-        const dragThreshold = 6;
-        let dragged = false;
-        let dragState = null;
         panel.id ||= 'alwrraqSidebar';
         toggle.setAttribute('aria-controls', panel.id);
         panel.classList.add('mobile-sidebar-panel');
@@ -208,60 +226,7 @@
             icon.textContent = open ? '×' : '☰';
         };
 
-        const clampToggleTop = (top) => {
-            const safeTop = 8;
-            const safeBottom = 8;
-            return Math.min(
-                Math.max(top, safeTop),
-                Math.max(safeTop, window.innerHeight - toggle.offsetHeight - safeBottom)
-            );
-        };
-
-        const setToggleTop = (top, persist = false) => {
-            const boundedTop = clampToggleTop(Number(top) || 0);
-            toggle.style.top = `${boundedTop}px`;
-            if (persist) {
-                try { localStorage.setItem(togglePositionKey, String(boundedTop)); } catch (_) {}
-            }
-        };
-
-        try {
-            const savedTop = Number(localStorage.getItem(togglePositionKey));
-            if (Number.isFinite(savedTop) && savedTop > 0) setToggleTop(savedTop);
-        } catch (_) {}
-
-        toggle.addEventListener('pointerdown', (event) => {
-            if (!window.matchMedia('(max-width: 980px)').matches) return;
-            dragged = false;
-            dragState = {
-                pointerId: event.pointerId,
-                startY: event.clientY,
-                startTop: toggle.getBoundingClientRect().top,
-            };
-            toggle.setPointerCapture?.(event.pointerId);
-        });
-        toggle.addEventListener('pointermove', (event) => {
-            if (!dragState || dragState.pointerId !== event.pointerId) return;
-            const movement = event.clientY - dragState.startY;
-            if (Math.abs(movement) >= dragThreshold) dragged = true;
-            if (!dragged) return;
-            event.preventDefault();
-            setToggleTop(dragState.startTop + movement);
-        });
-        const finishToggleDrag = (event) => {
-            if (!dragState || dragState.pointerId !== event.pointerId) return;
-            if (dragged) setToggleTop(toggle.getBoundingClientRect().top, true);
-            dragState = null;
-        };
-        toggle.addEventListener('pointerup', finishToggleDrag);
-        toggle.addEventListener('pointercancel', finishToggleDrag);
-        toggle.addEventListener('click', (event) => {
-            if (dragged) {
-                event.preventDefault();
-                event.stopPropagation();
-                dragged = false;
-                return;
-            }
+        toggle.addEventListener('click', () => {
             setOpen(!panel.classList.contains('mobile-sidebar-panel-open'));
         });
         backdrop.addEventListener('click', () => setOpen(false));
@@ -272,9 +237,6 @@
             if (event.key === 'Escape') setOpen(false);
         });
         window.addEventListener('popstate', () => setOpen(false));
-        window.addEventListener('resize', () => {
-            if (toggle.style.top) setToggleTop(toggle.getBoundingClientRect().top, true);
-        });
         window.matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
             if (event.matches) setOpen(false);
         });
