@@ -95,7 +95,7 @@
     <main class="page">
         <section class="auth-card">
             <div class="auth-top-actions">
-                <a class="web-back" href="{{ $publicHomeUrl }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
+                <a class="web-back" href="{{ $publicHomeUrl }}"><span aria-hidden="true">←</span><span>الموقع العام</span></a>
                 @include('shared.language-switcher')
             </div>
             <div class="brand">

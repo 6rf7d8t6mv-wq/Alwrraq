@@ -142,6 +142,8 @@ class ExampleTest extends TestCase
         $this->assertStringContainsString('.auth-card { width: min(400px, 100%); padding: 14px 16px;', $source);
         $this->assertStringContainsString('.brand-logo { width: 68px; height: 68px;', $source);
         $this->assertStringContainsString("route('public.home', ['from_app' => 1])", $source);
+        $this->assertStringContainsString('<span>الموقع العام</span>', $source);
+        $this->assertStringNotContainsString('<span>الصفحة الرئيسية</span>', $source);
         $this->assertStringNotContainsString('$appMode ? route(\'home\') : route(\'public.home\')', $source);
     }
 
