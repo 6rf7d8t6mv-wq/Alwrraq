@@ -85,6 +85,7 @@ class ExampleTest extends TestCase
         $sidebar
             ->assertSee('mobile-sidebar-toggle', false)
             ->assertSee('mobile-sidebar-edge', false)
+            ->assertSee('padding-right: 44px', false)
             ->assertSee('mobile-sidebar-backdrop', false)
             ->assertSee("event.key === 'Escape'", false)
             ->assertSee("event.target.closest('a')", false)

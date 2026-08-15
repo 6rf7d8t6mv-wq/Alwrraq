@@ -4,7 +4,13 @@
     .mobile-sidebar-backdrop { display: none; }
 
     @media (max-width: 980px) {
-        body.mobile-sidebar-enabled { --mobile-sidebar-width: min(300px, 86vw); }
+        body.mobile-sidebar-enabled {
+            --mobile-sidebar-width: min(300px, 86vw);
+            box-sizing: border-box;
+            width: 100%;
+            padding-right: 44px !important;
+            overflow-x: hidden;
+        }
         body.mobile-sidebar-enabled.mobile-sidebar-open { overflow: hidden; }
         body.mobile-sidebar-enabled .layout { padding-top: 0 !important; }
 
