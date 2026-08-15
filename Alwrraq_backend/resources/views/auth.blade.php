@@ -94,7 +94,7 @@
     <main class="page">
         <section class="auth-card">
             <div class="auth-top-actions">
-                <a class="web-back" href="{{ $appMode ? route('home') : route('public.home') }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
+                <a class="web-back" href="{{ route('public.home') }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
                 @include('shared.language-switcher')
             </div>
             <div class="brand">

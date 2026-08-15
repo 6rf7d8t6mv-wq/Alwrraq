@@ -141,6 +141,8 @@ class ExampleTest extends TestCase
         $this->assertStringContainsString('@media (max-width: 520px) and (min-height: 700px)', $source);
         $this->assertStringContainsString('.auth-card { width: min(400px, 100%); padding: 14px 16px;', $source);
         $this->assertStringContainsString('.brand-logo { width: 68px; height: 68px;', $source);
+        $this->assertStringContainsString('<a class="web-back" href="{{ route(\'public.home\') }}">', $source);
+        $this->assertStringNotContainsString('$appMode ? route(\'home\') : route(\'public.home\')', $source);
     }
 
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
