@@ -91,10 +91,11 @@
 </head>
 <body>
     @php($appMode = $appMode ?? false)
+    @php($publicHomeUrl = $appMode ? route('public.home', ['from_app' => 1]) : route('public.home'))
     <main class="page">
         <section class="auth-card">
             <div class="auth-top-actions">
-                <a class="web-back" href="{{ route('public.home') }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
+                <a class="web-back" href="{{ $publicHomeUrl }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
                 @include('shared.language-switcher')
             </div>
             <div class="brand">

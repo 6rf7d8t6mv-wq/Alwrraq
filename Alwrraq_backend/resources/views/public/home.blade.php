@@ -2,6 +2,7 @@
     $siteUrl = rtrim(config('app.url') ?: url('/'), '/');
     $pageUrl = $siteUrl . '/';
     $isEnglish = session('ui_locale', 'ar') === 'en';
+    $openedFromApp = request()->boolean('from_app');
     $pageTitle = $isEnglish
         ? 'Alwrraq | Document Copying, Binding, and Stationery Across Saudi Arabia'
         : 'الورّاق | الطباعة والتصوير وتجليد الرسائل والقرطاسية في السعودية';
@@ -88,8 +89,11 @@
             ],
         ],
     ];
-    $loginUrl = route('login');
+    $loginUrl = $openedFromApp ? route('app.login') : route('login');
     $registerUrl = route('login') . '#register';
+    if ($openedFromApp) {
+        $registerUrl = route('app.login') . '#register';
+    }
 @endphp
 <!DOCTYPE html>
 <html lang="{{ session('ui_locale', 'ar') === 'en' ? 'en' : 'ar' }}" dir="{{ session('ui_locale', 'ar') === 'en' ? 'ltr' : 'rtl' }}">
@@ -150,6 +154,8 @@
         .btn.primary { background: #10233f; border-color: #10233f; color: #ffffff; box-shadow: 0 14px 28px rgba(15, 23, 42, 0.14); }
         .btn.blue { background: linear-gradient(135deg, #0f4c81, #1d6fa5); border-color: #0f4c81; color: #ffffff; box-shadow: 0 14px 28px rgba(15, 76, 129, 0.18); }
         .btn.light { background: #ffffff; color: #0f172a; }
+        .btn.app-return { background: #bbf7d0; border-color: #86efac; color: #14532d; box-shadow: 0 12px 24px rgba(22, 163, 74, 0.14); }
+        .btn.app-return:hover { background: #86efac; border-color: #4ade80; }
         .hero { padding: clamp(64px, 8vw, 104px) 0 46px; }
         .hero-grid { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr); gap: 28px; align-items: center; }
         .eyebrow { display: inline-flex; padding: 7px 13px; border-radius: 999px; background: #dbeafe; color: #0f4c81; font-size: 13px; font-weight: 900; margin-bottom: 16px; border: 1px solid #bfdbfe; }
@@ -298,6 +304,7 @@
             .brand { gap: 5px; font-size: 15px; white-space: nowrap; }
             .logo { width: 30px; height: 30px; border-radius: 8px; box-shadow: none; }
             .nav-actions { width: 100%; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3px; }
+            .nav-actions.has-app-return { grid-template-columns: repeat(2, minmax(0, 1fr)); }
             .nav-actions .btn,
             .nav-actions .language-switcher-button { width: 100%; min-width: 0; min-height: 26px !important; margin: 0; padding: 3px 2px !important; border-radius: 6px; font-size: 8px; line-height: 1.15; text-align: center; white-space: nowrap; }
             .nav-actions .language-switcher-form { width: 100% !important; min-width: 0; margin: 0; }
@@ -524,7 +531,10 @@
                 <a href="#about">من نحن</a>
                 <a href="#contact">تواصل معنا</a>
             </nav>
-            <div class="nav-actions">
+            <div class="nav-actions {{ $openedFromApp ? 'has-app-return' : '' }}">
+                @if ($openedFromApp)
+                    <a class="btn app-return" href="{{ route('app.entry') }}"><span aria-hidden="true">↩</span><span>العودة إلى التطبيق</span></a>
+                @endif
                 <a class="btn light" href="{{ $loginUrl }}">تسجيل الدخول</a>
                 <a class="btn blue" href="{{ $registerUrl }}">إنشاء حساب</a>
                 @include('shared.language-switcher')

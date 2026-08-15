@@ -141,8 +141,26 @@ class ExampleTest extends TestCase
         $this->assertStringContainsString('@media (max-width: 520px) and (min-height: 700px)', $source);
         $this->assertStringContainsString('.auth-card { width: min(400px, 100%); padding: 14px 16px;', $source);
         $this->assertStringContainsString('.brand-logo { width: 68px; height: 68px;', $source);
-        $this->assertStringContainsString('<a class="web-back" href="{{ route(\'public.home\') }}">', $source);
+        $this->assertStringContainsString("route('public.home', ['from_app' => 1])", $source);
         $this->assertStringNotContainsString('$appMode ? route(\'home\') : route(\'public.home\')', $source);
+    }
+
+    public function test_public_home_shows_a_return_to_app_button_only_for_app_visits(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertDontSee('العودة إلى التطبيق');
+
+        $this->get('/?from_app=1')
+            ->assertOk()
+            ->assertSee('العودة إلى التطبيق')
+            ->assertSee(route('app.entry'), false)
+            ->assertSee('has-app-return', false)
+            ->assertSee(route('app.login'), false);
+
+        $this->get('/app/login')
+            ->assertOk()
+            ->assertSee(route('public.home', ['from_app' => 1]), false);
     }
 
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
