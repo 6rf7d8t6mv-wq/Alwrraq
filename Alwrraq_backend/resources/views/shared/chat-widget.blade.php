@@ -190,8 +190,7 @@
             const headerActions = isAdmin
                 ? document.querySelector('.layout > aside nav')
                 : document.querySelector('.header-actions');
-            const insertBefore = headerActions?.querySelector('.settings-link, .settings-button, form');
-            if (headerActions) headerActions.insertBefore(launcher, insertBefore || null);
+            if (headerActions) headerActions.append(launcher);
 
             let conversations = [];
             let currentConversationId = null;

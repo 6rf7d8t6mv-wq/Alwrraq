@@ -80,12 +80,16 @@ class ExampleTest extends TestCase
     public function test_mobile_sidebar_is_shared_by_customer_and_admin_headers(): void
     {
         $sidebar = $this->view('shared.mobile-sidebar');
+        $languageSwitcher = file_get_contents(resource_path('views/shared/language-switcher.blade.php'));
 
         $sidebar
             ->assertSee('mobile-sidebar-toggle', false)
             ->assertSee('mobile-sidebar-backdrop', false)
             ->assertSee("event.key === 'Escape'", false)
             ->assertSee("event.target.closest('a')", false);
+
+        $this->assertStringNotContainsString('customer-menu-toggle', $languageSwitcher);
+        $this->assertStringNotContainsString('customer-menu-open', $languageSwitcher);
 
         foreach ([
             'grades.blade.php',
@@ -110,6 +114,7 @@ class ExampleTest extends TestCase
             ->assertSee('تواصل مع خدمة العملاء')
             ->assertSee('background: #bbf7d0', false)
             ->assertSee("document.querySelector('.header-actions')", false)
+            ->assertSee('headerActions.append(launcher)', false)
             ->assertDontSee('position: fixed; left: 18px; bottom: 18px', false);
 
         $admin = User::factory()->make(['role' => 'admin']);
@@ -125,6 +130,8 @@ class ExampleTest extends TestCase
 
         $this->assertStringContainsString('class="auth-top-actions"', $source);
         $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr))', $source);
+        $this->assertStringContainsString('.web-back { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; height: 36px;', $source);
+        $this->assertStringContainsString('.auth-top-actions .language-switcher-button { width: 100%; height: 36px;', $source);
         $this->assertStringNotContainsString('ادخل رقم جوالك أو بريدك الإلكتروني وكلمة المرور للمتابعة.', $source);
         $this->assertStringNotContainsString('يمكنك الدخول برقم الجوال المسجل أو البريد الإلكتروني الذي أضفته من إعدادات الحساب.', $source);
         $this->assertStringNotContainsString('اكتب الرقم بأي صيغة أرقام عربية أو إنجليزية، وسيتم تحويله تلقائيًا إلى أرقام إنجليزية.', $source);
@@ -207,7 +214,7 @@ class ExampleTest extends TestCase
     public function test_registration_is_minimal_and_mobile_header_is_a_drawer(): void
     {
         $authView = (string) file_get_contents(resource_path('views/auth.blade.php'));
-        $header = (string) file_get_contents(resource_path('views/shared/language-switcher.blade.php'));
+        $header = (string) file_get_contents(resource_path('views/shared/mobile-sidebar.blade.php'));
         $services = (string) file_get_contents(resource_path('views/grades.blade.php'));
 
         $this->assertStringContainsString('name="first_name"', $authView);
@@ -219,8 +226,8 @@ class ExampleTest extends TestCase
         $this->assertStringNotContainsString('name="institution_not_interested"', $authView);
         $this->assertStringNotContainsString('name="email"', $authView);
         $this->assertStringContainsString('رقم الجوال أو البريد الإلكتروني', $authView);
-        $this->assertStringContainsString('customer-menu-toggle', $header);
-        $this->assertStringContainsString('customer-menu-backdrop', $header);
+        $this->assertStringContainsString('mobile-sidebar-toggle', $header);
+        $this->assertStringContainsString('mobile-sidebar-backdrop', $header);
         $this->assertStringContainsString('خدمات الورّاق', $services);
         $this->assertStringNotContainsString('اختر الخدمة المطلوبة', $services);
     }

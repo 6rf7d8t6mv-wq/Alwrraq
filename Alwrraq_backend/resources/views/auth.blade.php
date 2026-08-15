@@ -11,10 +11,10 @@
         .page { min-height: 100vh; display: grid; place-items: center; padding: clamp(14px, 4vw, 24px); }
         .auth-card { width: min(430px, 100%); background: #ffffff; border: 1px solid #e5e7eb; border-radius: clamp(12px, 3vw, 14px); padding: clamp(18px, 4vw, 26px); box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10); }
         .auth-top-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: stretch; margin-bottom: 28px; }
-        .web-back { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; min-height: 36px; margin: 0; padding: 7px 9px; border-radius: 9px; background: linear-gradient(135deg, #0f4c81, #1d6fa5); color: #fff; text-decoration: none; font-size: 11px; font-weight: 900; border: 1px solid rgba(96, 165, 250, 0.35); box-shadow: 0 7px 16px rgba(15, 76, 129, 0.15); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+        .web-back { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; height: 36px; min-height: 36px; margin: 0; padding: 7px 9px; border-radius: 9px; background: linear-gradient(135deg, #0f4c81, #1d6fa5); color: #fff; text-decoration: none; font-size: 11px; font-weight: 900; line-height: 1.4; border: 1px solid rgba(96, 165, 250, 0.35); box-shadow: 0 7px 16px rgba(15, 76, 129, 0.15); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
         .web-back:hover { background: linear-gradient(135deg, #123f68, #0f4c81); transform: translateY(-1px); box-shadow: 0 9px 20px rgba(15, 76, 129, 0.21); }
-        .auth-top-actions .language-switcher-form { width: 100%; }
-        .auth-top-actions .language-switcher-button { min-height: 36px; padding: 7px 9px; border-radius: 9px; gap: 5px; font-size: 11px; }
+        .auth-top-actions .language-switcher-form { width: 100%; height: 36px; margin: 0; }
+        .auth-top-actions .language-switcher-button { width: 100%; height: 36px; min-height: 36px; margin: 0; padding: 7px 9px; border-radius: 9px; gap: 5px; font-size: 11px; line-height: 1.4; }
         .brand { margin-bottom: 22px; text-align: center; }
         .brand-logo { width: 92px; height: 92px; display: block; margin: 0 auto 12px; border-radius: 22px; object-fit: cover; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12); }
         h1 { margin: 0; font-size: clamp(24px, 7vw, 28px); }
