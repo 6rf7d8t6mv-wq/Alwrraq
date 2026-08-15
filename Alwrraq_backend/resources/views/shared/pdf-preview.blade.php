@@ -68,6 +68,11 @@
             for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
                 const canvas = document.createElement('canvas');
                 canvas.className = 'pdf-page';
+                // PDF.js receives positioned glyphs from the PDF itself. Letting
+                // the canvas inherit RTL from the Arabic page reverses glyph runs
+                // in some Chromium/WebView versions and corrupts Arabic documents.
+                canvas.setAttribute('dir', 'ltr');
+                canvas.style.direction = 'ltr';
                 canvas.dataset.page = String(pageNumber);
                 canvas.style.width = `${availableWidth}px`;
                 canvas.style.height = `${Math.round(availableWidth * 1.414)}px`;
@@ -82,6 +87,7 @@
                 const baseViewport = page.getViewport({ scale: 1 });
                 const viewport = page.getViewport({ scale: availableWidth / baseViewport.width });
                 const context = canvas.getContext('2d');
+                context.direction = 'ltr';
 
                 canvas.width = Math.floor(viewport.width * pixelRatio);
                 canvas.height = Math.floor(viewport.height * pixelRatio);

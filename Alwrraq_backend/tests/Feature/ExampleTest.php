@@ -120,6 +120,8 @@ class ExampleTest extends TestCase
         $this->assertStringContainsString('compactViewer ? 1.35 : 2', $preview);
         $this->assertStringContainsString('let renderQueue = Promise.resolve()', $preview);
         $this->assertStringContainsString('previewOwnsScroll ? preview : null', $preview);
+        $this->assertStringContainsString("canvas.setAttribute('dir', 'ltr')", $preview);
+        $this->assertStringContainsString("context.direction = 'ltr'", $preview);
         $this->assertStringNotContainsString("document.createElement('iframe')", $preview);
     }
 
