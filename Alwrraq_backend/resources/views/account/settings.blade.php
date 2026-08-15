@@ -351,6 +351,24 @@
                 </div>
             </div>
 
+            <div id="biometricLoginSection" class="section" hidden>
+                <div class="section-header">
+                    <h2 class="section-title">الدخول بالبصمة وFace ID</h2>
+                </div>
+                <div data-biometric-disabled>
+                    <p>فعّل الدخول الآمن والسريع إلى التطبيق باستخدام <span data-biometric-label>بصمة الجهاز</span>. لن تُحفظ كلمة المرور على جهازك.</p>
+                    <div class="section-actions">
+                        <button class="secondary" type="button" onclick="window.AlwrraqBiometric?.postMessage(JSON.stringify({action:'enable'}))">تفعيل الدخول بالبصمة</button>
+                    </div>
+                </div>
+                <div data-biometric-enabled hidden>
+                    <p>الدخول باستخدام <span data-biometric-label>بصمة الجهاز</span> مفعّل وآمن على هذا الجهاز.</p>
+                    <div class="section-actions">
+                        <button class="secondary" type="button" onclick="window.AlwrraqBiometric?.postMessage(JSON.stringify({action:'disable'}))">إيقاف الدخول بالبصمة</button>
+                    </div>
+                </div>
+            </div>
+
             <div class="section">
                 <div class="section-header">
                     <h2 class="section-title">حذف الحساب</h2>

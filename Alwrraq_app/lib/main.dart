@@ -1,11 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:local_auth/local_auth.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 
@@ -41,6 +44,9 @@ class AlwrraqWebApp extends StatefulWidget {
 }
 
 class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
+  static const _biometricTokenKey = 'alwrraq_biometric_token';
+  static const _biometricDeviceKey = 'alwrraq_biometric_device_id';
+  static const _biometricPromptKey = 'alwrraq_biometric_prompt_dismissed';
   static const String _configuredSiteUrl = String.fromEnvironment(
     'ALWRRAQ_SITE_URL',
     defaultValue: 'https://alwrraq.com',
@@ -55,9 +61,19 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
     'alwrraq/security',
   );
   static const MethodChannel _shareChannel = MethodChannel('alwrraq/share');
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage();
 
   late final WebViewController _controller;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  final WebViewCookieManager _cookieManager = WebViewCookieManager();
   var _isEnglish = false;
+  var _biometricSupported = false;
+  var _biometricEnabled = false;
+  var _biometricGateLocked = false;
+  var _biometricBusy = false;
+  var _biometricOfferShown = false;
+  var _biometricLoginPending = false;
+  var _biometricLabel = 'بصمة الجهاز';
   var _isImportingSharedFiles = false;
   var _sharedFilesCompleted = 0;
   var _sharedFilesTotal = 0;
@@ -98,6 +114,12 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
         'AlwrraqShareService',
         onMessageReceived: (message) {
           unawaited(_handleSharedServiceSelection(message.message));
+        },
+      )
+      ..addJavaScriptChannel(
+        'AlwrraqBiometric',
+        onMessageReceived: (message) {
+          unawaited(_handleBiometricMessage(message.message));
         },
       )
       ..setNavigationDelegate(
@@ -164,6 +186,13 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
             final currentUrl = Uri.tryParse(
               await _controller.currentUrl() ?? '',
             );
+            if (_biometricLoginPending) {
+              _biometricLoginPending = false;
+              if (currentUrl?.path == '/app/login') {
+                await _secureStorage.delete(key: _biometricTokenKey);
+                if (mounted) setState(() => _biometricEnabled = false);
+              }
+            }
             if (_pendingSharedFiles.isNotEmpty &&
                 currentUrl?.host == _siteUri.host &&
                 const {'/', '/app', '/home'}.contains(currentUrl?.path) &&
@@ -180,6 +209,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
             if (_isEnglish != isEnglish) {
               setState(() => _isEnglish = isEnglish);
             }
+            await _syncBiometricStateToWeb();
           },
           onWebResourceError: (error) {
             if (!mounted || error.isForMainFrame != true) return;
@@ -214,19 +244,24 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
       }
     });
 
+    var hasInitialShare = false;
     try {
       final initialShare = await _shareChannel.invokeMethod<Object?>(
         'getInitialShare',
       );
-      if (await _acceptSharedFiles(initialShare)) return;
+      hasInitialShare = await _acceptSharedFiles(initialShare, loadPage: false);
     } on PlatformException {
       // The normal web experience remains available on unsupported platforms.
     }
 
-    await _loadSite();
+    if (await _prepareBiometricEntry()) return;
+    await _loadSite(hasInitialShare ? _sharedServicesUri() : null);
   }
 
-  Future<bool> _acceptSharedFiles(Object? payload) async {
+  Future<bool> _acceptSharedFiles(
+    Object? payload, {
+    bool loadPage = true,
+  }) async {
     if (payload is! List || payload.isEmpty) return false;
 
     final files = <SharedImportFile>[];
@@ -266,8 +301,249 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
         _sharedFilesCompleted = 0;
       });
     }
-    await _loadSite(shareUri);
+    if (loadPage) await _loadSite(shareUri);
     return true;
+  }
+
+  Future<bool> _prepareBiometricEntry() async {
+    if (!const {
+      TargetPlatform.android,
+      TargetPlatform.iOS,
+    }.contains(defaultTargetPlatform)) {
+      return false;
+    }
+
+    await _refreshBiometricSupport();
+    final token = await _secureStorage.read(key: _biometricTokenKey);
+    final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
+    _biometricEnabled = token != null && deviceId != null;
+    if (!_biometricEnabled) return false;
+
+    if (mounted) {
+      setState(() {
+        _biometricGateLocked = true;
+        _biometricBusy = true;
+      });
+    }
+
+    final authenticated = await _authenticateBiometrically();
+    if (!mounted) return true;
+    setState(() => _biometricBusy = false);
+    if (!authenticated) return true;
+
+    await _submitBiometricLogin(token: token!, deviceId: deviceId!);
+    setState(() => _biometricGateLocked = false);
+    return true;
+  }
+
+  Future<void> _refreshBiometricSupport() async {
+    try {
+      final supported = await _localAuth.isDeviceSupported();
+      final canCheck = await _localAuth.canCheckBiometrics;
+      final available = await _localAuth.getAvailableBiometrics();
+      final label = available.contains(BiometricType.face)
+          ? 'Face ID'
+          : available.contains(BiometricType.fingerprint)
+          ? 'بصمة الإصبع'
+          : 'بصمة الجهاز';
+      if (!mounted) return;
+      setState(() {
+        _biometricSupported = supported && canCheck && available.isNotEmpty;
+        _biometricLabel = label;
+      });
+    } on Object {
+      if (mounted) setState(() => _biometricSupported = false);
+    }
+  }
+
+  Future<bool> _authenticateBiometrically() async {
+    if (!_biometricSupported) return false;
+    try {
+      return await _localAuth.authenticate(
+        localizedReason: _isEnglish
+            ? 'Authenticate to open Alwrraq'
+            : 'تحقق من هويتك لفتح تطبيق الورّاق',
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
+      );
+    } on Object {
+      return false;
+    }
+  }
+
+  Future<void> _submitBiometricLogin({
+    required String token,
+    required String deviceId,
+  }) async {
+    _biometricLoginPending = true;
+    final body = Uri(
+      queryParameters: {'token': token, 'device_id': deviceId},
+    ).query;
+    await _controller.loadRequest(
+      Uri.parse('${_siteUri.origin}/app/biometric/login'),
+      method: LoadRequestMethod.post,
+      headers: const {'Content-Type': 'application/x-www-form-urlencoded'},
+      body: Uint8List.fromList(utf8.encode(body)),
+    );
+  }
+
+  Future<void> _handleBiometricMessage(String message) async {
+    final currentUrl = Uri.tryParse(await _controller.currentUrl() ?? '');
+    if (currentUrl?.scheme != _siteUri.scheme ||
+        currentUrl?.host != _siteUri.host) {
+      return;
+    }
+
+    Map<String, dynamic> data;
+    try {
+      data = (jsonDecode(message) as Map).cast<String, dynamic>();
+    } on Object {
+      return;
+    }
+
+    switch (data['action']) {
+      case 'session':
+        await _syncBiometricStateToWeb();
+        final dismissed = await _secureStorage.read(key: _biometricPromptKey);
+        if (!_biometricEnabled &&
+            _biometricSupported &&
+            dismissed != 'true' &&
+            !_biometricOfferShown) {
+          _biometricOfferShown = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) unawaited(_offerBiometricEnrollment());
+          });
+        }
+        return;
+      case 'enable':
+        await _enableBiometricLogin();
+        return;
+      case 'disable':
+        await _disableBiometricLogin();
+        return;
+      case 'issued':
+        final token = data['token']?.toString();
+        if (token == null || token.isEmpty) return;
+        await _secureStorage.write(key: _biometricTokenKey, value: token);
+        await _secureStorage.write(key: _biometricPromptKey, value: 'true');
+        if (mounted) setState(() => _biometricEnabled = true);
+        await _syncBiometricStateToWeb();
+        _showBiometricNotice('تم تفعيل الدخول بـ $_biometricLabel بنجاح.');
+        return;
+      case 'revoked':
+        await _secureStorage.delete(key: _biometricTokenKey);
+        if (mounted) setState(() => _biometricEnabled = false);
+        await _syncBiometricStateToWeb();
+        _showBiometricNotice('تم إيقاف الدخول بالبصمة على هذا الجهاز.');
+        return;
+      case 'error':
+        _showBiometricNotice(
+          data['message']?.toString() ?? 'تعذر إكمال العملية.',
+        );
+        return;
+    }
+  }
+
+  Future<void> _offerBiometricEnrollment() async {
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        icon: const Icon(Icons.fingerprint_rounded, size: 46),
+        title: Text('تفعيل $_biometricLabel؟'),
+        content: const Text(
+          'ادخل إلى تطبيق الورّاق بسرعة وأمان دون حفظ كلمة المرور على جهازك.',
+          textAlign: TextAlign.center,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('لاحقًا'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('تفعيل الآن'),
+          ),
+        ],
+      ),
+    );
+    if (accepted == true) {
+      await _enableBiometricLogin();
+    } else {
+      await _secureStorage.write(key: _biometricPromptKey, value: 'true');
+    }
+  }
+
+  Future<void> _enableBiometricLogin() async {
+    await _refreshBiometricSupport();
+    if (!_biometricSupported) {
+      _showBiometricNotice('فعّل بصمة الوجه أو الإصبع من إعدادات جهازك أولًا.');
+      return;
+    }
+    if (!await _authenticateBiometrically()) return;
+
+    final deviceId = await _getOrCreateDeviceId();
+    final platform = defaultTargetPlatform == TargetPlatform.iOS
+        ? 'ios'
+        : 'android';
+    final deviceName = platform == 'ios' ? 'جهاز Apple' : 'جهاز Android';
+    await _controller.runJavaScript(
+      'window.alwrraqIssueBiometricToken?.(${jsonEncode({'device_id': deviceId, 'device_name': deviceName, 'platform': platform})});',
+    );
+  }
+
+  Future<void> _disableBiometricLogin() async {
+    final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
+    if (deviceId == null) return;
+    await _controller.runJavaScript(
+      'window.alwrraqRevokeBiometricToken?.(${jsonEncode(deviceId)});',
+    );
+  }
+
+  Future<String> _getOrCreateDeviceId() async {
+    final existing = await _secureStorage.read(key: _biometricDeviceKey);
+    if (existing != null) return existing;
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+    final value = base64UrlEncode(bytes).replaceAll('=', '');
+    await _secureStorage.write(key: _biometricDeviceKey, value: value);
+    return value;
+  }
+
+  Future<void> _syncBiometricStateToWeb() async {
+    try {
+      await _controller.runJavaScript(
+        'window.alwrraqSetBiometricState?.(${jsonEncode({'supported': _biometricSupported, 'enabled': _biometricEnabled, 'label': _biometricLabel})});',
+      );
+    } on Object {
+      // Public and login pages do not expose the authenticated app bridge.
+    }
+  }
+
+  void _showBiometricNotice(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<void> _retryBiometricGate() async {
+    setState(() => _biometricBusy = true);
+    final authenticated = await _authenticateBiometrically();
+    if (!mounted) return;
+    setState(() => _biometricBusy = false);
+    if (!authenticated) return;
+    final token = await _secureStorage.read(key: _biometricTokenKey);
+    final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
+    if (token == null || deviceId == null) return;
+    await _submitBiometricLogin(token: token, deviceId: deviceId);
+    if (mounted) setState(() => _biometricGateLocked = false);
+  }
+
+  Future<void> _usePasswordInstead() async {
+    await _cookieManager.clearCookies();
+    if (!mounted) return;
+    setState(() => _biometricGateLocked = false);
+    await _loadSite(Uri.parse('${_siteUri.origin}/app/login'));
   }
 
   Uri _sharedServicesUri() {
@@ -457,6 +733,14 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           child: Stack(
             children: [
               WebViewWidget(controller: _controller),
+              if (_biometricGateLocked)
+                _BiometricGate(
+                  busy: _biometricBusy,
+                  label: _biometricLabel,
+                  isEnglish: _isEnglish,
+                  onAuthenticate: _retryBiometricGate,
+                  onUsePassword: _usePasswordInstead,
+                ),
               if (_isImportingSharedFiles)
                 _SharedImportProgress(
                   completed: _sharedFilesCompleted,
@@ -475,6 +759,121 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
                   isEnglish: _isEnglish,
                 ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BiometricGate extends StatelessWidget {
+  const _BiometricGate({
+    required this.busy,
+    required this.label,
+    required this.isEnglish,
+    required this.onAuthenticate,
+    required this.onUsePassword,
+  });
+
+  final bool busy;
+  final String label;
+  final bool isEnglish;
+  final VoidCallback onAuthenticate;
+  final VoidCallback onUsePassword;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: const Color(0xFFF4F7FA),
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 390),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(26, 30, 26, 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(28),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x1F0F172A),
+                    blurRadius: 38,
+                    offset: Offset(0, 18),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 82,
+                    height: 82,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE9F2FA),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.fingerprint_rounded,
+                      color: Color(0xFF0F4C81),
+                      size: 52,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    isEnglish ? 'Welcome back' : 'مرحبًا بعودتك',
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 23,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    isEnglish
+                        ? 'Use biometrics to securely open Alwrraq.'
+                        : 'استخدم $label لفتح تطبيق الورّاق بأمان.',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Color(0xFF64748B),
+                      height: 1.6,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: FilledButton.icon(
+                      onPressed: busy ? null : onAuthenticate,
+                      icon: busy
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.fingerprint_rounded),
+                      label: Text(isEnglish ? 'Unlock' : 'الدخول بـ $label'),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F4C81),
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: busy ? null : onUsePassword,
+                    child: Text(
+                      isEnglish
+                          ? 'Use password instead'
+                          : 'الدخول بكلمة المرور',
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

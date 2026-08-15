@@ -5,6 +5,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminServiceDefinitionController;
 use App\Http\Controllers\AdminServicePricingController;
 use App\Http\Controllers\AdminStationeryProductController;
+use App\Http\Controllers\AppBiometricAuthController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AutomaticTranslationController;
 use App\Http\Controllers\CartController;
@@ -36,6 +37,17 @@ Route::middleware('guest')->group(function () {
 
 Route::get('/app', [AuthController::class, 'showAppEntry'])->name('app.entry');
 Route::get('/app/login', [AuthController::class, 'showAppLogin'])->name('app.login');
+Route::post('/app/biometric/login', [AppBiometricAuthController::class, 'login'])
+    ->middleware(['guest', 'throttle:10,1'])
+    ->name('app.biometric.login');
+Route::middleware('auth')->group(function () {
+    Route::post('/app/biometric/token', [AppBiometricAuthController::class, 'issue'])
+        ->middleware('throttle:5,1')
+        ->name('app.biometric.issue');
+    Route::delete('/app/biometric/token', [AppBiometricAuthController::class, 'revoke'])
+        ->middleware('throttle:10,1')
+        ->name('app.biometric.revoke');
+});
 
 Route::get('/educational-institutions', [EducationalInstitutionController::class, 'index'])
     ->name('educational-institutions.index');

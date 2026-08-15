@@ -17,6 +17,10 @@ class AuthController extends Controller
 
     public function showAppEntry(Request $request)
     {
+        if (Auth::check()) {
+            $request->session()->put('auth_surface', 'app');
+        }
+
         return redirect()->route('home', $request->query());
     }
 

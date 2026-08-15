@@ -187,6 +187,7 @@ class ApiController extends Controller
         $user->update([
             'password' => $data['password'],
         ]);
+        $user->biometricLoginTokens()->delete();
 
         return response()->json([
             'success' => true,

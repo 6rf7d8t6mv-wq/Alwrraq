@@ -495,7 +495,11 @@ class AdminController extends Controller
         }
         unset($data['account_verified']);
 
+        $passwordWasChanged = $request->boolean('change_password');
         $user->update($data);
+        if ($passwordWasChanged) {
+            $user->biometricLoginTokens()->delete();
+        }
 
         return redirect()
             ->route($user->role === 'admin' ? 'admin.users' : 'admin.customers')
@@ -624,12 +628,16 @@ class AdminController extends Controller
 
         $data = $request->validate($rules);
 
-        if (blank($data['password'] ?? null)) {
+        $passwordWasChanged = filled($data['password'] ?? null);
+        if (! $passwordWasChanged) {
             unset($data['password']);
         }
         unset($data['current_password'], $data['password_confirmation']);
 
         $user->update($data);
+        if ($passwordWasChanged) {
+            $user->biometricLoginTokens()->delete();
+        }
 
         return redirect()->route('admin.settings')->with('status', 'تم تحديث إعدادات حسابك.');
     }

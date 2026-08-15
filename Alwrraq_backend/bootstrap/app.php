@@ -1,10 +1,10 @@
 <?php
 
+use App\Http\Middleware\ReconcileMoyasarPayments;
+use App\Http\Middleware\TrackUserPresence;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\ReconcileMoyasarPayments;
-use App\Http\Middleware\TrackUserPresence;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'upload-file',
             'payments/moyasar/webhook',
+            'app/biometric/login',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

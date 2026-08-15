@@ -216,3 +216,4 @@
     })();
 </script>
 @include('shared.chat-widget')
+@include('shared.biometric-bridge')

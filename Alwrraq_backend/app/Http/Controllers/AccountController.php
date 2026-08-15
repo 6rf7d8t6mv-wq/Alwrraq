@@ -30,7 +30,7 @@ class AccountController extends Controller
         ]);
 
         $user->update([
-            'name' => trim($data['first_name'] . ' ' . $data['second_name']),
+            'name' => trim($data['first_name'].' '.$data['second_name']),
             'phone' => $data['phone'],
             'email' => $data['email'] ?? null,
             'institution_name' => filled($data['institution_name'] ?? null)
@@ -74,7 +74,7 @@ class AccountController extends Controller
             'password' => ['required', 'confirmed', Password::min(6), 'regex:/^[A-Za-z0-9]+$/'],
         ]);
 
-        if (!Hash::check($data['current_password'], $user->password)) {
+        if (! Hash::check($data['current_password'], $user->password)) {
             return back()->withErrors([
                 'current_password' => 'كلمة المرور القديمة غير صحيحة.',
             ]);
@@ -83,6 +83,7 @@ class AccountController extends Controller
         $user->update([
             'password' => $data['password'],
         ]);
+        $user->biometricLoginTokens()->delete();
 
         return redirect()->route('account.settings')->with('status', 'تم تغيير كلمة المرور بنجاح.');
     }

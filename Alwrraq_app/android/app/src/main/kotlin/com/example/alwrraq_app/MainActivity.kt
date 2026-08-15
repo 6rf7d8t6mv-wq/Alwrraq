@@ -10,13 +10,13 @@ import android.webkit.MimeTypeMap
 import android.webkit.CookieManager
 import android.view.WindowManager
 import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
 
-class MainActivity : FlutterActivity() {
+class MainActivity : FlutterFragmentActivity() {
     private val downloadsChannel = "alwrraq/downloads"
     private val securityChannel = "alwrraq/security"
     private val shareChannelName = "alwrraq/share"
