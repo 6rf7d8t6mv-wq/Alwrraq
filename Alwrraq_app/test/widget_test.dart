@@ -10,6 +10,12 @@ void main() {
     expect(const AlwrraqApp(), isA<AlwrraqApp>());
   });
 
+  test('Biometric background lock uses a fixed 30 second grace period', () {
+    expect(biometricBackgroundLockTimeout, const Duration(seconds: 30));
+    expect(shouldLockAfterBackground(const Duration(seconds: 29)), isFalse);
+    expect(shouldLockAfterBackground(const Duration(seconds: 30)), isTrue);
+  });
+
   group('Android WebView file filters', () {
     test('PDF fields only expose PDF files', () {
       final plan = androidFileSelectionPlan(['application/pdf']);

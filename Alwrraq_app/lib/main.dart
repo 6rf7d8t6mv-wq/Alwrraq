@@ -15,6 +15,12 @@ import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'android_file_selector.dart';
 import 'shared_import.dart';
 
+const Duration biometricBackgroundLockTimeout = Duration(seconds: 30);
+
+bool shouldLockAfterBackground(Duration elapsed) {
+  return elapsed >= biometricBackgroundLockTimeout;
+}
+
 void main() {
   runApp(const AlwrraqApp());
 }
@@ -43,7 +49,8 @@ class AlwrraqWebApp extends StatefulWidget {
   State<AlwrraqWebApp> createState() => _AlwrraqWebAppState();
 }
 
-class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
+class _AlwrraqWebAppState extends State<AlwrraqWebApp>
+    with WidgetsBindingObserver {
   static const _biometricTokenKey = 'alwrraq_biometric_token';
   static const _biometricDeviceKey = 'alwrraq_biometric_device_id';
   static const _biometricPromptKey = 'alwrraq_biometric_prompt_dismissed';
@@ -69,10 +76,19 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   var _isEnglish = false;
   var _biometricSupported = false;
   var _biometricEnabled = false;
-  var _biometricGateLocked = false;
-  var _biometricBusy = false;
+  var _biometricGateLocked = const {
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+  }.contains(defaultTargetPlatform);
+  var _biometricBusy = const {
+    TargetPlatform.android,
+    TargetPlatform.iOS,
+  }.contains(defaultTargetPlatform);
   var _biometricOfferShown = false;
   var _biometricLoginPending = false;
+  var _biometricAuthenticationInProgress = false;
+  var _resumeUnlockInProgress = false;
+  DateTime? _backgroundedAt;
   var _biometricLabel = 'بصمة الجهاز';
   var _isImportingSharedFiles = false;
   var _sharedFilesCompleted = 0;
@@ -84,6 +100,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF3F4F6))
@@ -187,10 +204,28 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
               await _controller.currentUrl() ?? '',
             );
             if (_biometricLoginPending) {
-              _biometricLoginPending = false;
-              if (currentUrl?.path == '/app/login') {
+              if (currentUrl?.path == '/home') {
+                _biometricLoginPending = false;
+                if (mounted) {
+                  setState(() {
+                    _biometricBusy = false;
+                    _biometricGateLocked = false;
+                  });
+                }
+              } else if (currentUrl?.path == '/app/biometric/login' ||
+                  currentUrl?.path == '/app/login') {
+                _biometricLoginPending = false;
                 await _secureStorage.delete(key: _biometricTokenKey);
-                if (mounted) setState(() => _biometricEnabled = false);
+                if (mounted) {
+                  setState(() {
+                    _biometricBusy = false;
+                    _biometricEnabled = false;
+                    _biometricGateLocked = true;
+                  });
+                }
+                _showBiometricNotice(
+                  'انتهت صلاحية الدخول بالبصمة. استخدم كلمة المرور ثم فعّلها من جديد.',
+                );
               }
             }
             if (_pendingSharedFiles.isNotEmpty &&
@@ -213,6 +248,23 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
           },
           onWebResourceError: (error) {
             if (!mounted || error.isForMainFrame != true) return;
+            // iOS reports NSURLErrorCancelled (-999) and Android reports
+            // ERR_ABORTED when a normal link replaces the current WebView page.
+            // File preview links trigger this more often because the viewer also
+            // starts authenticated PDF/Word requests. It is not a connection
+            // failure and must not cover the successfully loaded viewer.
+            final navigationWasReplaced =
+                error.errorCode == -999 ||
+                error.description.contains('ERR_ABORTED');
+            if (navigationWasReplaced) return;
+            if (_biometricLoginPending) {
+              _biometricLoginPending = false;
+              setState(() => _biometricBusy = false);
+              _showBiometricNotice(
+                'تعذر التحقق من الدخول الآمن. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.',
+              );
+              return;
+            }
             setState(() {
               _errorMessage = _isEnglish
                   ? 'Alwrraq could not be opened. Check your internet connection and try again.'
@@ -222,6 +274,51 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
         ),
       );
     unawaited(_initializeWebView());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (!const {
+          TargetPlatform.android,
+          TargetPlatform.iOS,
+        }.contains(defaultTargetPlatform) ||
+        !_biometricEnabled ||
+        _biometricAuthenticationInProgress) {
+      return;
+    }
+
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden) {
+      _backgroundedAt ??= DateTime.now();
+      if (mounted && !_biometricGateLocked) {
+        setState(() => _biometricGateLocked = true);
+      }
+      return;
+    }
+
+    if (state != AppLifecycleState.resumed) return;
+
+    final backgroundedAt = _backgroundedAt;
+    _backgroundedAt = null;
+    if (backgroundedAt == null) return;
+
+    final shouldLock = shouldLockAfterBackground(
+      DateTime.now().difference(backgroundedAt),
+    );
+    if (!shouldLock) {
+      if (mounted && !_biometricLoginPending) {
+        setState(() => _biometricGateLocked = false);
+      }
+      return;
+    }
+
+    unawaited(_unlockAfterResume());
   }
 
   Future<void> _initializeWebView() async {
@@ -317,7 +414,15 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
     final token = await _secureStorage.read(key: _biometricTokenKey);
     final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
     _biometricEnabled = token != null && deviceId != null;
-    if (!_biometricEnabled) return false;
+    if (!_biometricEnabled) {
+      if (mounted) {
+        setState(() {
+          _biometricGateLocked = false;
+          _biometricBusy = false;
+        });
+      }
+      return false;
+    }
 
     if (mounted) {
       setState(() {
@@ -326,13 +431,15 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
       });
     }
 
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return true;
     final authenticated = await _authenticateBiometrically();
     if (!mounted) return true;
     setState(() => _biometricBusy = false);
     if (!authenticated) return true;
 
+    setState(() => _biometricBusy = true);
     await _submitBiometricLogin(token: token!, deviceId: deviceId!);
-    setState(() => _biometricGateLocked = false);
     return true;
   }
 
@@ -357,7 +464,10 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   }
 
   Future<bool> _authenticateBiometrically() async {
-    if (!_biometricSupported) return false;
+    if (!_biometricSupported || _biometricAuthenticationInProgress) {
+      return false;
+    }
+    _biometricAuthenticationInProgress = true;
     try {
       return await _localAuth.authenticate(
         localizedReason: _isEnglish
@@ -368,6 +478,8 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
       );
     } on Object {
       return false;
+    } finally {
+      _biometricAuthenticationInProgress = false;
     }
   }
 
@@ -527,16 +639,59 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
   }
 
   Future<void> _retryBiometricGate() async {
+    if (_biometricAuthenticationInProgress || _biometricLoginPending) return;
+    final token = await _secureStorage.read(key: _biometricTokenKey);
+    final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
+    if (token == null || deviceId == null) {
+      _showBiometricNotice(
+        'انتهت صلاحية الدخول بالبصمة. استخدم كلمة المرور ثم فعّلها من جديد.',
+      );
+      return;
+    }
     setState(() => _biometricBusy = true);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
     final authenticated = await _authenticateBiometrically();
     if (!mounted) return;
     setState(() => _biometricBusy = false);
     if (!authenticated) return;
-    final token = await _secureStorage.read(key: _biometricTokenKey);
-    final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
-    if (token == null || deviceId == null) return;
+    setState(() => _biometricBusy = true);
     await _submitBiometricLogin(token: token, deviceId: deviceId);
-    if (mounted) setState(() => _biometricGateLocked = false);
+  }
+
+  Future<void> _unlockAfterResume() async {
+    if (_resumeUnlockInProgress ||
+        _biometricAuthenticationInProgress ||
+        _biometricLoginPending ||
+        !mounted) {
+      return;
+    }
+    _resumeUnlockInProgress = true;
+    try {
+      setState(() {
+        _biometricGateLocked = true;
+        _biometricBusy = true;
+      });
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) return;
+
+      final authenticated = await _authenticateBiometrically();
+      if (!mounted) return;
+      setState(() => _biometricBusy = false);
+      if (!authenticated) return;
+
+      final token = await _secureStorage.read(key: _biometricTokenKey);
+      final deviceId = await _secureStorage.read(key: _biometricDeviceKey);
+      if (token == null || deviceId == null) {
+        setState(() => _biometricEnabled = false);
+        return;
+      }
+
+      setState(() => _biometricBusy = true);
+      await _submitBiometricLogin(token: token, deviceId: deviceId);
+    } finally {
+      _resumeUnlockInProgress = false;
+    }
   }
 
   Future<void> _usePasswordInstead() async {
@@ -720,7 +875,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
     setState(() {
       _errorMessage = null;
     });
-    await _loadSite();
+    await _controller.reload();
   }
 
   @override
@@ -732,7 +887,7 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
         body: SafeArea(
           child: Stack(
             children: [
-              WebViewWidget(controller: _controller),
+              if (!_biometricGateLocked) WebViewWidget(controller: _controller),
               if (_biometricGateLocked)
                 _BiometricGate(
                   busy: _biometricBusy,
@@ -741,18 +896,20 @@ class _AlwrraqWebAppState extends State<AlwrraqWebApp> {
                   onAuthenticate: _retryBiometricGate,
                   onUsePassword: _usePasswordInstead,
                 ),
-              if (_isImportingSharedFiles)
+              if (!_biometricGateLocked && _isImportingSharedFiles)
                 _SharedImportProgress(
                   completed: _sharedFilesCompleted,
                   total: _sharedFilesTotal,
                   isEnglish: _isEnglish,
                 ),
-              if (_shareErrorMessage != null && !_isImportingSharedFiles)
+              if (!_biometricGateLocked &&
+                  _shareErrorMessage != null &&
+                  !_isImportingSharedFiles)
                 _SharedImportError(
                   message: _shareErrorMessage!,
                   onDismiss: () => setState(() => _shareErrorMessage = null),
                 ),
-              if (_errorMessage != null)
+              if (!_biometricGateLocked && _errorMessage != null)
                 _ConnectionError(
                   message: _errorMessage!,
                   onRetry: _reload,

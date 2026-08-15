@@ -62,7 +62,7 @@
             .store-head { margin-bottom: 8px; }
             .store-title h1 { font-size: 18px; }
             .store-title p { font-size: 9px; }
-            .cart-link { top: 96px; left: 12px; padding: 7px 9px; font-size: 10px; }
+            .cart-link { top: max(10px, env(safe-area-inset-top)); left: 10px; padding: 7px 9px; font-size: 10px; }
             .search-form { margin-bottom: 9px; padding: 5px; }
             .search-form input { padding: 7px 8px; }
             .search-form button { padding: 6px 10px; font-size: 10px; }
@@ -123,7 +123,6 @@
             <div class="store-head">
                 <div class="store-title">
                     <h1>القرطاسية</h1>
-                    <p>اختر المنتجات وأضفها أو أزلها من السلة مباشرة.</p>
                 </div>
                 <a class="cart-link" href="{{ auth()->check() ? route('cart.index') : route('app.login') }}">🛒 السلة <span id="stationeryCartCount" class="cart-count">{{ $cartOrder?->productItems->sum('quantity') ?? 0 }}</span></a>
             </div>

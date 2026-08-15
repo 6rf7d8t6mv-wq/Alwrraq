@@ -38,7 +38,7 @@ Route::middleware('guest')->group(function () {
 Route::get('/app', [AuthController::class, 'showAppEntry'])->name('app.entry');
 Route::get('/app/login', [AuthController::class, 'showAppLogin'])->name('app.login');
 Route::post('/app/biometric/login', [AppBiometricAuthController::class, 'login'])
-    ->middleware(['guest', 'throttle:10,1'])
+    ->middleware('throttle:10,1')
     ->name('app.biometric.login');
 Route::middleware('auth')->group(function () {
     Route::post('/app/biometric/token', [AppBiometricAuthController::class, 'issue'])

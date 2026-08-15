@@ -7,6 +7,7 @@ use App\Services\GuestCartService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
@@ -41,7 +42,7 @@ class AppBiometricAuthController extends Controller
         ])->header('Cache-Control', 'no-store');
     }
 
-    public function login(Request $request): RedirectResponse
+    public function login(Request $request): RedirectResponse|Response
     {
         $data = $request->validate([
             'token' => ['required', 'string', 'size:96', 'regex:/^[A-Za-z0-9]+$/'],
@@ -56,9 +57,8 @@ class AppBiometricAuthController extends Controller
             ->first();
 
         if (! $loginToken || ! $loginToken->user || ! $loginToken->user->canLogin()) {
-            return redirect()->route('app.login')->withErrors([
-                'login_identifier' => 'انتهت صلاحية الدخول بالبصمة. سجّل الدخول بكلمة المرور ثم فعّلها من جديد.',
-            ]);
+            return response('Biometric authentication failed.', 401)
+                ->header('Cache-Control', 'no-store');
         }
 
         Auth::login($loginToken->user, true);

@@ -692,8 +692,8 @@
                                             @foreach ($cartOrder->files as $file)
                                                 <article class="cart-image-file">
                                                     <div class="cart-image-preview">
-                                                        <a href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}" aria-label="عرض الصورة {{ $file->original_name }}">
-                                                            <img src="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'raw' => 1, 'v' => $file->updated_at?->timestamp]) }}" alt="{{ $file->original_name }}" loading="lazy">
+                                                        <a href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart'], false) }}" aria-label="عرض الصورة {{ $file->original_name }}">
+                                                            <img src="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'raw' => 1, 'v' => $file->updated_at?->timestamp], false) }}" alt="{{ $file->original_name }}" loading="lazy">
                                                         </a>
                                                     </div>
                                                     <div class="cart-image-content">
@@ -704,7 +704,7 @@
                                                             </div>
                                                             <div class="cart-image-name-actions">
                                                                 <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>
-                                                                <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}">عرض الصورة</a>
+                                                                <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart'], false) }}">عرض الصورة</a>
                                                             </div>
                                                         </div>
                                                         <div class="cart-image-details">
@@ -804,12 +804,12 @@
                                                                     <a class="edit-file-button" href="{{ route('home', ['service' => $cartOrder->service_type, 'order' => $cartOrder->id]) }}" target="_top">تعديل</a>
                                                                     @if ($file->file_type === 'image')
                                                                         <div class="image-action-buttons">
-                                                                            <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart']) }}">عرض الصورة</a>
+                                                                            <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart'], false) }}">عرض الصورة</a>
                                                                             <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
                                                                             <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
                                                                         </div>
                                                                     @elseif ($cartOrder->service_type !== 'research')
-                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
+                                                                        <a class="view-file-button" href="{{ route('orders.file.view', ['order' => $cartOrder, 'file' => $file, 'from' => 'cart', 'v' => $file->updated_at?->timestamp], false) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
                                                                     @endif
                                                                     <form method="post" action="{{ url('/order-files/' . $file->id) }}">
                                                                         @csrf

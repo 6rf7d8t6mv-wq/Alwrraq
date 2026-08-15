@@ -149,6 +149,9 @@
             box-shadow: 0 10px 28px rgba(15, 23, 42, .24);
             font: inherit;
             cursor: pointer;
+            touch-action: none;
+            user-select: none;
+            -webkit-user-select: none;
             transition: right .24s ease, background .18s ease;
         }
         .mobile-sidebar-toggle-icon { font-size: 23px; line-height: 1; }
@@ -188,6 +191,10 @@
         if (!panel || !toggle || !backdrop) return;
 
         const icon = toggle.querySelector('.mobile-sidebar-toggle-icon');
+        const togglePositionKey = 'alwrraq-mobile-menu-top';
+        const dragThreshold = 6;
+        let dragged = false;
+        let dragState = null;
         panel.id ||= 'alwrraqSidebar';
         toggle.setAttribute('aria-controls', panel.id);
         panel.classList.add('mobile-sidebar-panel');
@@ -201,7 +208,62 @@
             icon.textContent = open ? '×' : '☰';
         };
 
-        toggle.addEventListener('click', () => setOpen(!panel.classList.contains('mobile-sidebar-panel-open')));
+        const clampToggleTop = (top) => {
+            const safeTop = 8;
+            const safeBottom = 8;
+            return Math.min(
+                Math.max(top, safeTop),
+                Math.max(safeTop, window.innerHeight - toggle.offsetHeight - safeBottom)
+            );
+        };
+
+        const setToggleTop = (top, persist = false) => {
+            const boundedTop = clampToggleTop(Number(top) || 0);
+            toggle.style.top = `${boundedTop}px`;
+            if (persist) {
+                try { localStorage.setItem(togglePositionKey, String(boundedTop)); } catch (_) {}
+            }
+        };
+
+        try {
+            const savedTop = Number(localStorage.getItem(togglePositionKey));
+            if (Number.isFinite(savedTop) && savedTop > 0) setToggleTop(savedTop);
+        } catch (_) {}
+
+        toggle.addEventListener('pointerdown', (event) => {
+            if (!window.matchMedia('(max-width: 980px)').matches) return;
+            dragged = false;
+            dragState = {
+                pointerId: event.pointerId,
+                startY: event.clientY,
+                startTop: toggle.getBoundingClientRect().top,
+            };
+            toggle.setPointerCapture?.(event.pointerId);
+        });
+        toggle.addEventListener('pointermove', (event) => {
+            if (!dragState || dragState.pointerId !== event.pointerId) return;
+            const movement = event.clientY - dragState.startY;
+            if (Math.abs(movement) >= dragThreshold) dragged = true;
+            if (!dragged) return;
+            event.preventDefault();
+            setToggleTop(dragState.startTop + movement);
+        });
+        const finishToggleDrag = (event) => {
+            if (!dragState || dragState.pointerId !== event.pointerId) return;
+            if (dragged) setToggleTop(toggle.getBoundingClientRect().top, true);
+            dragState = null;
+        };
+        toggle.addEventListener('pointerup', finishToggleDrag);
+        toggle.addEventListener('pointercancel', finishToggleDrag);
+        toggle.addEventListener('click', (event) => {
+            if (dragged) {
+                event.preventDefault();
+                event.stopPropagation();
+                dragged = false;
+                return;
+            }
+            setOpen(!panel.classList.contains('mobile-sidebar-panel-open'));
+        });
         backdrop.addEventListener('click', () => setOpen(false));
         panel.addEventListener('click', (event) => {
             if (event.target.closest('a')) setOpen(false);
@@ -210,6 +272,9 @@
             if (event.key === 'Escape') setOpen(false);
         });
         window.addEventListener('popstate', () => setOpen(false));
+        window.addEventListener('resize', () => {
+            if (toggle.style.top) setToggleTop(toggle.getBoundingClientRect().top, true);
+        });
         window.matchMedia('(min-width: 981px)').addEventListener('change', (event) => {
             if (event.matches) setOpen(false);
         });

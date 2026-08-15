@@ -785,11 +785,11 @@
                                                                 <span>{{ $file->original_name }}</span>
                                                                 <div class="uploaded-file-actions {{ $file->file_type === 'image' ? 'image-action-buttons' : '' }}">
                                                                     @if ($file->file_type === 'image')
-                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file]) }}">عرض الصورة</a>
+                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file], false) }}">عرض الصورة</a>
                                                                         <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
                                                                         <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
                                                                     @elseif ($order->service_type !== 'research')
-                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'v' => $file->updated_at?->timestamp]) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
+                                                                        <a class="uploaded-file-view" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'v' => $file->updated_at?->timestamp], false) }}">عرض {{ strtoupper(pathinfo($file->original_name, PATHINFO_EXTENSION) ?: $file->file_type) }}</a>
                                                                     @endif
                                                                 </div>
                                                             </div>
@@ -954,7 +954,7 @@
                                                         <div class="service-detail" data-local-datetime="{{ $deliveredFile->created_at->toIso8601String() }}">{{ $deliveredFile->created_at->format('Y-m-d H:i') }}</div>
                                                     </div>
                                                     <div class="delivered-file-buttons">
-                                                        <a class="action ghost" href="{{ route('orders.delivered-file.view', [$order, $deliveredFile]) }}">عرض الملف المستلم</a>
+                                                        <a class="action ghost" href="{{ route('orders.delivered-file.view', [$order, $deliveredFile], false) }}">عرض الملف المستلم</a>
                                                         <a class="action secondary notice-action" href="{{ route('orders.delivered-file', ['order' => $order, 'deliveredFile' => $deliveredFile, 'download' => 1, 'filename' => $deliveredFile->original_name]) }}" data-delivered-file-download data-order-id="{{ $order->id }}" data-delivered-file-id="{{ $deliveredFile->id }}">
                                                             تحميل الملف المستلم
                                                             @if (blank($deliveredFile->customer_downloaded_at))

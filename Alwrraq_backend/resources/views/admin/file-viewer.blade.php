@@ -258,7 +258,7 @@
         @include('shared.pdf-preview', [
             'pdfPreviewId' => 'adminPdfPreview',
             'pdfStatusId' => 'adminPdfStatus',
-            'pdfUrl' => route('admin.files.view', ['file' => $file, 'raw' => 1]),
+            'pdfUrl' => route('admin.files.view', ['file' => $file, 'raw' => 1], false),
         ])
     @endif
 

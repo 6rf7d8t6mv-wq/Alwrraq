@@ -101,9 +101,9 @@
                 <div class="actions">
                     @if ($isImage)
                         <button class="action dark" type="button" onclick="window.print()">طباعة الصورة</button>
-                        <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                        <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1], false) }}">تحميل الصورة</a>
                     @else
-                        <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الملف</a>
+                        <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1], false) }}">تحميل الملف</a>
                     @endif
                     @if (request('from') === 'upload')
                         <a class="action green" href="{{ route('home', ['service' => $order->service_type, 'order' => $order->id]) }}">العودة للملفات المحملة</a>
@@ -127,7 +127,7 @@
                     </div>
                 @elseif ($isImage)
                     <div class="image-preview">
-                        <img id="uploadedImagePreview" src="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'raw' => 1]) }}" alt="{{ $file->original_name }}">
+                        <img id="uploadedImagePreview" src="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'raw' => 1], false) }}" alt="{{ $file->original_name }}">
                     </div>
                 @elseif ($wordPreviewHtml)
                     <article class="word-preview" dir="auto">{!! $wordPreviewHtml !!}</article>
@@ -146,7 +146,7 @@
         @include('shared.pdf-preview', [
             'pdfPreviewId' => 'uploadedPdfPreview',
             'pdfStatusId' => 'uploadedPdfStatus',
-            'pdfUrl' => route('orders.file.view', ['order' => $order, 'file' => $file, 'raw' => 1]),
+            'pdfUrl' => route('orders.file.view', ['order' => $order, 'file' => $file, 'raw' => 1], false),
         ])
     @endif
     @if ($isImage && request()->boolean('print'))

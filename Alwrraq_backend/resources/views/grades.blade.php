@@ -1484,8 +1484,17 @@
                 }
                 window.history.replaceState({}, '', serviceUrl);
                 document.getElementById('servicesScreen').style.display = 'none';
-                document.getElementById(uploadIds[service] || ('upload' + service.charAt(0).toUpperCase() + service.slice(1))).classList.add('active');
+                const activeServicePanel = document.getElementById(uploadIds[service] || ('upload' + service.charAt(0).toUpperCase() + service.slice(1)));
+                activeServicePanel.classList.add('active');
                 initializeService(service);
+
+                // The services live on one page, so browsers/WebViews may retain the
+                // previous page position when a service is opened. Always reveal the
+                // beginning of the selected service, including its back button.
+                requestAnimationFrame(() => requestAnimationFrame(() => {
+                    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+                    activeServicePanel.scrollTop = 0;
+                }));
 
                 const shareParams = new URLSearchParams(window.location.search);
                 if (shareParams.get('share_import') === '1' && window.AlwrraqShareService) {

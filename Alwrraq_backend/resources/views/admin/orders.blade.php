@@ -691,11 +691,11 @@
                                             @if (auth()->user()->hasAdminPermission('files_download'))
                                                 <div class="file-action-buttons {{ $file->file_type === 'image' ? 'image-action-buttons' : '' }}">
                                                     @if ($file->file_type === 'image')
-                                                        <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الصورة</a>
+                                                        <a class="file-action-button view" href="{{ route('admin.files.view', $file, false) }}">عرض الصورة</a>
                                                         <a class="file-action-button view" href="{{ route('admin.files.view', ['file' => $file, 'print' => 1]) }}" target="_blank" rel="noopener">طباعة الصورة</a>
                                                         <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الصورة</a>
                                                     @else
-                                                        <a class="file-action-button view" href="{{ route('admin.files.view', $file) }}">عرض الملف</a>
+                                                        <a class="file-action-button view" href="{{ route('admin.files.view', $file, false) }}">عرض الملف</a>
                                                         <a class="file-action-button download" href="{{ route('admin.files.download', $file) }}" data-direct-file-download>تحميل الملف</a>
                                                     @endif
                                                 </div>
@@ -721,7 +721,7 @@
                                                 </div>
                                                 <div class="delivered-file-actions">
                                                     @if (auth()->user()->hasAdminPermission('delivered_files_download'))
-                                                        <a class="ghost" href="{{ route('admin.delivered-files.view', $deliveredFile) }}">عرض الملف المستلم</a>
+                                                        <a class="ghost" href="{{ route('admin.delivered-files.view', $deliveredFile, false) }}">عرض الملف المستلم</a>
                                                         <a class="save small-button" href="{{ route('admin.delivered-files.download', ['deliveredFile' => $deliveredFile, 'download' => 1, 'filename' => $deliveredFile->original_name]) }}">تحميل الملف المستلم</a>
                                                     @endif
                                                     @if (auth()->user()->hasAdminPermission('delivered_files_delete'))

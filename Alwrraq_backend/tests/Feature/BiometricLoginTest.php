@@ -84,8 +84,23 @@ class BiometricLoginTest extends TestCase
         $this->post('/app/biometric/login', [
             'token' => str_repeat('Z', 96),
             'device_id' => str_repeat('b', 32),
-        ])->assertRedirect('/app/login');
+        ])->assertUnauthorized();
         $this->assertGuest();
+    }
+
+    public function test_existing_webview_session_cannot_bypass_invalid_biometric_token(): void
+    {
+        $user = $this->user();
+
+        $response = $this->actingAs($user)
+            ->post('/app/biometric/login', [
+                'token' => str_repeat('Z', 96),
+                'device_id' => str_repeat('b', 32),
+            ])
+            ->assertUnauthorized();
+
+        $this->assertAuthenticatedAs($user);
+        $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
     }
 
     public function test_app_password_login_opens_internal_home_for_every_role(): void
