@@ -4,6 +4,11 @@ namespace App\Http\Controllers;
 
 class PublicAssetController extends Controller
 {
+    private const DOCUMENT_VIEWER_ASSETS = [
+        'pdf.min.js' => 'application/javascript; charset=UTF-8',
+        'pdf.worker.min.js' => 'application/javascript; charset=UTF-8',
+    ];
+
     private const SHOWCASE_IMAGES = [
         'desktop' => 'alwrraq-desktop-preview.png',
         'mobile' => 'alwrraq-mobile-preview.png',
@@ -29,5 +34,19 @@ class PublicAssetController extends Controller
             302,
             ['Cache-Control' => 'no-cache']
         );
+    }
+
+    public function documentViewer(string $asset)
+    {
+        abort_unless(isset(self::DOCUMENT_VIEWER_ASSETS[$asset]), 404);
+
+        $path = resource_path('document-viewer/'.$asset);
+        abort_unless(is_file($path), 404);
+
+        return response()->file($path, [
+            'Content-Type' => self::DOCUMENT_VIEWER_ASSETS[$asset],
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options' => 'nosniff',
+        ]);
     }
 }

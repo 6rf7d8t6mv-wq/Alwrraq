@@ -6,6 +6,7 @@ use DOMDocument;
 use DOMElement;
 use DOMNode;
 use DOMXPath;
+use Throwable;
 use ZipArchive;
 
 class WordPreviewService
@@ -14,23 +15,21 @@ class WordPreviewService
 
     public function toHtml(string $path): ?string
     {
-        $zip = new ZipArchive();
-        if ($zip->open($path) !== true) {
-            return null;
-        }
-
-        $documentXml = $zip->getFromName('word/document.xml');
-        $zip->close();
+        $documentXml = $this->documentXml($path);
 
         if (! $documentXml) {
             return null;
         }
 
-        $document = new DOMDocument();
-        $previous = libxml_use_internal_errors(true);
-        $loaded = $document->loadXML($documentXml, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
-        libxml_clear_errors();
-        libxml_use_internal_errors($previous);
+        try {
+            $document = new DOMDocument;
+            $previous = libxml_use_internal_errors(true);
+            $loaded = $document->loadXML($documentXml, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        } catch (Throwable) {
+            return null;
+        }
 
         if (! $loaded) {
             return null;
@@ -60,6 +59,95 @@ class WordPreviewService
         return trim($html) !== '' ? $html : '<p>الملف لا يحتوي على نص قابل للعرض.</p>';
     }
 
+    private function documentXml(string $path): ?string
+    {
+        if (class_exists(ZipArchive::class)) {
+            try {
+                $zip = new ZipArchive;
+                if ($zip->open($path) === true) {
+                    $xml = $zip->getFromName('word/document.xml');
+                    $zip->close();
+
+                    if (is_string($xml) && $xml !== '') {
+                        return $xml;
+                    }
+                }
+            } catch (Throwable) {
+                // Continue with the dependency-free ZIP reader below.
+            }
+        }
+
+        return $this->readZipEntry($path, 'word/document.xml');
+    }
+
+    /**
+     * Read one ZIP entry without requiring the optional PHP zip extension.
+     * DOCX files are ZIP containers, and some shared-hosting PHP builds do not
+     * enable ZipArchive even though zlib is available.
+     */
+    private function readZipEntry(string $path, string $wantedEntry): ?string
+    {
+        try {
+            $archive = file_get_contents($path);
+            if (! is_string($archive) || strlen($archive) < 22) {
+                return null;
+            }
+
+            $searchStart = max(0, strlen($archive) - 65_557);
+            $endRecord = strrpos(substr($archive, $searchStart), "PK\x05\x06");
+            if ($endRecord === false) {
+                return null;
+            }
+            $endRecord += $searchStart;
+            $centralOffset = unpack('Voffset', substr($archive, $endRecord + 16, 4))['offset'] ?? null;
+            if (! is_int($centralOffset)) {
+                return null;
+            }
+
+            $cursor = $centralOffset;
+            $archiveLength = strlen($archive);
+            while ($cursor + 46 <= $archiveLength && substr($archive, $cursor, 4) === "PK\x01\x02") {
+                $header = unpack(
+                    'vflags/vcompression/x4/x4/Vcompressed/Vuncompressed/vnameLength/vextraLength/vcommentLength/x8/VlocalOffset',
+                    substr($archive, $cursor + 8, 38)
+                );
+                if (! is_array($header)) {
+                    return null;
+                }
+
+                $name = substr($archive, $cursor + 46, $header['nameLength']);
+                if ($name === $wantedEntry) {
+                    if (($header['flags'] & 0x1) !== 0) {
+                        return null;
+                    }
+
+                    $localOffset = $header['localOffset'];
+                    if (substr($archive, $localOffset, 4) !== "PK\x03\x04") {
+                        return null;
+                    }
+                    $localLengths = unpack(
+                        'vnameLength/vextraLength',
+                        substr($archive, $localOffset + 26, 4)
+                    );
+                    $dataOffset = $localOffset + 30 + $localLengths['nameLength'] + $localLengths['extraLength'];
+                    $compressed = substr($archive, $dataOffset, $header['compressed']);
+
+                    return match ($header['compression']) {
+                        0 => $compressed,
+                        8 => ($inflated = @gzinflate($compressed)) !== false ? $inflated : null,
+                        default => null,
+                    };
+                }
+
+                $cursor += 46 + $header['nameLength'] + $header['extraLength'] + $header['commentLength'];
+            }
+        } catch (Throwable) {
+            return null;
+        }
+
+        return null;
+    }
+
     private function paragraph(DOMElement $paragraph, DOMXPath $xpath): string
     {
         $content = '';
@@ -79,7 +167,7 @@ class WordPreviewService
             default => 'start',
         };
 
-        return '<p dir="auto" style="text-align:' . $textAlign . '">' . ($content !== '' ? $content : '<br>') . '</p>';
+        return '<p dir="auto" style="text-align:'.$textAlign.'">'.($content !== '' ? $content : '<br>').'</p>';
     }
 
     private function run(DOMNode $run, DOMXPath $xpath): string
@@ -103,13 +191,13 @@ class WordPreviewService
         }
 
         if ($xpath->query('./w:rPr/w:u', $run)->length > 0) {
-            $content = '<u>' . $content . '</u>';
+            $content = '<u>'.$content.'</u>';
         }
         if ($xpath->query('./w:rPr/w:i', $run)->length > 0) {
-            $content = '<em>' . $content . '</em>';
+            $content = '<em>'.$content.'</em>';
         }
         if ($xpath->query('./w:rPr/w:b', $run)->length > 0) {
-            $content = '<strong>' . $content . '</strong>';
+            $content = '<strong>'.$content.'</strong>';
         }
 
         return $content;
@@ -126,11 +214,11 @@ class WordPreviewService
                 foreach ($xpath->query('./w:p', $cell) as $paragraph) {
                     $cellHtml .= $this->paragraph($paragraph, $xpath);
                 }
-                $html .= '<td>' . ($cellHtml !== '' ? $cellHtml : '&nbsp;') . '</td>';
+                $html .= '<td>'.($cellHtml !== '' ? $cellHtml : '&nbsp;').'</td>';
             }
             $html .= '</tr>';
         }
 
-        return $html . '</tbody></table></div>';
+        return $html.'</tbody></table></div>';
     }
 }

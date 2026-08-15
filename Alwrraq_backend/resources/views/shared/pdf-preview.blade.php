@@ -1,7 +1,8 @@
 @php
-    $pdfJsBasePath = rtrim(request()->getBaseUrl(), '/').'/vendor/pdfjs';
+    $pdfJsLibraryUrl = route('document-viewer.asset', ['asset' => 'pdf.min.js'], false);
+    $pdfJsWorkerUrl = route('document-viewer.asset', ['asset' => 'pdf.worker.min.js'], false);
 @endphp
-<script src="{{ $pdfJsBasePath }}/pdf.min.js"></script>
+<script src="{{ $pdfJsLibraryUrl }}"></script>
 <script>
     window.addEventListener('load', async () => {
         const preview = document.getElementById(@json($pdfPreviewId));
@@ -37,7 +38,7 @@
                 return;
             }
 
-            pdfjsLib.GlobalWorkerOptions.workerSrc = @json($pdfJsBasePath.'/pdf.worker.min.js');
+            pdfjsLib.GlobalWorkerOptions.workerSrc = @json($pdfJsWorkerUrl);
             const response = await fetch(sameOriginPdfUrl, {
                 credentials: 'same-origin',
                 cache: 'no-store',

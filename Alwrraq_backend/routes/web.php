@@ -122,6 +122,10 @@ Route::get('/showcase-images/{device}', [PublicAssetController::class, 'showcase
     ->where('device', 'desktop|mobile')
     ->name('public.showcase-image');
 
+Route::get('/document-viewer/{asset}', [PublicAssetController::class, 'documentViewer'])
+    ->where('asset', 'pdf\.min\.js|pdf\.worker\.min\.js')
+    ->name('document-viewer.asset');
+
 Route::middleware('auth')->prefix('chat')->name('chat.')->group(function () {
     Route::get('/conversations', [ChatController::class, 'conversations'])->name('conversations');
     Route::get('/conversations/{conversation}/stream', [ChatController::class, 'stream'])->name('conversations.stream');
