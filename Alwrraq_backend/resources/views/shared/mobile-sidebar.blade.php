@@ -4,6 +4,23 @@
     .mobile-sidebar-backdrop { display: none; }
 
     @media (max-width: 980px) {
+        html,
+        body.mobile-sidebar-enabled,
+        body.mobile-sidebar-enabled .mobile-sidebar-panel,
+        body.mobile-sidebar-enabled .modal-backdrop,
+        body.mobile-sidebar-enabled .modal-body {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        html::-webkit-scrollbar,
+        body.mobile-sidebar-enabled::-webkit-scrollbar,
+        body.mobile-sidebar-enabled .mobile-sidebar-panel::-webkit-scrollbar,
+        body.mobile-sidebar-enabled .modal-backdrop::-webkit-scrollbar,
+        body.mobile-sidebar-enabled .modal-body::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
         body.mobile-sidebar-enabled {
             --mobile-sidebar-width: min(300px, 86vw);
             box-sizing: border-box;

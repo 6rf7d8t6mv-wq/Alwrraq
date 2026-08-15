@@ -86,6 +86,8 @@ class ExampleTest extends TestCase
             ->assertSee('mobile-sidebar-toggle', false)
             ->assertSee('mobile-sidebar-edge', false)
             ->assertSee('padding-right: 44px', false)
+            ->assertSee('scrollbar-width: none', false)
+            ->assertSee('::-webkit-scrollbar', false)
             ->assertSee('right: 44px !important', false)
             ->assertSee('right: var(--mobile-sidebar-width)', false)
             ->assertSee('mobile-sidebar-backdrop', false)
