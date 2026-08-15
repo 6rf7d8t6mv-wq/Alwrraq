@@ -138,6 +138,9 @@ class ExampleTest extends TestCase
         $this->assertStringContainsString('.page { min-height: 100vh; min-height: 100dvh; padding: 6px 10px; }', $source);
         $this->assertStringContainsString('.auth-card { width: min(390px, 100%); padding: 10px 12px;', $source);
         $this->assertStringContainsString('.brand-logo { width: 54px; height: 54px;', $source);
+        $this->assertStringContainsString('@media (max-width: 520px) and (min-height: 700px)', $source);
+        $this->assertStringContainsString('.auth-card { width: min(400px, 100%); padding: 14px 16px;', $source);
+        $this->assertStringContainsString('.brand-logo { width: 68px; height: 68px;', $source);
     }
 
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void

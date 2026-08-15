@@ -60,6 +60,33 @@
             .switch-button { margin-top: 5px; padding: 6px 9px; font-size: 10px; }
             .error { margin-bottom: 8px; padding: 8px 9px; font-size: 10px; }
         }
+        @media (max-width: 520px) and (min-height: 700px) {
+            .page { padding: 10px; }
+            .auth-card { width: min(400px, 100%); padding: 14px 16px; border-radius: 13px; }
+            .auth-top-actions { gap: 8px; margin-bottom: 16px; }
+            .web-back,
+            .auth-top-actions .language-switcher-form,
+            .auth-top-actions .language-switcher-button { height: 36px; min-height: 36px; }
+            .web-back,
+            .auth-top-actions .language-switcher-button { padding: 7px 9px; border-radius: 9px; font-size: 11px; }
+            .brand { margin-bottom: 14px; }
+            .brand-logo { width: 68px; height: 68px; margin-bottom: 7px; border-radius: 17px; }
+            h1 { font-size: 22px; }
+            .brand p { font-size: 11px; line-height: 1.45; }
+            h2 { margin-bottom: 3px; font-size: 20px; }
+            label,
+            .form-grid label { margin: 9px 0 4px; font-size: 12px; }
+            input { min-height: 40px; padding: 9px 10px; border-radius: 8px; }
+            button { margin-top: 12px; padding: 10px 13px; border-radius: 8px; font-size: 13px; }
+            .input-note { margin-top: 4px; font-size: 10px; line-height: 1.45; }
+            .english-number-warning { margin-top: 4px; font-size: 10px; }
+            .form-grid { gap: 8px; }
+            .form-grid input { padding-inline: 9px; }
+            .secondary-action { margin-top: 12px; padding-top: 10px; }
+            .secondary-action p { font-size: 11px; }
+            .switch-button { margin-top: 6px; padding: 8px 11px; font-size: 11px; }
+            .error { margin-bottom: 10px; padding: 9px 10px; font-size: 11px; }
+        }
     </style>
 </head>
 <body>
