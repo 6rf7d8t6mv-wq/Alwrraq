@@ -119,6 +119,17 @@ class ExampleTest extends TestCase
             ->assertSee("document.querySelector('.layout > aside nav')", false);
     }
 
+    public function test_auth_page_has_compact_top_actions_without_extra_instructions(): void
+    {
+        $source = file_get_contents(resource_path('views/auth.blade.php'));
+
+        $this->assertStringContainsString('class="auth-top-actions"', $source);
+        $this->assertStringContainsString('grid-template-columns: repeat(2, minmax(0, 1fr))', $source);
+        $this->assertStringNotContainsString('ادخل رقم جوالك أو بريدك الإلكتروني وكلمة المرور للمتابعة.', $source);
+        $this->assertStringNotContainsString('يمكنك الدخول برقم الجوال المسجل أو البريد الإلكتروني الذي أضفته من إعدادات الحساب.', $source);
+        $this->assertStringNotContainsString('اكتب الرقم بأي صيغة أرقام عربية أو إنجليزية، وسيتم تحويله تلقائيًا إلى أرقام إنجليزية.', $source);
+    }
+
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
     {
         $response = $this->withSession(['ui_locale' => 'en'])->get('/');

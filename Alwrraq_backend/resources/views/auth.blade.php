@@ -10,8 +10,11 @@
         body { margin: 0; font-family: Arial, sans-serif; background: #f3f4f6; color: #111827; }
         .page { min-height: 100vh; display: grid; place-items: center; padding: clamp(14px, 4vw, 24px); }
         .auth-card { width: min(430px, 100%); background: #ffffff; border: 1px solid #e5e7eb; border-radius: clamp(12px, 3vw, 14px); padding: clamp(18px, 4vw, 26px); box-shadow: 0 22px 55px rgba(15, 23, 42, 0.10); }
-        .web-back { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 16px; padding: 11px 14px; border-radius: 12px; background: linear-gradient(135deg, #0f4c81, #1d6fa5); color: #fff; text-decoration: none; font-size: 14px; font-weight: 900; border: 1px solid rgba(96, 165, 250, 0.35); box-shadow: 0 12px 24px rgba(15, 76, 129, 0.18); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
-        .web-back:hover { background: linear-gradient(135deg, #123f68, #0f4c81); transform: translateY(-1px); box-shadow: 0 14px 28px rgba(15, 76, 129, 0.24); }
+        .auth-top-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; align-items: stretch; margin-bottom: 28px; }
+        .web-back { display: inline-flex; align-items: center; justify-content: center; gap: 5px; width: 100%; min-height: 36px; margin: 0; padding: 7px 9px; border-radius: 9px; background: linear-gradient(135deg, #0f4c81, #1d6fa5); color: #fff; text-decoration: none; font-size: 11px; font-weight: 900; border: 1px solid rgba(96, 165, 250, 0.35); box-shadow: 0 7px 16px rgba(15, 76, 129, 0.15); transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease; }
+        .web-back:hover { background: linear-gradient(135deg, #123f68, #0f4c81); transform: translateY(-1px); box-shadow: 0 9px 20px rgba(15, 76, 129, 0.21); }
+        .auth-top-actions .language-switcher-form { width: 100%; }
+        .auth-top-actions .language-switcher-button { min-height: 36px; padding: 7px 9px; border-radius: 9px; gap: 5px; font-size: 11px; }
         .brand { margin-bottom: 22px; text-align: center; }
         .brand-logo { width: 92px; height: 92px; display: block; margin: 0 auto 12px; border-radius: 22px; object-fit: cover; background: #ffffff; border: 1px solid #e2e8f0; box-shadow: 0 16px 34px rgba(15, 23, 42, 0.12); }
         h1 { margin: 0; font-size: clamp(24px, 7vw, 28px); }
@@ -41,10 +44,10 @@
     @php($appMode = $appMode ?? false)
     <main class="page">
         <section class="auth-card">
-            @unless ($appMode)
-                <a class="web-back" href="{{ route('public.home') }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
-            @endunless
-            @include('shared.language-switcher')
+            <div class="auth-top-actions">
+                <a class="web-back" href="{{ $appMode ? route('home') : route('public.home') }}"><span aria-hidden="true">←</span><span>الصفحة الرئيسية</span></a>
+                @include('shared.language-switcher')
+            </div>
             <div class="brand">
                 <img class="brand-logo" src="{{ asset('images/alwrraq-logo.jpeg') }}" alt="شعار الورّاق">
                 <h1>الورّاق</h1>
@@ -57,13 +60,11 @@
 
             <div id="loginPanel" class="auth-panel active">
                 <h2>تسجيل الدخول</h2>
-                <p>ادخل رقم جوالك أو بريدك الإلكتروني وكلمة المرور للمتابعة.</p>
 
                 <form method="post" action="{{ $appMode ? route('app.login.store') : route('login.store') }}">
                     @csrf
                     <label for="loginIdentifier">رقم الجوال أو البريد الإلكتروني</label>
                     <input id="loginIdentifier" name="login_identifier" value="{{ old('login_identifier') }}" autocomplete="username" required>
-                    <p class="input-note">يمكنك الدخول برقم الجوال المسجل أو البريد الإلكتروني الذي أضفته من إعدادات الحساب.</p>
 
                     <label for="loginPassword">كلمة المرور</label>
                     <input id="loginPassword" name="password" type="password" autocomplete="current-password" required>
@@ -96,7 +97,6 @@
 
                     <label for="phone">رقم الجوال</label>
                     <input id="phone" name="phone" inputmode="numeric" autocomplete="tel" required>
-                    <p class="input-note">اكتب الرقم بأي صيغة أرقام عربية أو إنجليزية، وسيتم تحويله تلقائيًا إلى أرقام إنجليزية.</p>
 
                     <label for="password">كلمة المرور</label>
                     <input id="password" name="password" type="password" autocomplete="new-password" required>
