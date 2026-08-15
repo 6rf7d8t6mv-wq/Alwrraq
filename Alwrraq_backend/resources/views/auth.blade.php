@@ -34,9 +34,31 @@
         .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         .form-grid label { margin-top: 14px; }
         @media (max-width: 520px) {
-            .auth-card { padding-inline: 14px; }
-            .form-grid { gap: 8px; }
-            .form-grid input { padding-inline: 9px; }
+            .page { min-height: 100vh; min-height: 100dvh; padding: 6px 10px; }
+            .auth-card { width: min(390px, 100%); padding: 10px 12px; border-radius: 11px; box-shadow: 0 14px 34px rgba(15, 23, 42, 0.09); }
+            .auth-top-actions { gap: 6px; margin-bottom: 10px; }
+            .web-back,
+            .auth-top-actions .language-switcher-form,
+            .auth-top-actions .language-switcher-button { height: 32px; min-height: 32px; }
+            .web-back,
+            .auth-top-actions .language-switcher-button { padding: 5px 7px; border-radius: 8px; font-size: 10px; }
+            .brand { margin-bottom: 9px; }
+            .brand-logo { width: 54px; height: 54px; margin-bottom: 5px; border-radius: 14px; box-shadow: 0 9px 20px rgba(15, 23, 42, 0.10); }
+            h1 { font-size: 20px; line-height: 1.2; }
+            .brand p { margin-top: 2px; font-size: 10px; line-height: 1.35; }
+            h2 { margin-bottom: 2px; font-size: 18px; line-height: 1.3; }
+            label,
+            .form-grid label { margin: 7px 0 3px; font-size: 11px; line-height: 1.25; }
+            input { min-height: 35px; padding: 7px 9px; border-radius: 7px; line-height: 1.2; }
+            button { margin-top: 9px; padding: 8px 11px; border-radius: 7px; font-size: 12px; }
+            .input-note { margin-top: 3px; font-size: 9px; line-height: 1.35; }
+            .english-number-warning { margin-top: 3px; font-size: 9px; line-height: 1.3; }
+            .form-grid { gap: 6px; }
+            .form-grid input { padding-inline: 7px; }
+            .secondary-action { margin-top: 9px; padding-top: 8px; }
+            .secondary-action p { font-size: 10px; line-height: 1.35; }
+            .switch-button { margin-top: 5px; padding: 6px 9px; font-size: 10px; }
+            .error { margin-bottom: 8px; padding: 8px 9px; font-size: 10px; }
         }
     </style>
 </head>

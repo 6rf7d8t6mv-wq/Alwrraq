@@ -135,6 +135,9 @@ class ExampleTest extends TestCase
         $this->assertStringNotContainsString('ادخل رقم جوالك أو بريدك الإلكتروني وكلمة المرور للمتابعة.', $source);
         $this->assertStringNotContainsString('يمكنك الدخول برقم الجوال المسجل أو البريد الإلكتروني الذي أضفته من إعدادات الحساب.', $source);
         $this->assertStringNotContainsString('اكتب الرقم بأي صيغة أرقام عربية أو إنجليزية، وسيتم تحويله تلقائيًا إلى أرقام إنجليزية.', $source);
+        $this->assertStringContainsString('.page { min-height: 100vh; min-height: 100dvh; padding: 6px 10px; }', $source);
+        $this->assertStringContainsString('.auth-card { width: min(390px, 100%); padding: 10px 12px;', $source);
+        $this->assertStringContainsString('.brand-logo { width: 54px; height: 54px;', $source);
     }
 
     public function test_english_homepage_is_ltr_and_prevents_translated_copy_overflow(): void
