@@ -102,6 +102,8 @@
                     @if ($isImage)
                         <button class="action dark" type="button" onclick="window.print()">طباعة الصورة</button>
                         <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الصورة</a>
+                    @else
+                        <a class="action blue" href="{{ route('orders.file.view', ['order' => $order, 'file' => $file, 'download' => 1]) }}">تحميل الملف</a>
                     @endif
                     @if (request('from') === 'upload')
                         <a class="action green" href="{{ route('home', ['service' => $order->service_type, 'order' => $order->id]) }}">العودة للملفات المحملة</a>

@@ -8,6 +8,24 @@
         const status = document.getElementById(@json($pdfStatusId));
         if (!preview || !status) return;
 
+        let previewFailed = false;
+        const showFailure = () => {
+            if (previewFailed) return;
+            previewFailed = true;
+            const box = document.createElement('div');
+            box.className = 'pdf-status';
+            const message = document.createElement('p');
+            message.textContent = @json($pdfErrorMessage ?? 'تعذر عرض ملف PDF. حاول مرة أخرى.');
+            message.style.margin = '0 0 14px';
+            const retry = document.createElement('button');
+            retry.type = 'button';
+            retry.textContent = 'إعادة المحاولة';
+            retry.style.cssText = 'border:0;border-radius:9px;background:#0f4c81;color:#fff;padding:10px 16px;font:inherit;font-weight:900;cursor:pointer;';
+            retry.addEventListener('click', () => window.location.reload());
+            box.append(message, retry);
+            preview.replaceChildren(box);
+        };
+
         try {
             // Keep the authenticated PDF request on the exact WebView origin.
             // Laravel may be configured with "localhost" while the app is opened
@@ -15,15 +33,7 @@
             const configuredPdfUrl = new URL(@json($pdfUrl), window.location.href);
             const sameOriginPdfUrl = `${configuredPdfUrl.pathname}${configuredPdfUrl.search}${configuredPdfUrl.hash}`;
             if (typeof window.pdfjsLib === 'undefined') {
-                const nativeViewer = document.createElement('iframe');
-                nativeViewer.src = sameOriginPdfUrl;
-                nativeViewer.title = 'معاينة ملف PDF';
-                nativeViewer.style.width = '100%';
-                nativeViewer.style.maxWidth = '100%';
-                nativeViewer.style.minHeight = 'calc(100vh - 120px)';
-                nativeViewer.style.border = '0';
-                nativeViewer.style.display = 'block';
-                preview.replaceChildren(nativeViewer);
+                showFailure();
                 return;
             }
 
@@ -47,12 +57,25 @@
                 1,
                 Math.floor(preview.clientWidth - horizontalPadding)
             );
-            const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+            const compactViewer = window.matchMedia('(max-width: 860px), (pointer: coarse)').matches
+                || /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+            const pixelRatio = Math.min(window.devicePixelRatio || 1, compactViewer ? 1.35 : 2);
 
             status.remove();
 
+            const canvases = [];
+            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+                const canvas = document.createElement('canvas');
+                canvas.className = 'pdf-page';
+                canvas.dataset.page = String(pageNumber);
+                canvas.style.width = `${availableWidth}px`;
+                canvas.style.height = `${Math.round(availableWidth * 1.414)}px`;
+                preview.appendChild(canvas);
+                canvases.push(canvas);
+            }
+
             const renderPage = async (canvas) => {
-                if (canvas.dataset.rendering === '1' || canvas.dataset.rendered === '1') return;
+                if (previewFailed || !canvas || canvas.dataset.rendering === '1' || canvas.dataset.rendered === '1') return;
                 canvas.dataset.rendering = '1';
                 const page = await pdf.getPage(Number(canvas.dataset.page));
                 const baseViewport = page.getViewport({ scale: 1 });
@@ -69,47 +92,54 @@
                     viewport,
                     transform: pixelRatio === 1 ? null : [pixelRatio, 0, 0, pixelRatio, 0, 0],
                 }).promise;
+                page.cleanup();
                 canvas.dataset.rendered = '1';
                 delete canvas.dataset.rendering;
             };
 
+            // Render one page at a time. Rendering every page together can exhaust
+            // a mobile WebView's memory and leave the PDF viewer blank.
+            let renderQueue = Promise.resolve();
+            const queuePage = (canvas) => {
+                if (!canvas || canvas.dataset.queued === '1' || canvas.dataset.rendered === '1') return;
+                canvas.dataset.queued = '1';
+                renderQueue = renderQueue
+                    .then(() => renderPage(canvas))
+                    .catch(() => showFailure());
+            };
+
+            const previewOwnsScroll = preview.scrollHeight > preview.clientHeight + 8;
             const observer = 'IntersectionObserver' in window
                 ? new IntersectionObserver((entries) => {
                     entries.forEach((entry) => {
-                        if (!entry.isIntersecting) return;
-                        observer.unobserve(entry.target);
-                        renderPage(entry.target);
+                        if (entry.isIntersecting) {
+                            queuePage(entry.target);
+                            if (!compactViewer) observer.unobserve(entry.target);
+                            return;
+                        }
+
+                        if (compactViewer && entry.target.dataset.rendered === '1') {
+                            entry.target.width = 1;
+                            entry.target.height = 1;
+                            delete entry.target.dataset.rendered;
+                            delete entry.target.dataset.queued;
+                        }
                     });
-                }, { root: preview, rootMargin: '700px 0px' })
+                }, { root: previewOwnsScroll ? preview : null, rootMargin: '700px 0px' })
                 : null;
 
-            for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
-                const canvas = document.createElement('canvas');
-                canvas.className = 'pdf-page';
-                canvas.dataset.page = String(pageNumber);
-                canvas.style.width = `${availableWidth}px`;
-                canvas.style.height = `${Math.round(availableWidth * 1.414)}px`;
-                preview.appendChild(canvas);
-
+            canvases.forEach((canvas) => {
                 if (observer) {
                     observer.observe(canvas);
                 } else {
-                    renderPage(canvas);
+                    queuePage(canvas);
                 }
-            }
+            });
 
-            await renderPage(preview.querySelector('.pdf-page'));
-        } catch (error) {
-            const fallback = document.createElement('iframe');
-            fallback.src = new URL(@json($pdfUrl), window.location.href).pathname
-                + new URL(@json($pdfUrl), window.location.href).search;
-            fallback.title = 'معاينة ملف PDF';
-            fallback.style.width = '100%';
-            fallback.style.maxWidth = '100%';
-            fallback.style.minHeight = 'calc(100vh - 120px)';
-            fallback.style.border = '0';
-            fallback.style.display = 'block';
-            preview.replaceChildren(fallback);
+            queuePage(canvases[0]);
+            queuePage(canvases[1]);
+        } catch (_) {
+            showFailure();
         }
     });
 </script>

@@ -105,6 +105,16 @@ class ExampleTest extends TestCase
         }
     }
 
+    public function test_pdf_preview_uses_memory_safe_webview_rendering_without_iframe_fallback(): void
+    {
+        $preview = (string) file_get_contents(resource_path('views/shared/pdf-preview.blade.php'));
+
+        $this->assertStringContainsString('compactViewer ? 1.35 : 2', $preview);
+        $this->assertStringContainsString('let renderQueue = Promise.resolve()', $preview);
+        $this->assertStringContainsString('previewOwnsScroll ? preview : null', $preview);
+        $this->assertStringNotContainsString("document.createElement('iframe')", $preview);
+    }
+
     public function test_support_chat_launcher_is_a_light_green_header_button(): void
     {
         $customer = User::factory()->make(['role' => 'customer']);

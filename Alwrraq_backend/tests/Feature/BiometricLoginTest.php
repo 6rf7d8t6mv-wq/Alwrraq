@@ -88,6 +88,31 @@ class BiometricLoginTest extends TestCase
         $this->assertGuest();
     }
 
+    public function test_app_password_login_opens_internal_home_for_every_role(): void
+    {
+        foreach (['customer', 'admin'] as $index => $role) {
+            $user = User::query()->create([
+                'name' => $role === 'admin' ? 'مدير تجريبي' : 'عميل تجريبي',
+                'email' => $role.'@example.com',
+                'phone' => '050000000'.($index + 2),
+                'password' => 'password',
+                'role' => $role,
+                'is_active' => true,
+                'login_blocked' => false,
+            ]);
+
+            $this->withSession(['url.intended' => '/cart'])
+                ->post('/app/login', [
+                    'login_identifier' => $user->phone,
+                    'password' => 'password',
+                ])
+                ->assertRedirect('/home')
+                ->assertSessionMissing('url.intended');
+
+            $this->post('/logout');
+        }
+    }
+
     public function test_changing_password_revokes_all_biometric_tokens(): void
     {
         $user = $this->user();

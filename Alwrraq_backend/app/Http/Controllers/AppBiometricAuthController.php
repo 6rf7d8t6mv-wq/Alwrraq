@@ -64,13 +64,12 @@ class AppBiometricAuthController extends Controller
         Auth::login($loginToken->user, true);
         $request->session()->regenerate();
         $request->session()->put('auth_surface', 'app');
+        $request->session()->forget('url.intended');
         $loginToken->forceFill(['last_used_at' => now()])->save();
 
         app(GuestCartService::class)->claim($request, $loginToken->user);
 
-        return $loginToken->user->role === 'admin'
-            ? redirect()->route('admin.dashboard')
-            : redirect()->route('home');
+        return redirect()->route('home');
     }
 
     public function revoke(Request $request): JsonResponse

@@ -29,10 +29,8 @@ class AuthController extends Controller
         if (Auth::check()) {
             session(['auth_surface' => 'app']);
 
-            return $this->redirectAfterLogin(Auth::user());
+            return redirect()->route('home');
         }
-
-        $request->session()->put('url.intended', route('cart.index'));
 
         return view('auth', ['appMode' => true]);
     }
@@ -76,9 +74,12 @@ class AuthController extends Controller
 
         if ($request->routeIs('app.register.store')) {
             $request->session()->put('auth_surface', 'app');
+            $request->session()->forget('url.intended');
         }
 
-        return redirect()->intended(route('home'));
+        return $request->routeIs('app.register.store')
+            ? redirect()->route('home')
+            : redirect()->intended(route('home'));
     }
 
     public function appLogin(Request $request)
@@ -110,10 +111,11 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
         $request->session()->put('auth_surface', 'app');
+        $request->session()->forget('url.intended');
 
         app(GuestCartService::class)->claim($request, Auth::user());
 
-        return redirect()->intended(route('home'));
+        return redirect()->route('home');
     }
 
     public function login(Request $request)
